@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
  * Rutas de ADMIN
  */
 import roleRoutes from './routes/roleRoutes.js';
+import institucionRoutes from './routes/institucionRoutes.js';
 
 /**
  * Configuración para usar __dirname con ES modules.
@@ -53,28 +54,44 @@ await fastify.register(swagger, {
  * Esquemas de objetos para Response
  */
 fastify.addSchema({
-  $id: 'Role',
-  type: 'object',
-  properties: {
-    id: { type: 'integer', example: 1 },
-    nombre: { type: 'string', example: 'Admin' },
-    descripcion: { type: 'string', example: 'Administrador del sistema' }
-  }
+	$id: 'Role',
+	type: 'object',
+	properties: {
+		id: { type: 'integer', example: 1 },
+		nombre: { type: 'string', example: 'Admin' },
+		descripcion: { type: 'string', example: 'Administrador del sistema' }
+	}
 });
 
 fastify.addSchema({
-  $id: 'ErrorResponse',
+	$id: 'ErrorResponse',
+	type: 'object',
+	properties: {
+		success: { type: 'boolean', example: false },
+		error: {
+			type: 'object',
+			properties: {
+				code: { type: 'string', example: 'ERR_ROLE_NOT_FOUND' },
+				message: { type: 'string', example: 'Rol no encontrado' },
+				details: { type: 'string', example: null }
+			}
+		}
+	}
+});
+
+fastify.addSchema({
+  $id: 'Institucion',
   type: 'object',
   properties: {
-    success: { type: 'boolean', example: false },
-    error: {
-      type: 'object',
-      properties: {
-        code: { type: 'string', example: 'ERR_ROLE_NOT_FOUND' },
-        message: { type: 'string', example: 'Rol no encontrado' },
-        details: { type: 'string', example: null }
-      }
-    }
+    id: { type: 'number', example: 1 },
+    nombre: { type: 'string', example: 'Institución Ejemplo' },
+    direccion: { type: 'string', example: 'Av. Siempre Viva 123' },
+    telefono: { type: 'string', example: '555-1234' },
+    email: { type: 'string', example: 'contacto@institucion.com' },
+    fecha_fundacion: { type: 'string', format: 'date', example: '2000-01-01' },
+    nit: { type: 'string', example: '1234567890' },
+    created_at: { type: 'string', example: '2023-01-01T12:00:00Z' },
+    updated_at: { type: 'string', example: '2023-01-02T12:00:00Z' }
   }
 });
 
@@ -105,6 +122,7 @@ await fastify.register(staticFiles, {
  */
 fastify.register(homeRoutes, { prefix: '/api' });
 fastify.register(roleRoutes, { prefix: '/api' });
+fastify.register(institucionRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
