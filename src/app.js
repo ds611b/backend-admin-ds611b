@@ -6,6 +6,10 @@ import swaggerUI from '@fastify/swagger-ui';
 import staticFiles from '@fastify/static';
 import path from 'path';
 import { fileURLToPath } from 'url';
+/**
+ * Rutas de ADMIN
+ */
+import roleRoutes from './routes/roleRoutes.js';
 
 /**
  * Configuración para usar __dirname con ES modules.
@@ -46,6 +50,35 @@ await fastify.register(swagger, {
 });
 
 /**
+ * Esquemas de objetos para Response
+ */
+fastify.addSchema({
+  $id: 'Role',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    nombre: { type: 'string', example: 'Admin' },
+    descripcion: { type: 'string', example: 'Administrador del sistema' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'ErrorResponse',
+  type: 'object',
+  properties: {
+    success: { type: 'boolean', example: false },
+    error: {
+      type: 'object',
+      properties: {
+        code: { type: 'string', example: 'ERR_ROLE_NOT_FOUND' },
+        message: { type: 'string', example: 'Rol no encontrado' },
+        details: { type: 'string', example: null }
+      }
+    }
+  }
+});
+
+/**
  * Configuración de Swagger UI (interfaz).
  * Define la ruta donde estará disponible la documentación y opciones de la interfaz.
  */
@@ -71,6 +104,7 @@ await fastify.register(staticFiles, {
  * Todas las rutas definidas en homeRoutes estarán bajo el prefijo '/api'.
  */
 fastify.register(homeRoutes, { prefix: '/api' });
+fastify.register(roleRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
@@ -93,8 +127,8 @@ const start = async () => {
 			port: port,
 			host: host
 		});
-		fastify.log.info(`Servidor ejecutándose en http://${host}:${port}`);
-		fastify.log.info(`Documentación disponible en http://${host}:${port}/${docsPath}`);
+		fastify.log.info(`Servidor ejecutandose en http://${host}:${port}`);
+		fastify.log.info(`Documentacion disponible en http://${host}:${port}/${docsPath}`);
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);
