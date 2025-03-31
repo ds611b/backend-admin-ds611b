@@ -11,6 +11,7 @@ export async function getRoles(request, reply) {
     const roles = await Role.findAll();
     reply.send(roles);
   } catch (error) {
+    request.log.error(error);
     reply.status(500).send(createErrorResponse('Error al obtener los roles', 'GET_ROLES_ERROR', error));
   }
 }
@@ -30,6 +31,7 @@ export async function getRoleById(request, reply) {
       reply.status(404).send(createErrorResponse('Rol no encontrado', 'ROLE_NOT_FOUND'));
     }
   } catch (error) {
+    request.log.error(error);
     reply.status(500).send(createErrorResponse('Error al obtener el rol', 'GET_ROLE_ERROR', error));
   }
 }
@@ -45,6 +47,7 @@ export async function createRole(request, reply) {
     const newRole = await Role.create({ nombre, descripcion });
     reply.status(201).send(newRole);
   } catch (error) {
+    request.log.error(error);
     reply.status(500).send(createErrorResponse('Error al crear el rol', 'CREATE_ROLE_ERROR', error));
   }
 }
@@ -68,6 +71,7 @@ export async function updateRole(request, reply) {
       reply.status(404).send(createErrorResponse('Rol no encontrado', 'ROLE_NOT_FOUND'));
     }
   } catch (error) {
+    request.log.error(error);
     reply.status(500).send(createErrorResponse('Error al actualizar el rol', 'UPDATE_ROLE_ERROR', error));
   }
 }
@@ -88,6 +92,7 @@ export async function deleteRole(request, reply) {
       reply.status(404).send(createErrorResponse('Rol no encontrado', 'ROLE_NOT_FOUND'));
     }
   } catch (error) {
+    request.log.error(error);
     reply.status(500).send(createErrorResponse('Error al eliminar el rol', 'DELETE_ROLE_ERROR', error));
   }
 }

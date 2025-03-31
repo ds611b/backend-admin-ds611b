@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
  */
 import roleRoutes from './routes/roleRoutes.js';
 import institucionRoutes from './routes/institucionRoutes.js';
+import proyectoInstitucionRoutes from './routes/proyectoInstitucionRoutes.js';
 
 /**
  * Configuración para usar __dirname con ES modules.
@@ -98,6 +99,25 @@ fastify.addSchema({
   }
 });
 
+fastify.addSchema({
+  $id: 'ProyectoInstitucion',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    institucion_id: { type: 'integer', example: 1 },
+    nombre: { type: 'string', example: 'Proyecto de Modernización' },
+    descripcion: { type: 'string', example: 'Implementación de nuevas tecnologías en la institución.' },
+    fecha_inicio: { type: 'string', format: 'date', example: '2024-01-15' },
+    fecha_fin: { type: 'string', format: 'date', example: '2024-12-31' },
+    modalidad: { type: 'string', example: 'Presencial' },
+    direccion: { type: 'string', example: 'Calle Principal #123' },
+    disponibilidad: { type: 'boolean', example: true },
+    institucion: { $ref: 'Institucion' },
+    created_at: { type: 'string', example: '2024-03-30T10:00:00Z' },
+    updated_at: { type: 'string', example: '2024-03-30T10:30:00Z' }
+  }
+});
+
 /**
  * Esquemas de validación sin ejemplos
  * Estos esquemas se utilizarán para la validación en lugar de para la documentación
@@ -141,6 +161,22 @@ fastify.addSchema({
   }
 });
 
+fastify.addSchema({
+  $id: 'ProyectoInstitucionValidation',
+  type: 'object',
+  properties: {
+    institucion_id: { type: 'integer' },
+    nombre: { type: 'string' },
+    descripcion: { type: 'string' },
+    fecha_inicio: { type: 'string', format: 'date' },
+    fecha_fin: { type: 'string', format: 'date' },
+    modalidad: { type: 'string', enum: ['Presencial', 'Virtual', 'Híbrida'] },
+    direccion: { type: 'string' },
+    disponibilidad: { type: 'boolean' },
+  },
+  required: ['institucion_id', 'nombre', 'descripcion']
+});
+
 /**
  * Configuración de Swagger UI (interfaz).
  * Define la ruta donde estará disponible la documentación y opciones de la interfaz.
@@ -172,6 +208,7 @@ await fastify.register(staticFiles, {
 fastify.register(homeRoutes, { prefix: '/api' });
 fastify.register(roleRoutes, { prefix: '/api' });
 fastify.register(institucionRoutes, { prefix: '/api' });
+fastify.register(proyectoInstitucionRoutes, {prefix: '/api'})
 
 /**
  * Registra la landing page de la API
