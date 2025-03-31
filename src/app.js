@@ -29,54 +29,57 @@ const fastify = Fastify({ logger: true });
 const { port, host, docsPath } = config;
 
 /**
- * Configuración de Swagger (esquemas).
- * Define la información básica de la API y las especificaciones de Swagger.
+ * Configuración de OpenAPI 3.0 (antes Swagger).
+ * Define la información básica de la API y las especificaciones.
  */
 await fastify.register(swagger, {
-	swagger: {
-		info: {
-			title: 'boilerplate-ds611b',
-			description: 'API',
-			version: '1.0.0'
-		},
-		externalDocs: {
-			url: 'https://swagger.io',
-			description: 'Encuentra más información aquí'
-		},
-		host: `${host}:${port}`,
-		schemes: ['http'],
-		consumes: ['application/json'],
-		produces: ['application/json']
-	}
+  openapi: {
+    info: {
+      title: 'boilerplate-ds611b',
+      description: 'API Documentation',
+      version: '1.0.0'
+    },
+    externalDocs: {
+      url: 'https://swagger.io',
+      description: 'Encuentra más información aquí'
+    },
+    servers: [
+      {
+        url: `http://${host}:${port}`,
+        description: 'Servidor de desarrollo'
+      }
+    ],
+    components: {}
+  }
 });
 
 /**
- * Esquemas de objetos para Response
+ * Definiciones de esquemas con ejemplos para la documentación y serialización.
  */
 fastify.addSchema({
-	$id: 'Role',
-	type: 'object',
-	properties: {
-		id: { type: 'integer', example: 1 },
-		nombre: { type: 'string', example: 'Admin' },
-		descripcion: { type: 'string', example: 'Administrador del sistema' }
-	}
+  $id: 'Role',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    nombre: { type: 'string', example: 'Admin' },
+    descripcion: { type: 'string', example: 'Administrador del sistema' }
+  }
 });
 
 fastify.addSchema({
-	$id: 'ErrorResponse',
-	type: 'object',
-	properties: {
-		success: { type: 'boolean', example: false },
-		error: {
-			type: 'object',
-			properties: {
-				code: { type: 'string', example: 'ERR_ROLE_NOT_FOUND' },
-				message: { type: 'string', example: 'Rol no encontrado' },
-				details: { type: 'string', example: null }
-			}
-		}
-	}
+  $id: 'ErrorResponse',
+  type: 'object',
+  properties: {
+    success: { type: 'boolean', example: false },
+    error: {
+      type: 'object',
+      properties: {
+        code: { type: 'string', example: 'ERR_ROLE_NOT_FOUND' },
+        message: { type: 'string', example: 'Rol no encontrado' },
+        details: { type: 'string', example: null }
+      }
+    }
+  }
 });
 
 fastify.addSchema({
@@ -96,15 +99,61 @@ fastify.addSchema({
 });
 
 /**
+ * Esquemas de validación sin ejemplos
+ * Estos esquemas se utilizarán para la validación en lugar de para la documentación
+ */
+fastify.addSchema({
+  $id: 'RoleValidation',
+  type: 'object',
+  properties: {
+    id: { type: 'integer' },
+    nombre: { type: 'string' },
+    descripcion: { type: 'string' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'ErrorResponseValidation',
+  type: 'object',
+  properties: {
+    success: { type: 'boolean' },
+    error: {
+      type: 'object',
+      properties: {
+        code: { type: 'string' },
+        message: { type: 'string' },
+        details: { type: 'string' }
+      }
+    }
+  }
+});
+
+fastify.addSchema({
+  $id: 'InstitucionValidation',
+  type: 'object',
+  properties: {
+    nombre: { type: 'string' },
+    direccion: { type: 'string' },
+    telefono: { type: 'string' },
+    email: { type: 'string' },
+    fecha_fundacion: { type: 'string', format: 'date' },
+    nit: { type: 'string' },
+  }
+});
+
+/**
  * Configuración de Swagger UI (interfaz).
  * Define la ruta donde estará disponible la documentación y opciones de la interfaz.
  */
 await fastify.register(swaggerUI, {
-	routePrefix: `/${docsPath}`,
-	uiConfig: {
-		deepLinking: true // Permite compartir enlaces directos a endpoints
-	},
-	staticCSP: true // Mantiene seguridad básica
+  routePrefix: `/${docsPath}`,
+  uiConfig: {
+    docExpansion: 'list',
+    deepLinking: true // Permite compartir enlaces directos a endpoints
+  },
+  staticCSP: true, // Mantiene seguridad básica
+  transformSpecification: (swaggerObject, request, reply) => { return swaggerObject },
+  transformSpecificationClone: true
 });
 
 /**
@@ -112,8 +161,8 @@ await fastify.register(swaggerUI, {
  * Define el directorio raíz y el prefijo para acceder a los archivos públicos.
  */
 await fastify.register(staticFiles, {
-	root: path.join(__dirname, '../public'),
-	prefix: '/public/'
+  root: path.join(__dirname, '../public'),
+  prefix: '/public/'
 });
 
 /**
@@ -128,11 +177,11 @@ fastify.register(institucionRoutes, { prefix: '/api' });
  * Registra la landing page de la API
  */
 fastify.get('/', {
-	schema: {
-		hide: true
-	}
+  schema: {
+    hide: true
+  }
 }, (request, reply) => {
-	reply.sendFile('index.html', { root: path.join(__dirname, '../public') });
+  reply.sendFile('index.html', { root: path.join(__dirname, '../public') });
 });
 
 /**
@@ -140,17 +189,17 @@ fastify.get('/', {
  * Intenta escuchar en el puerto y host definidos y maneja errores en caso de fallo.
  */
 const start = async () => {
-	try {
-		await fastify.listen({
-			port: port,
-			host: host
-		});
-		fastify.log.info(`Servidor ejecutandose en http://${host}:${port}`);
-		fastify.log.info(`Documentacion disponible en http://${host}:${port}/${docsPath}`);
-	} catch (err) {
-		fastify.log.error(err);
-		process.exit(1);
-	}
+  try {
+    await fastify.listen({
+      port: port,
+      host: host
+    });
+    fastify.log.info(`Servidor ejecutandose en http://${host}:${port}`);
+    fastify.log.info(`Documentacion disponible en http://${host}:${port}/${docsPath}`);
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
 };
 
 start();

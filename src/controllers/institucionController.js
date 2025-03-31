@@ -3,6 +3,8 @@ import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
  * Obtiene todas las instituciones.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
  */
 export async function getInstituciones(request, reply) {
   try {
@@ -16,13 +18,15 @@ export async function getInstituciones(request, reply) {
 
 /**
  * Obtiene una institución por ID.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
  */
 export async function getInstitucionById(request, reply) {
   const { id } = request.params;
   try {
     const institucion = await Institucion.findByPk(id);
     if (!institucion) {
-      return reply.status(404).send(createErrorResponse('Institución no encontrada', 'ERR_INSTITUCION_NOT_FOUND'));
+      return reply.status(404).send(createErrorResponse('Institución no encontrada', 'INSTITUCION_NOT_FOUND'));
     }
     reply.send(institucion);
   } catch (error) {
@@ -33,6 +37,8 @@ export async function getInstitucionById(request, reply) {
 
 /**
  * Crea una nueva institución.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
  */
 export async function createInstitucion(request, reply) {
   const { nombre, direccion, telefono, email, fecha_fundacion, nit } = request.body;
@@ -54,6 +60,8 @@ export async function createInstitucion(request, reply) {
 
 /**
  * Actualiza una institución existente.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
  */
 export async function updateInstitucion(request, reply) {
   const { id } = request.params;
@@ -61,7 +69,7 @@ export async function updateInstitucion(request, reply) {
   try {
     const institucion = await Institucion.findByPk(id);
     if (!institucion) {
-      return reply.status(404).send(createErrorResponse('Institución no encontrada', 'ERR_INSTITUCION_NOT_FOUND'));
+      return reply.status(404).send(createErrorResponse('Institución no encontrada', 'INSTITUCION_NOT_FOUND'));
     }
     await institucion.update({
       nombre,
@@ -80,6 +88,8 @@ export async function updateInstitucion(request, reply) {
 
 /**
  * Elimina una institución por ID.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
  */
 export async function deleteInstitucion(request, reply) {
   const { id } = request.params;

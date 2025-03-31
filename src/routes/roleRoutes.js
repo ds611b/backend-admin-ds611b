@@ -1,5 +1,10 @@
 import { getRoles, getRoleById, createRole, updateRole, deleteRole } from '../controllers/roleController.js';
 
+/**
+ * Define las rutas para los roles.
+ * @param {import('fastify').FastifyInstance} fastify - La instancia de Fastify.
+ * @param {Object} options - Opciones de registro.
+ */
 async function roleRoutes(fastify, options) {
   // Obtener todos los roles
   fastify.get('/roles', {
@@ -10,11 +15,11 @@ async function roleRoutes(fastify, options) {
         200: {
           description: 'Lista de roles obtenida exitosamente.',
           type: 'array',
-          items: { $ref: 'Role#' },
+          items: { $ref: 'Role' },
         },
         500: {
           description: 'Error al obtener los roles.',
-          $ref: 'ErrorResponse#',
+          $ref: 'ErrorResponseValidation',
         },
       },
     },
@@ -35,15 +40,15 @@ async function roleRoutes(fastify, options) {
       response: {
         200: {
           description: 'Detalles del rol obtenidos exitosamente.',
-          $ref: 'Role#',
+          $ref: 'Role',
         },
         404: {
           description: 'Rol no encontrado.',
-          $ref: 'ErrorResponse#',
+          $ref: 'ErrorResponseValidation',
         },
         500: {
           description: 'Error al obtener el rol.',
-          $ref: 'ErrorResponse#',
+          $ref: 'ErrorResponseValidation',
         },
       },
     },
@@ -55,21 +60,16 @@ async function roleRoutes(fastify, options) {
       description: 'Crea un nuevo rol en el sistema.',
       tags: ['Roles'],
       body: {
-        type: 'object',
-        properties: {
-          nombre: { type: 'string', description: 'Nombre del rol.' },
-          descripcion: { type: 'string', description: 'Descripción del rol.' },
-        },
-        required: ['nombre'],
+        $ref: 'RoleValidation',
       },
       response: {
         201: {
           description: 'Rol creado exitosamente.',
-          $ref: 'Role#',
+          $ref: 'Role',
         },
         500: {
           description: 'Error al crear el rol.',
-          $ref: 'ErrorResponse#',
+          $ref: 'ErrorResponseValidation',
         },
       },
     },
@@ -88,25 +88,20 @@ async function roleRoutes(fastify, options) {
         required: ['id'],
       },
       body: {
-        type: 'object',
-        properties: {
-          nombre: { type: 'string', description: 'Nombre del rol.' },
-          descripcion: { type: 'string', description: 'Descripción del rol.' },
-        },
-        required: ['nombre'],
+        $ref: 'RoleValidation',
       },
       response: {
         200: {
           description: 'Rol actualizado exitosamente.',
-          $ref: 'Role#',
+          $ref: 'Role',
         },
         404: {
           description: 'Rol no encontrado.',
-          $ref: 'ErrorResponse#',
+          $ref: 'ErrorResponseValidation',
         },
         500: {
           description: 'Error al actualizar el rol.',
-          $ref: 'ErrorResponse#',
+          $ref: 'ErrorResponseValidation',
         },
       },
     },
@@ -131,11 +126,11 @@ async function roleRoutes(fastify, options) {
         },
         404: {
           description: 'Rol no encontrado.',
-          $ref: 'ErrorResponse#',
+          $ref: 'ErrorResponseValidation',
         },
         500: {
           description: 'Error al eliminar el rol.',
-          $ref: 'ErrorResponse#',
+          $ref: 'ErrorResponseValidation',
         },
       },
     },

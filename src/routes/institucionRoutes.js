@@ -1,5 +1,10 @@
 import { getInstituciones, getInstitucionById, createInstitucion, updateInstitucion, deleteInstitucion } from '../controllers/institucionController.js';
 
+/**
+ * Define las rutas para las instituciones.
+ * @param {import('fastify').FastifyInstance} fastify - La instancia de Fastify.
+ * @param {Object} options - Opciones de registro.
+ */
 async function institucionRoutes(fastify, options) {
   // GET /instituciones
   fastify.get('/instituciones', {
@@ -10,11 +15,11 @@ async function institucionRoutes(fastify, options) {
         200: {
           description: 'Lista de instituciones obtenida exitosamente',
           type: 'array',
-          items: { $ref: 'Institucion#' }
+          items: { $ref: 'Institucion' }
         },
         500: {
           description: 'Error al obtener las instituciones',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponseValidation'
         }
       }
     }
@@ -35,15 +40,15 @@ async function institucionRoutes(fastify, options) {
       response: {
         200: {
           description: 'Institución encontrada',
-          $ref: 'Institucion#'
+          $ref: 'Institucion'
         },
         404: {
           description: 'Institución no encontrada',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponseValidation'
         },
         500: {
           description: 'Error al obtener la institución',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponseValidation'
         }
       }
     }
@@ -55,25 +60,16 @@ async function institucionRoutes(fastify, options) {
       description: 'Crea una nueva institución',
       tags: ['Instituciones'],
       body: {
-        type: 'object',
-        properties: {
-          nombre: { type: 'string', description: 'Nombre de la institución' },
-          direccion: { type: 'string', description: 'Dirección de la institución' },
-          telefono: { type: 'string', description: 'Teléfono de contacto' },
-          email: { type: 'string', description: 'Correo electrónico' },
-          fecha_fundacion: { type: 'string', format: 'date', description: 'Fecha de fundación' },
-          nit: { type: 'string', description: 'Número de identificación tributaria' }
-        },
-        required: ['nombre']
+        $ref: 'InstitucionValidation',
       },
       response: {
         201: {
           description: 'Institución creada exitosamente',
-          $ref: 'Institucion#'
+          $ref: 'Institucion'
         },
         500: {
           description: 'Error al crear la institución',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponseValidation'
         }
       }
     }
@@ -92,29 +88,20 @@ async function institucionRoutes(fastify, options) {
         required: ['id']
       },
       body: {
-        type: 'object',
-        properties: {
-          nombre: { type: 'string', description: 'Nombre de la institución' },
-          direccion: { type: 'string', description: 'Dirección de la institución' },
-          telefono: { type: 'string', description: 'Teléfono de contacto' },
-          email: { type: 'string', description: 'Correo electrónico' },
-          fecha_fundacion: { type: 'string', format: 'date', description: 'Fecha de fundación' },
-          nit: { type: 'string', description: 'Número de identificación tributaria' }
-        },
-        required: ['nombre']
+        $ref: 'InstitucionValidation',
       },
       response: {
         200: {
           description: 'Institución actualizada exitosamente',
-          $ref: 'Institucion#'
+          $ref: 'Institucion'
         },
         404: {
           description: 'Institución no encontrada',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponseValidation'
         },
         500: {
           description: 'Error al actualizar la institución',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponseValidation'
         }
       }
     }
@@ -139,11 +126,11 @@ async function institucionRoutes(fastify, options) {
         },
         404: {
           description: 'Institución no encontrada',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponseValidation'
         },
         500: {
           description: 'Error al eliminar la institución',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponseValidation'
         }
       }
     }

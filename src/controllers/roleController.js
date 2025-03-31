@@ -1,7 +1,11 @@
 import Role from '../models/Role.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
-// Obtener todos los roles
+/**
+ * Obtiene todas los roles.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
+ */
 export async function getRoles(request, reply) {
   try {
     const roles = await Role.findAll();
@@ -11,7 +15,11 @@ export async function getRoles(request, reply) {
   }
 }
 
-// Obtener un rol por ID
+/**
+ * Obtiene un rol por ID.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
+ */
 export async function getRoleById(request, reply) {
   const { id } = request.params;
   try {
@@ -26,7 +34,11 @@ export async function getRoleById(request, reply) {
   }
 }
 
-// Crear un nuevo rol
+/**
+ * Crea un nuevo rol.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
+ */
 export async function createRole(request, reply) {
   const { nombre, descripcion } = request.body;
   try {
@@ -37,7 +49,11 @@ export async function createRole(request, reply) {
   }
 }
 
-// Actualizar un rol existente
+/**
+ * Actualiza un rol.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
+ */
 export async function updateRole(request, reply) {
   const { id } = request.params;
   const { nombre, descripcion } = request.body;
@@ -56,7 +72,11 @@ export async function updateRole(request, reply) {
   }
 }
 
-// Eliminar un rol
+/**
+ * Elimina un rol por ID.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
+ */
 export async function deleteRole(request, reply) {
   const { id } = request.params;
   try {
