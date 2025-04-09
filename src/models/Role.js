@@ -1,7 +1,8 @@
+// src/models/Role.js
 import { DataTypes } from 'sequelize';
 import sequelize from './db.js';
 
-const Roles = sequelize.define('Roles', {
+const Role = sequelize.define('Role', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -21,4 +22,4 @@ const Roles = sequelize.define('Roles', {
   timestamps: false
 });
 
-export default Roles;
+export default Role;
