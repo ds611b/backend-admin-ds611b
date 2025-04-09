@@ -58,7 +58,7 @@ await fastify.register(swagger, {
  * Definiciones de esquemas con ejemplos para la documentación y serialización.
  */
 fastify.addSchema({
-  $id: 'Role',
+  $id: 'Roles',
   type: 'object',
   properties: {
     id: { type: 'integer', example: 1 },
