@@ -2,7 +2,7 @@ import { DataTypes } from 'sequelize';
 import sequelize from './db.js';
 import Instituciones from './Instituciones.js';
 
-const ProyectoInstitucion = sequelize.define('ProyectoInstitucion', {
+const ProyectosInstitucion = sequelize.define('ProyectosInstitucion', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -47,9 +47,9 @@ const ProyectoInstitucion = sequelize.define('ProyectoInstitucion', {
   updatedAt: 'updated_at'
 });
 
-ProyectoInstitucion.belongsTo(Instituciones, {
+ProyectosInstitucion.belongsTo(Instituciones, {
   foreignKey: 'institucion_id',
   as: 'institucion'
 });
 
-export default ProyectoInstitucion;
+export default ProyectosInstitucion;

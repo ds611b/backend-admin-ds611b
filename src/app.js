@@ -100,7 +100,7 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
-  $id: 'ProyectoInstitucion',
+  $id: 'ProyectosInstitucion',
   type: 'object',
   properties: {
     id: { type: 'integer', example: 1 },

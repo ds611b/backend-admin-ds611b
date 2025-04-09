@@ -21,7 +21,7 @@ async function proyectoInstitucionRoutes(fastify, options) {
         200: {
           description: 'Lista de proyectos de instituciones obtenida exitosamente.',
           type: 'array',
-          items: { $ref: 'ProyectoInstitucion' },
+          items: { $ref: 'ProyectosInstitucion' },
         },
         500: {
           description: 'Error al obtener los proyectos de instituciones.',
@@ -46,7 +46,7 @@ async function proyectoInstitucionRoutes(fastify, options) {
       response: {
         200: {
           description: 'Detalles del proyecto de institución obtenidos exitosamente.',
-          $ref: 'ProyectoInstitucion',
+          $ref: 'ProyectosInstitucion',
         },
         404: {
           description: 'Proyecto de institución no encontrado.',
@@ -71,7 +71,7 @@ async function proyectoInstitucionRoutes(fastify, options) {
       response: {
         201: {
           description: 'Proyecto de institución creado exitosamente.',
-          $ref: 'ProyectoInstitucion',
+          $ref: 'ProyectosInstitucion',
         },
         500: {
           description: 'Error al crear el proyecto de institución.',
@@ -99,7 +99,7 @@ async function proyectoInstitucionRoutes(fastify, options) {
       response: {
         200: {
           description: 'Proyecto de institución actualizado exitosamente.',
-          $ref: 'ProyectoInstitucion',
+          $ref: 'ProyectosInstitucion',
         },
         404: {
           description: 'Proyecto de institución no encontrado.',

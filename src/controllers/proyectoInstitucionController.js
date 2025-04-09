@@ -1,4 +1,4 @@
-import ProyectoInstitucion from '../models/ProyectoInstitucion.js';
+import ProyectosInstitucion from '../models/ProyectosInstitucion.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 import Instituciones from '../models/Instituciones.js';
 
@@ -9,7 +9,7 @@ import Instituciones from '../models/Instituciones.js';
  */
 export async function getProyectosInstitucion(request, reply) {
   try {
-    const proyectos = await ProyectoInstitucion.findAll({
+    const proyectos = await ProyectosInstitucion.findAll({
       include: { model: Instituciones, as: 'institucion' }
     });
     reply.send(proyectos);
@@ -27,7 +27,7 @@ export async function getProyectosInstitucion(request, reply) {
 export async function getProyectoInstitucionById(request, reply) {
   const { id } = request.params;
   try {
-    const proyecto = await ProyectoInstitucion.findByPk(id, {
+    const proyecto = await ProyectosInstitucion.findByPk(id, {
       include: {
         model: Instituciones,
         as: 'institucion'
@@ -51,7 +51,7 @@ export async function getProyectoInstitucionById(request, reply) {
 export async function createProyectoInstitucion(request, reply) {
   const { institucion_id, nombre, descripcion, fecha_inicio, fecha_fin, modalidad, direccion, disponibilidad } = request.body;
   try {
-    const nuevoProyecto = await ProyectoInstitucion.create({
+    const nuevoProyecto = await ProyectosInstitucion.create({
       institucion_id,
       nombre,
       descripcion,
@@ -63,7 +63,7 @@ export async function createProyectoInstitucion(request, reply) {
     });
     console.log("objeto: ", nuevoProyecto)
     console.log("id: ", nuevoProyecto.id)
-    const proyectoActualizado = await ProyectoInstitucion.findByPk(nuevoProyecto.id, {
+    const proyectoActualizado = await ProyectosInstitucion.findByPk(nuevoProyecto.id, {
       include: {
         model: Instituciones,
         as: 'institucion'
@@ -86,7 +86,7 @@ export async function updateProyectoInstitucion(request, reply) {
   const { id } = request.params;
   const { institucion_id, nombre, descripcion, fecha_inicio, fecha_fin, modalidad, direccion, disponibilidad } = request.body;
   try {
-    const proyecto = await ProyectoInstitucion.findByPk(id);
+    const proyecto = await ProyectosInstitucion.findByPk(id);
     if (!proyecto) {
       return reply.status(404).send(createErrorResponse('Proyecto de institución no encontrado', 'PROYECTO_INSTITUCION_NOT_FOUND'));
     }
@@ -100,7 +100,7 @@ export async function updateProyectoInstitucion(request, reply) {
       direccion,
       disponibilidad
     });
-    const proyectoActualizado = await ProyectoInstitucion.findByPk(id, {
+    const proyectoActualizado = await ProyectosInstitucion.findByPk(id, {
       include: {
         model: Instituciones,
         as: 'institucion',
@@ -121,7 +121,7 @@ export async function updateProyectoInstitucion(request, reply) {
 export async function deleteProyectoInstitucion(request, reply) {
   const { id } = request.params;
   try {
-    const proyecto = await ProyectoInstitucion.findByPk(id, {
+    const proyecto = await ProyectosInstitucion.findByPk(id, {
       include: {
         model: Instituciones,
         as: 'institucion'
