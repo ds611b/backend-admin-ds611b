@@ -58,7 +58,7 @@ await fastify.register(swagger, {
  * Definiciones de esquemas con ejemplos para la documentación y serialización.
  */
 fastify.addSchema({
-  $id: 'Role',
+  $id: 'Roles',
   type: 'object',
   properties: {
     id: { type: 'integer', example: 1 },
@@ -84,7 +84,7 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
-  $id: 'Institucion',
+  $id: 'Instituciones',
   type: 'object',
   properties: {
     id: { type: 'number', example: 1 },
@@ -112,7 +112,7 @@ fastify.addSchema({
     modalidad: { type: 'string', example: 'Presencial' },
     direccion: { type: 'string', example: 'Calle Principal #123' },
     disponibilidad: { type: 'boolean', example: true },
-    institucion: { $ref: 'Institucion' },
+    institucion: { $ref: 'Instituciones' },
     created_at: { type: 'string', example: '2024-03-30T10:00:00Z' },
     updated_at: { type: 'string', example: '2024-03-30T10:30:00Z' }
   }

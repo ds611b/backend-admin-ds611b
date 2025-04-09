@@ -1,6 +1,6 @@
 import ProyectoInstitucion from '../models/ProyectoInstitucion.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
-import Institucion from '../models/Institucion.js';
+import Instituciones from '../models/Instituciones.js';
 
 /**
  * Obtiene todos los proyectos de instituciones.
@@ -10,7 +10,7 @@ import Institucion from '../models/Institucion.js';
 export async function getProyectosInstitucion(request, reply) {
   try {
     const proyectos = await ProyectoInstitucion.findAll({
-      include: { model: Institucion, as: 'institucion' }
+      include: { model: Instituciones, as: 'institucion' }
     });
     reply.send(proyectos);
   } catch (error) {
@@ -29,7 +29,7 @@ export async function getProyectoInstitucionById(request, reply) {
   try {
     const proyecto = await ProyectoInstitucion.findByPk(id, {
       include: {
-        model: Institucion,
+        model: Instituciones,
         as: 'institucion'
       },
     });
@@ -65,7 +65,7 @@ export async function createProyectoInstitucion(request, reply) {
     console.log("id: ", nuevoProyecto.id)
     const proyectoActualizado = await ProyectoInstitucion.findByPk(nuevoProyecto.id, {
       include: {
-        model: Institucion,
+        model: Instituciones,
         as: 'institucion'
       },
     });
@@ -102,7 +102,7 @@ export async function updateProyectoInstitucion(request, reply) {
     });
     const proyectoActualizado = await ProyectoInstitucion.findByPk(id, {
       include: {
-        model: Institucion,
+        model: Instituciones,
         as: 'institucion',
       }
     });
@@ -123,7 +123,7 @@ export async function deleteProyectoInstitucion(request, reply) {
   try {
     const proyecto = await ProyectoInstitucion.findByPk(id, {
       include: {
-        model: Institucion,
+        model: Instituciones,
         as: 'institucion'
       },
     });

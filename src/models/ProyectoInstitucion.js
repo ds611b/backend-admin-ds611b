@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from './db.js';
-import Institucion from './Institucion.js';
+import Instituciones from './Instituciones.js';
 
 const ProyectoInstitucion = sequelize.define('ProyectoInstitucion', {
   id: {
@@ -39,22 +39,15 @@ const ProyectoInstitucion = sequelize.define('ProyectoInstitucion', {
   disponibilidad: {
     type: DataTypes.BOOLEAN,
     allowNull: true,
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-  updated_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
+  }
 }, {
   tableName: 'ProyectosInstitucion',
-  timestamps: false,
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
-// Relación: cada proyecto pertenece a una Institucion.
-ProyectoInstitucion.belongsTo(Institucion, {
+ProyectoInstitucion.belongsTo(Instituciones, {
   foreignKey: 'institucion_id',
   as: 'institucion'
 });

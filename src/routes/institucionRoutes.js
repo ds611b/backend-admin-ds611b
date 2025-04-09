@@ -15,7 +15,7 @@ async function institucionRoutes(fastify, options) {
         200: {
           description: 'Lista de instituciones obtenida exitosamente',
           type: 'array',
-          items: { $ref: 'Institucion' }
+          items: { $ref: 'Instituciones' }
         },
         500: {
           description: 'Error al obtener las instituciones',
@@ -40,7 +40,7 @@ async function institucionRoutes(fastify, options) {
       response: {
         200: {
           description: 'Institución encontrada',
-          $ref: 'Institucion'
+          $ref: 'Instituciones'
         },
         404: {
           description: 'Institución no encontrada',
@@ -65,7 +65,7 @@ async function institucionRoutes(fastify, options) {
       response: {
         201: {
           description: 'Institución creada exitosamente',
-          $ref: 'Institucion'
+          $ref: 'Instituciones'
         },
         500: {
           description: 'Error al crear la institución',
@@ -93,7 +93,7 @@ async function institucionRoutes(fastify, options) {
       response: {
         200: {
           description: 'Institución actualizada exitosamente',
-          $ref: 'Institucion'
+          $ref: 'Instituciones'
         },
         404: {
           description: 'Institución no encontrada',

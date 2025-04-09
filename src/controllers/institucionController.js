@@ -1,4 +1,4 @@
-import Institucion from '../models/Institucion.js';
+import Instituciones from '../models/Instituciones.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -8,7 +8,7 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  */
 export async function getInstituciones(request, reply) {
   try {
-    const instituciones = await Institucion.findAll();
+    const instituciones = await Instituciones.findAll();
     reply.send(instituciones);
   } catch (error) {
     request.log.error(error);
@@ -24,7 +24,7 @@ export async function getInstituciones(request, reply) {
 export async function getInstitucionById(request, reply) {
   const { id } = request.params;
   try {
-    const institucion = await Institucion.findByPk(id);
+    const institucion = await Instituciones.findByPk(id);
     if (!institucion) {
       return reply.status(404).send(createErrorResponse('Institución no encontrada', 'INSTITUCION_NOT_FOUND'));
     }
@@ -43,7 +43,7 @@ export async function getInstitucionById(request, reply) {
 export async function createInstitucion(request, reply) {
   const { nombre, direccion, telefono, email, fecha_fundacion, nit } = request.body;
   try {
-    const nuevaInstitucion = await Institucion.create({
+    const nuevaInstitucion = await Instituciones.create({
       nombre,
       direccion,
       telefono,
@@ -67,7 +67,7 @@ export async function updateInstitucion(request, reply) {
   const { id } = request.params;
   const { nombre, direccion, telefono, email, fecha_fundacion, nit } = request.body;
   try {
-    const institucion = await Institucion.findByPk(id);
+    const institucion = await Instituciones.findByPk(id);
     if (!institucion) {
       return reply.status(404).send(createErrorResponse('Institución no encontrada', 'INSTITUCION_NOT_FOUND'));
     }
@@ -94,7 +94,7 @@ export async function updateInstitucion(request, reply) {
 export async function deleteInstitucion(request, reply) {
   const { id } = request.params;
   try {
-    const institucion = await Institucion.findByPk(id);
+    const institucion = await Instituciones.findByPk(id);
     if (!institucion) {
       return reply.status(404).send(createErrorResponse('Institución no encontrada', 'ERR_INSTITUCION_NOT_FOUND'));
     }

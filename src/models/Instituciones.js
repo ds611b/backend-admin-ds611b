@@ -1,11 +1,7 @@
-// src/models/Institucion.js
 import { DataTypes } from 'sequelize';
 import sequelize from './db.js';
 
-/**
- * Modelo que representa la tabla 'Instituciones'
- */
-const Institucion = sequelize.define('Institucion', {
+const Instituciones = sequelize.define('Instituciones', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -39,9 +35,9 @@ const Institucion = sequelize.define('Institucion', {
   }
 }, {
   tableName: 'Instituciones',
-  timestamps: true,              // Activamos timestamps
-  createdAt: 'created_at',       // Mapeamos a la columna created_at
-  updatedAt: 'updated_at'        // Mapeamos a la columna updated_at
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
-export default Institucion;
+export default Instituciones;

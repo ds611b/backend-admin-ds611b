@@ -1,4 +1,4 @@
-import Role from '../models/Role.js';
+import Roles from '../models/Roles.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -8,7 +8,7 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  */
 export async function getRoles(request, reply) {
   try {
-    const roles = await Role.findAll();
+    const roles = await Roles.findAll();
     reply.send(roles);
   } catch (error) {
     request.log.error(error);
@@ -24,7 +24,7 @@ export async function getRoles(request, reply) {
 export async function getRoleById(request, reply) {
   const { id } = request.params;
   try {
-    const role = await Role.findByPk(id);
+    const role = await Roles.findByPk(id);
     if (role) {
       reply.send(role);
     } else {
@@ -44,7 +44,7 @@ export async function getRoleById(request, reply) {
 export async function createRole(request, reply) {
   const { nombre, descripcion } = request.body;
   try {
-    const newRole = await Role.create({ nombre, descripcion });
+    const newRole = await Roles.create({ nombre, descripcion });
     reply.status(201).send(newRole);
   } catch (error) {
     request.log.error(error);
@@ -61,7 +61,7 @@ export async function updateRole(request, reply) {
   const { id } = request.params;
   const { nombre, descripcion } = request.body;
   try {
-    const role = await Role.findByPk(id);
+    const role = await Roles.findByPk(id);
     if (role) {
       role.nombre = nombre;
       role.descripcion = descripcion;
@@ -84,7 +84,7 @@ export async function updateRole(request, reply) {
 export async function deleteRole(request, reply) {
   const { id } = request.params;
   try {
-    const role = await Role.findByPk(id);
+    const role = await Roles.findByPk(id);
     if (role) {
       await role.destroy();
       reply.status(204).send();
