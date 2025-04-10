@@ -1,6 +1,5 @@
-import ProyectosInstitucion from '../models/ProyectosInstitucion.js';
+import { ProyectosInstitucion, Instituciones } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
-import Instituciones from '../models/Instituciones.js';
 
 /**
  * Obtiene todos los proyectos de instituciones.

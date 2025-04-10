@@ -1,4 +1,4 @@
-import Instituciones from '../models/Instituciones.js';
+import { Instituciones } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**

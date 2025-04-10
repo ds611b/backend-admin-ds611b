@@ -1,4 +1,4 @@
-import Roles from '../models/Roles.js';
+import { Roles } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
