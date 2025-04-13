@@ -14,7 +14,7 @@ export async function getAplicacionesEstudiantes(request, reply) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al obtener las aplicaciones de estudiantes',
-      'ERR_GET_APLICACIONES',
+      'GET_APLICACIONES_ERROR',
       error
     ));
   }
@@ -39,14 +39,14 @@ export async function getAplicacionEstudianteById(request, reply) {
     } else {
       reply.status(404).send(createErrorResponse(
         'Aplicación no encontrada',
-        'ERR_APLICACION_NOT_FOUND'
+        'APLICACION_NOT_FOUND'
       ));
     }
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al obtener la aplicación de estudiante',
-      'ERR_GET_APLICACION',
+      'GET_APLICACION_ERROR',
       error
     ));
   }
@@ -65,7 +65,7 @@ export async function createAplicacionEstudiante(request, reply) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al crear la aplicación de estudiante',
-      'ERR_CREATE_APLICACION',
+      'CREATE_APLICACION_ERROR',
       error
     ));
   }
@@ -88,14 +88,14 @@ export async function updateAplicacionEstudiante(request, reply) {
     } else {
       reply.status(404).send(createErrorResponse(
         'Aplicación no encontrada',
-        'ERR_APLICACION_NOT_FOUND'
+        'APLICACION_NOT_FOUND'
       ));
     }
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al actualizar la aplicación de estudiante',
-      'ERR_UPDATE_APLICACION',
+      'UPDATE_APLICACION_ERROR',
       error
     ));
   }
@@ -115,14 +115,14 @@ export async function deleteAplicacionEstudiante(request, reply) {
     } else {
       reply.status(404).send(createErrorResponse(
         'Aplicación no encontrada',
-        'ERR_APLICACION_NOT_FOUND'
+        'APLICACION_NOT_FOUND'
       ));
     }
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al eliminar la aplicación de estudiante',
-      'ERR_DELETE_APLICACION',
+      'DELETE_APLICACION_ERROR',
       error
     ));
   }

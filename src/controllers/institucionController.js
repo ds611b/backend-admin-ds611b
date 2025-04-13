@@ -96,7 +96,7 @@ export async function deleteInstitucion(request, reply) {
   try {
     const institucion = await Instituciones.findByPk(id);
     if (!institucion) {
-      return reply.status(404).send(createErrorResponse('Institución no encontrada', 'ERR_INSTITUCION_NOT_FOUND'));
+      return reply.status(404).send(createErrorResponse('Institución no encontrada', 'INSTITUCION_NOT_FOUND'));
     }
     await institucion.destroy();
     reply.status(204).send();

@@ -14,7 +14,7 @@ export async function getHabilidades(request, reply) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al obtener las habilidades',
-      'ERR_GET_HABILIDADES',
+      'GET_HABILIDADES_ERROR',
       error
     ));
   }
@@ -34,14 +34,14 @@ export async function getHabilidadById(request, reply) {
     } else {
       reply.status(404).send(createErrorResponse(
         'Habilidad no encontrada',
-        'ERR_HABILIDAD_NOT_FOUND'
+        'HABILIDAD_NOT_FOUND'
       ));
     }
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al obtener la habilidad',
-      'ERR_GET_HABILIDAD',
+      'GET_HABILIDAD_ERROR',
       error
     ));
   }
@@ -60,7 +60,7 @@ export async function createHabilidad(request, reply) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al crear la habilidad',
-      'ERR_CREATE_HABILIDAD',
+      'CREATE_HABILIDAD_ERROR',
       error
     ));
   }
@@ -81,14 +81,14 @@ export async function updateHabilidad(request, reply) {
     } else {
       reply.status(404).send(createErrorResponse(
         'Habilidad no encontrada',
-        'ERR_HABILIDAD_NOT_FOUND'
+        'HABILIDAD_NOT_FOUND'
       ));
     }
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al actualizar la habilidad',
-      'ERR_UPDATE_HABILIDAD',
+      'UPDATE_HABILIDAD_ERROR',
       error
     ));
   }
@@ -108,14 +108,14 @@ export async function deleteHabilidad(request, reply) {
     } else {
       reply.status(404).send(createErrorResponse(
         'Habilidad no encontrada',
-        'ERR_HABILIDAD_NOT_FOUND'
+        'HABILIDAD_NOT_FOUND'
       ));
     }
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al eliminar la habilidad',
-      'ERR_DELETE_HABILIDAD',
+      'DELETE_HABILIDAD_ERROR',
       error
     ));
   }
