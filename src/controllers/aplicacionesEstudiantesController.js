@@ -111,7 +111,7 @@ export async function deleteAplicacionEstudiante(request, reply) {
   try {
     const deleted = await AplicacionesEstudiantes.destroy({ where: { id } });
     if (deleted) {
-      reply.send({ message: 'Aplicación eliminada exitosamente' });
+      reply.status(204).send({ message: 'Aplicación eliminada exitosamente' });
     } else {
       reply.status(404).send(createErrorResponse(
         'Aplicación no encontrada',

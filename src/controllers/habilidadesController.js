@@ -104,7 +104,7 @@ export async function deleteHabilidad(request, reply) {
   try {
     const deleted = await Habilidades.destroy({ where: { id } });
     if (deleted) {
-      reply.send({ message: 'Habilidad eliminada exitosamente' });
+      reply.status(204).send();
     } else {
       reply.status(404).send(createErrorResponse(
         'Habilidad no encontrada',
