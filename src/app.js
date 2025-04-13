@@ -13,6 +13,7 @@ import roleRoutes from './routes/roleRoutes.js';
 import institucionRoutes from './routes/institucionRoutes.js';
 import proyectoInstitucionRoutes from './routes/proyectoInstitucionRoutes.js';
 import aplicacionesEstudiantesRoutes from './routes/aplicacionesEstudiantesRoutes.js';
+import habilidadesRoutes from './routes/habilidadesRoutes.js';
 
 /**
  * Configuración para usar __dirname con ES modules.
@@ -146,6 +147,18 @@ fastify.addSchema({
   }
 });
 
+fastify.addSchema({
+  $id: 'HabilidadesExample',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 1 },
+    descripcion: { type: 'string', example: 'Comunicación' },
+    created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
+    updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
+  }
+});
+
+
 /**
  * Esquemas de validación sin ejemplos
  * Estos esquemas se utilizarán para la validación en lugar de para la documentación
@@ -216,6 +229,16 @@ fastify.addSchema({
   required: ['estudiante_id','proyecto_id', 'estado']
 });
 
+fastify.addSchema({
+  $id: 'HabilidadesValidation',
+  type: 'object',
+  properties: {
+    descripcion: { type: 'string', maxLength: 50 }
+  },
+  required: ['descripcion']
+});
+
+
 /**
  * Configuración de Swagger UI (interfaz).
  * Define la ruta donde estará disponible la documentación y opciones de la interfaz.
@@ -249,6 +272,7 @@ fastify.register(roleRoutes, { prefix: '/api' });
 fastify.register(institucionRoutes, { prefix: '/api' });
 fastify.register(proyectoInstitucionRoutes, { prefix: '/api' });
 fastify.register(aplicacionesEstudiantesRoutes, { prefix: '/api' });
+fastify.register(habilidadesRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API

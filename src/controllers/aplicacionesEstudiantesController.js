@@ -5,7 +5,8 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  * Obtiene todas las aplicaciones de estudiantes.
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
- */export async function getAplicacionesEstudiantes(request, reply) {
+ */
+export async function getAplicacionesEstudiantes(request, reply) {
   try {
     const aplicaciones = await AplicacionesEstudiantes.findAll();
     reply.send(aplicaciones);
@@ -104,7 +105,8 @@ export async function updateAplicacionEstudiante(request, reply) {
  * Elimina una aplicación por estudiante por ID.
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
- */export async function deleteAplicacionEstudiante(request, reply) {
+ */
+export async function deleteAplicacionEstudiante(request, reply) {
   const { id } = request.params;
   try {
     const deleted = await AplicacionesEstudiantes.destroy({ where: { id } });
