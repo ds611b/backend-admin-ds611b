@@ -25,7 +25,7 @@ ProyectosInstitucion.belongsTo(Instituciones, { foreignKey: 'institucion_id', as
 
 // AplicacionesEstudiantes con Usuarios y ProyectosInstitucion (N:M indirecto)
 AplicacionesEstudiantes.belongsTo(Usuarios, { foreignKey: 'estudiante_id', onDelete: 'CASCADE' });
-AplicacionesEstudiantes.belongsTo(ProyectosInstitucion, { foreignKey: 'proyecto_id', onDelete: 'CASCADE' });
+AplicacionesEstudiantes.belongsTo(ProyectosInstitucion, { foreignKey: 'proyecto_id', as: 'proyecto', onDelete: 'CASCADE' });
 Usuarios.hasMany(AplicacionesEstudiantes, { foreignKey: 'estudiante_id', onDelete: 'CASCADE' });
 ProyectosInstitucion.hasMany(AplicacionesEstudiantes, { foreignKey: 'proyecto_id', onDelete: 'CASCADE' });
 

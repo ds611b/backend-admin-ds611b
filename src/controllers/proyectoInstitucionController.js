@@ -43,7 +43,7 @@ export async function getProyectoInstitucionById(request, reply) {
 }
 
 /**
- * Crea un nuevo proyecto de institución.
+ * Crea un nuevo proyecto por Institución.
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
  */

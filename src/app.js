@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import roleRoutes from './routes/roleRoutes.js';
 import institucionRoutes from './routes/institucionRoutes.js';
 import proyectoInstitucionRoutes from './routes/proyectoInstitucionRoutes.js';
+import aplicacionesEstudiantesRoutes from './routes/aplicacionesEstudiantesRoutes.js';
 
 /**
  * Configuración para usar __dirname con ES modules.
@@ -118,6 +119,33 @@ fastify.addSchema({
   }
 });
 
+fastify.addSchema({
+  $id: 'AplicacionesEstudiantes',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 1 },
+    estudiante_id: { type: 'number', example: 123 },
+    proyecto_id: { type: 'number', example: 456 },
+    estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+    created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
+    updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'AplicacionesEstudiantesID',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 1 },
+    estudiante_id: { type: 'number', example: 123 },
+    proyecto_id: { type: 'number', example: 456 },
+    estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+    proyecto: { $ref: 'ProyectosInstitucion' },
+    created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
+    updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
+  }
+});
+
 /**
  * Esquemas de validación sin ejemplos
  * Estos esquemas se utilizarán para la validación en lugar de para la documentación
@@ -177,6 +205,17 @@ fastify.addSchema({
   required: ['institucion_id', 'nombre', 'descripcion']
 });
 
+fastify.addSchema({
+  $id: 'AplicacionesEstudiantesValidation',
+  type: 'object',
+  properties: {
+    estudiante_id: { type: 'number' },
+    proyecto_id: { type: 'number' },
+    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+  },
+  required: ['estudiante_id','proyecto_id', 'estado']
+});
+
 /**
  * Configuración de Swagger UI (interfaz).
  * Define la ruta donde estará disponible la documentación y opciones de la interfaz.
@@ -208,7 +247,8 @@ await fastify.register(staticFiles, {
 fastify.register(homeRoutes, { prefix: '/api' });
 fastify.register(roleRoutes, { prefix: '/api' });
 fastify.register(institucionRoutes, { prefix: '/api' });
-fastify.register(proyectoInstitucionRoutes, {prefix: '/api'})
+fastify.register(proyectoInstitucionRoutes, { prefix: '/api' });
+fastify.register(aplicacionesEstudiantesRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
