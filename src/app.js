@@ -14,6 +14,7 @@ import institucionRoutes from './routes/institucionRoutes.js';
 import proyectoInstitucionRoutes from './routes/proyectoInstitucionRoutes.js';
 import aplicacionesEstudiantesRoutes from './routes/aplicacionesEstudiantesRoutes.js';
 import habilidadesRoutes from './routes/habilidadesRoutes.js';
+import usuariosHabilidadesRoutes from './routes/usuariosHabilidadesRoutes.js';
 
 /**
  * Configuración para usar __dirname con ES modules.
@@ -158,6 +159,18 @@ fastify.addSchema({
   }
 });
 
+fastify.addSchema({
+  $id: 'UsuariosHabilidades',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 1 },
+    usuario_id: { type: 'number', example: 101 },
+    habilidad_id: { type: 'number', example: 202 },
+    created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
+    updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
+  }
+});
+
 
 /**
  * Esquemas de validación sin ejemplos
@@ -226,7 +239,7 @@ fastify.addSchema({
     proyecto_id: { type: 'number' },
     estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
   },
-  required: ['estudiante_id','proyecto_id', 'estado']
+  required: ['estudiante_id', 'proyecto_id', 'estado']
 });
 
 fastify.addSchema({
@@ -238,6 +251,15 @@ fastify.addSchema({
   required: ['descripcion']
 });
 
+fastify.addSchema({
+  $id: 'UsuariosHabilidadesValidation',
+  type: 'object',
+  properties: {
+    usuario_id: { type: 'number' },
+    habilidad_id: { type: 'number' }
+  },
+  required: ['usuario_id', 'habilidad_id']
+});
 
 /**
  * Configuración de Swagger UI (interfaz).
@@ -273,6 +295,7 @@ fastify.register(institucionRoutes, { prefix: '/api' });
 fastify.register(proyectoInstitucionRoutes, { prefix: '/api' });
 fastify.register(aplicacionesEstudiantesRoutes, { prefix: '/api' });
 fastify.register(habilidadesRoutes, { prefix: '/api' });
+fastify.register(usuariosHabilidadesRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
