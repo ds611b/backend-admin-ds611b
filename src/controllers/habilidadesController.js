@@ -57,12 +57,20 @@ export async function createHabilidad(request, reply) {
     const habilidad = await Habilidades.create(request.body);
     reply.status(201).send(habilidad);
   } catch (error) {
-    request.log.error(error);
-    reply.status(500).send(createErrorResponse(
-      'Error al crear la habilidad',
-      'CREATE_HABILIDAD_ERROR',
-      error
-    ));
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      reply.status(409).send(createErrorResponse(
+        'Ya existe una habilidad con esta descripción',
+        'DUPLICATE_HABILIDAD',
+        error
+      ));
+    } else {
+      request.log.error(error);
+      reply.status(500).send(createErrorResponse(
+        'Error al crear la habilidad',
+        'CREATE_HABILIDAD_ERROR',
+        error
+      ));
+    }
   }
 }
 
@@ -74,7 +82,10 @@ export async function createHabilidad(request, reply) {
 export async function updateHabilidad(request, reply) {
   const { id } = request.params;
   try {
-    const [updated] = await Habilidades.update(request.body, { where: { id } });
+    const [updated] = await Habilidades.update(request.body, {
+      where: { id },
+      validate: true
+    });
     if (updated) {
       const habilidad = await Habilidades.findByPk(id);
       reply.send(habilidad);
@@ -85,12 +96,20 @@ export async function updateHabilidad(request, reply) {
       ));
     }
   } catch (error) {
-    request.log.error(error);
-    reply.status(500).send(createErrorResponse(
-      'Error al actualizar la habilidad',
-      'UPDATE_HABILIDAD_ERROR',
-      error
-    ));
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      reply.status(409).send(createErrorResponse(
+        'No se puede actualizar: Ya existe otra habilidad con esta descripción',
+        'HABILIDAD_DUPLICADA',
+        error
+      ));
+    } else {
+      request.log.error(error);
+      reply.status(500).send(createErrorResponse(
+        'Error al actualizar la habilidad',
+        'UPDATE_HABILIDAD_ERROR',
+        error
+      ));
+    }
   }
 }
 

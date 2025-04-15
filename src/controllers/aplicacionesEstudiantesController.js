@@ -62,12 +62,20 @@ export async function createAplicacionEstudiante(request, reply) {
     const aplicacion = await AplicacionesEstudiantes.create(request.body);
     reply.status(201).send(aplicacion);
   } catch (error) {
-    request.log.error(error);
-    reply.status(500).send(createErrorResponse(
-      'Error al crear la aplicación de estudiante',
-      'CREATE_APLICACION_ERROR',
-      error
-    ));
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      reply.status(409).send(createErrorResponse(
+        'El estudiante ya tiene una aplicación activa para este proyecto',
+        'DUPLICATE_APLICACION_ESTUDIANTE',
+        error
+      ));
+    } else {
+      request.log.error(error);
+      reply.status(500).send(createErrorResponse(
+        'Error al crear la aplicación de estudiante',
+        'CREATE_APLICACION_ERROR',
+        error
+      ));
+    }
   }
 }
 
@@ -80,7 +88,8 @@ export async function updateAplicacionEstudiante(request, reply) {
   const { id } = request.params;
   try {
     const [updated] = await AplicacionesEstudiantes.update(request.body, {
-      where: { id }
+      where: { id },
+      validate: true
     });
     if (updated) {
       const aplicacion = await AplicacionesEstudiantes.findByPk(id);
@@ -92,12 +101,20 @@ export async function updateAplicacionEstudiante(request, reply) {
       ));
     }
   } catch (error) {
-    request.log.error(error);
-    reply.status(500).send(createErrorResponse(
-      'Error al actualizar la aplicación de estudiante',
-      'UPDATE_APLICACION_ERROR',
-      error
-    ));
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      reply.status(409).send(createErrorResponse(
+        'No se puede actualizar: La nueva combinación de estudiante y proyecto ya existe',
+        'DUPLICATE_APLICACION_ESTUDIANTE',
+        error
+      ));
+    } else {
+      request.log.error(error);
+      reply.status(500).send(createErrorResponse(
+        'Error al actualizar la aplicación de estudiante',
+        'UPDATE_APLICACION_ERROR',
+        error
+      ));
+    }
   }
 }
 
