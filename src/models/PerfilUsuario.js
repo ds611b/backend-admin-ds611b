@@ -32,6 +32,13 @@ const PerfilUsuario = sequelize.define('PerfilUsuario', {
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
+  indexes: [
+    {
+      unique: true,
+      name: 'uq_perfil_usuario',
+      fields: ['usuario_id']
+    }
+  ]
 });
 
 export default PerfilUsuario;

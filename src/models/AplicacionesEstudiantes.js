@@ -25,6 +25,13 @@ const AplicacionesEstudiantes = sequelize.define('AplicacionesEstudiantes', {
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
+  indexes: [
+    {
+      unique: true,
+      name: 'uq_aplicacion_estudiante_proyecto',
+      fields: ['estudiante_id', 'proyecto_id']
+    }
+  ]
 });
 
 export default AplicacionesEstudiantes;

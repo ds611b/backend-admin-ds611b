@@ -20,6 +20,13 @@ const ProyectosInstitucionesHabilidades = sequelize.define('ProyectosInstitucion
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
+  indexes: [
+    {
+      unique: true,
+      name: 'uq_proyecto_habilidad',
+      fields: ['proyecto_id', 'habilidad_id']
+    }
+  ]
 });
 
 export default ProyectosInstitucionesHabilidades;

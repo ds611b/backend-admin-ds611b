@@ -16,6 +16,13 @@ const Habilidades = sequelize.define('Habilidades', {
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
+  indexes: [
+    {
+      unique: true,
+      name: 'uq_habilidades_descripcion',
+      fields: ['descripcion']
+    }
+  ]
 });
 
 export default Habilidades;
