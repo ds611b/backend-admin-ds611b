@@ -21,7 +21,7 @@ export async function getAplicacionesEstudiantes(request, reply) {
 }
 
 /**
- * Obtiene una Aplicacion por Estudiante por ID.
+ * Obtiene una aplicación por estudiante por ID.
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
  */
@@ -80,7 +80,7 @@ export async function createAplicacionEstudiante(request, reply) {
 }
 
 /**
- * Actualiza una aplicacion de estudiante.
+ * Actualiza una aplicación de estudiante.
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
  */
@@ -128,7 +128,7 @@ export async function deleteAplicacionEstudiante(request, reply) {
   try {
     const deleted = await AplicacionesEstudiantes.destroy({ where: { id } });
     if (deleted) {
-      reply.status(204).send({ message: 'Aplicación eliminada exitosamente' });
+      reply.status(204).send();
     } else {
       reply.status(404).send(createErrorResponse(
         'Aplicación no encontrada',

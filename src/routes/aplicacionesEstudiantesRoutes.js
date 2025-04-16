@@ -66,6 +66,10 @@ async function aplicacionesEstudiantesRoutes(fastify) {
           description: 'Aplicación creada exitosamente',
           $ref: 'AplicacionesEstudiantes'
         },
+        409: {
+          description: 'El estudiante ya tiene una aplicación para este proyecto',
+          $ref: 'ErrorResponse#'
+        },
         500: {
           description: 'Error al crear la aplicación',
           $ref: 'ErrorResponseValidation'
@@ -96,6 +100,10 @@ async function aplicacionesEstudiantesRoutes(fastify) {
           description: 'Aplicación no encontrada',
           $ref: 'ErrorResponseValidation'
         },
+        409: {
+          description: 'Conflicto - Combinación duplicada',
+          $ref: 'ErrorResponse#'
+        },
         500: {
           description: 'Error al actualizar la aplicación',
           $ref: 'ErrorResponseValidation'
@@ -117,12 +125,9 @@ async function aplicacionesEstudiantesRoutes(fastify) {
         required: ['id']
       },
       response: {
-        200: {
+        204: {
           description: 'Aplicación eliminada exitosamente',
-          type: 'object',
-          properties: {
-            message: { type: 'string' }
-          }
+          type: 'null'
         },
         404: {
           description: 'Aplicación no encontrada',

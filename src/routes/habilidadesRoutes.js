@@ -16,7 +16,7 @@ async function habilidadesRoutes(fastify) {
         200: {
           description: 'Lista de habilidades obtenida exitosamente',
           type: 'array',
-          items: { $ref: 'HabilidadesExample' }
+          items: { $ref: 'Habilidades' }
         },
         500: {
           description: 'Error al obtener las habilidades',
@@ -41,7 +41,7 @@ async function habilidadesRoutes(fastify) {
       response: {
         200: {
           description: 'Habilidad obtenida exitosamente',
-          $ref: 'HabilidadesExample'
+          $ref: 'Habilidades'
         },
         404: {
           description: 'Habilidad no encontrada',
@@ -64,7 +64,7 @@ async function habilidadesRoutes(fastify) {
       response: {
         201: {
           description: 'Habilidad creada exitosamente',
-          $ref: 'HabilidadesExample'
+          $ref: 'Habilidades'
         },
         500: {
           description: 'Error al crear la habilidad',
@@ -90,7 +90,7 @@ async function habilidadesRoutes(fastify) {
       response: {
         200: {
           description: 'Habilidad actualizada exitosamente',
-          $ref: 'HabilidadesExample'
+          $ref: 'Habilidades'
         },
         404: {
           description: 'Habilidad no encontrada',

@@ -150,7 +150,7 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
-  $id: 'HabilidadesExample',
+  $id: 'Habilidades',
   type: 'object',
   properties: {
     id: { type: 'number', example: 1 },
