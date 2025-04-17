@@ -25,7 +25,7 @@ async function proyectoInstitucionRoutes(fastify, options) {
         },
         500: {
           description: 'Error al obtener los proyectos de instituciones.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -50,11 +50,11 @@ async function proyectoInstitucionRoutes(fastify, options) {
         },
         404: {
           description: 'Proyecto de institución no encontrado.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
         500: {
           description: 'Error al obtener el proyecto de institución.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -75,7 +75,7 @@ async function proyectoInstitucionRoutes(fastify, options) {
         },
         500: {
           description: 'Error al crear el proyecto de institución.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -103,11 +103,11 @@ async function proyectoInstitucionRoutes(fastify, options) {
         },
         404: {
           description: 'Proyecto de institución no encontrado.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
         500: {
           description: 'Error al actualizar el proyecto de institución.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -132,11 +132,11 @@ async function proyectoInstitucionRoutes(fastify, options) {
         },
         404: {
           description: 'Proyecto de institución no encontrado.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
         500: {
           description: 'Error al eliminar el proyecto de institución.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },

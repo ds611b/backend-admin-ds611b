@@ -20,7 +20,7 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
         },
         500: {
           description: 'Error al obtener las relaciones',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -45,11 +45,11 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
         },
         404: {
           description: 'Relación no encontrada',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al obtener la relación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -66,9 +66,13 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
           description: 'Relación creada exitosamente',
           $ref: 'ProyectosInstitucionesHabilidades'
         },
+        409: {
+          description: 'Conflicto - Combinación duplicada',
+          $ref: 'ErrorResponse'
+        },
         500: {
           description: 'Error al crear la relación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -94,11 +98,15 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
         },
         404: {
           description: 'Relación no encontrada',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
+        },
+        409: {
+          description: 'Conflicto - Combinación duplicada',
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al actualizar la relación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -123,11 +131,11 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
         },
         404: {
           description: 'Relación no encontrada',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al eliminar la relación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }

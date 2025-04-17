@@ -66,6 +66,10 @@ async function habilidadesRoutes(fastify) {
           description: 'Habilidad creada exitosamente',
           $ref: 'Habilidades'
         },
+        409: {
+          description: 'Conflicto - Combinación duplicada',
+          $ref: 'ErrorResponse#'
+        },
         500: {
           description: 'Error al crear la habilidad',
           $ref: 'ErrorResponse'
@@ -96,6 +100,10 @@ async function habilidadesRoutes(fastify) {
           description: 'Habilidad no encontrada',
           $ref: 'ErrorResponse'
         },
+        409: {
+          description: 'Conflicto - Combinación duplicada',
+          $ref: 'ErrorResponse'
+        },
         500: {
           description: 'Error al actualizar la habilidad',
           $ref: 'ErrorResponse'
@@ -117,12 +125,9 @@ async function habilidadesRoutes(fastify) {
         required: ['id']
       },
       response: {
-        200: {
+        204: {
           description: 'Habilidad eliminada exitosamente',
-          type: 'object',
-          properties: {
-            message: { type: 'string' }
-          }
+          type: 'null'
         },
         404: {
           description: 'Habilidad no encontrada',

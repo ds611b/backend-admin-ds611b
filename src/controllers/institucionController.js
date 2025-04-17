@@ -12,7 +12,11 @@ export async function getInstituciones(request, reply) {
     reply.send(instituciones);
   } catch (error) {
     request.log.error(error);
-    reply.status(500).send(createErrorResponse('Error al obtener las instituciones', 'GET_INSTITUCIONES_ERROR', error));
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener las instituciones', 
+      'GET_INSTITUCIONES_ERROR', 
+      error
+    ));
   }
 }
 
@@ -26,7 +30,10 @@ export async function getInstitucionById(request, reply) {
   try {
     const institucion = await Instituciones.findByPk(id);
     if (!institucion) {
-      return reply.status(404).send(createErrorResponse('Institución no encontrada', 'INSTITUCION_NOT_FOUND'));
+      return reply.status(404).send(createErrorResponse(
+        'Institución no encontrada', 
+        'INSTITUCION_NOT_FOUND'
+      ));
     }
     reply.send(institucion);
   } catch (error) {

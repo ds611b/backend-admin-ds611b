@@ -19,7 +19,7 @@ async function roleRoutes(fastify, options) {
         },
         500: {
           description: 'Error al obtener los roles.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -44,11 +44,11 @@ async function roleRoutes(fastify, options) {
         },
         404: {
           description: 'Rol no encontrado.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
         500: {
           description: 'Error al obtener el rol.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -69,7 +69,7 @@ async function roleRoutes(fastify, options) {
         },
         500: {
           description: 'Error al crear el rol.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -97,11 +97,11 @@ async function roleRoutes(fastify, options) {
         },
         404: {
           description: 'Rol no encontrado.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
         500: {
           description: 'Error al actualizar el rol.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -126,11 +126,11 @@ async function roleRoutes(fastify, options) {
         },
         404: {
           description: 'Rol no encontrado.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
         500: {
           description: 'Error al eliminar el rol.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },

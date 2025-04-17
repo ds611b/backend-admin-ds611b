@@ -20,7 +20,7 @@ async function usuariosHabilidadesRoutes(fastify) {
         },
         500: {
           description: 'Error al obtener las asignaciones',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -45,11 +45,11 @@ async function usuariosHabilidadesRoutes(fastify) {
         },
         404: {
           description: 'Asignación no encontrada',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al obtener la asignación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -66,9 +66,13 @@ async function usuariosHabilidadesRoutes(fastify) {
           description: 'Asignación creada exitosamente',
           $ref: 'UsuariosHabilidades'
         },
+        409: {
+          description: 'Conflicto - Combinación duplicada',
+          $ref: 'ErrorResponse'
+        },
         500: {
           description: 'Error al crear la asignación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -94,11 +98,15 @@ async function usuariosHabilidadesRoutes(fastify) {
         },
         404: {
           description: 'Asignación no encontrada',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
+        },
+        409: {
+          description: 'Conflicto - Combinación duplicada',
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al actualizar la asignación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -122,11 +130,11 @@ async function usuariosHabilidadesRoutes(fastify) {
         },
         404: {
           description: 'Asignación no encontrada',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al eliminar la asignación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }

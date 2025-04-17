@@ -20,7 +20,7 @@ async function aplicacionesEstudiantesRoutes(fastify) {
         },
         500: {
           description: 'Error al obtener las aplicaciones',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -45,11 +45,11 @@ async function aplicacionesEstudiantesRoutes(fastify) {
         },
         404: {
           description: 'Aplicación no encontrada',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al obtener la aplicación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -68,11 +68,11 @@ async function aplicacionesEstudiantesRoutes(fastify) {
         },
         409: {
           description: 'El estudiante ya tiene una aplicación para este proyecto',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al crear la aplicación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -98,15 +98,15 @@ async function aplicacionesEstudiantesRoutes(fastify) {
         },
         404: {
           description: 'Aplicación no encontrada',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         },
         409: {
           description: 'Conflicto - Combinación duplicada',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al actualizar la aplicación',
-          $ref: 'ErrorResponseValidation'
+          $ref: 'ErrorResponse'
         }
       }
     }
@@ -131,11 +131,11 @@ async function aplicacionesEstudiantesRoutes(fastify) {
         },
         404: {
           description: 'Aplicación no encontrada',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al eliminar la aplicación',
-          $ref: 'ErrorResponse#'
+          $ref: 'ErrorResponse'
         }
       }
     }

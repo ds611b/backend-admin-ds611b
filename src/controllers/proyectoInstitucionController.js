@@ -14,7 +14,11 @@ export async function getProyectosInstitucion(request, reply) {
     reply.send(proyectos);
   } catch (error) {
     request.log.error(error);
-    reply.status(500).send(createErrorResponse('Error al obtener los proyectos de instituciones', 'GET_PROYECTOS_INSTITUCION_ERROR', error));
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener los proyectos de instituciones', 
+      'GET_PROYECTOS_INSTITUCION_ERROR', 
+      error
+    ));
   }
 }
 
@@ -33,7 +37,10 @@ export async function getProyectoInstitucionById(request, reply) {
       },
     });
     if (!proyecto) {
-      return reply.status(404).send(createErrorResponse('Proyecto de institución no encontrado', 'PROYECTO_INSTITUCION_NOT_FOUND'));
+      return reply.status(404).send(createErrorResponse(
+        'Proyecto de institución no encontrado', 
+        'PROYECTO_INSTITUCION_NOT_FOUND'
+      ));
     }
     reply.send(proyecto);
   } catch (error) {
@@ -60,19 +67,20 @@ export async function createProyectoInstitucion(request, reply) {
       direccion,
       disponibilidad
     });
-    console.log("objeto: ", nuevoProyecto)
-    console.log("id: ", nuevoProyecto.id)
     const proyectoActualizado = await ProyectosInstitucion.findByPk(nuevoProyecto.id, {
       include: {
         model: Instituciones,
         as: 'institucion'
       },
     });
-    console.log(proyectoActualizado);
     reply.status(201).send(proyectoActualizado);
   } catch (error) {
     request.log.error(error);
-    reply.status(500).send(createErrorResponse('Error al crear el proyecto de institución', 'CREATE_PROYECTO_INSTITUCION_ERROR', error));
+    reply.status(500).send(createErrorResponse(
+      'Error al crear el proyecto de institución', 
+      'CREATE_PROYECTO_INSTITUCION_ERROR', 
+      error
+    ));
   }
 }
 
