@@ -1,4 +1,4 @@
-import { AplicacionesEstudiantes, ProyectosInstitucion } from '../models/index.js';
+import { AplicacionesEstudiantes, ProyectosInstitucion, Usuarios } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -8,7 +8,18 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  */
 export async function getAplicacionesEstudiantes(request, reply) {
   try {
-    const aplicaciones = await AplicacionesEstudiantes.findAll();
+    const aplicaciones = await AplicacionesEstudiantes.findAll({
+      include: [
+        {
+          model: ProyectosInstitucion,
+          as: 'proyecto'
+        },
+        {
+          model: Usuarios,
+          as: 'estudiante'
+        }
+      ]
+    });
     reply.send(aplicaciones);
   } catch (error) {
     request.log.error(error);
@@ -29,10 +40,16 @@ export async function getAplicacionEstudianteById(request, reply) {
   const { id } = request.params;
   try {
     const aplicacion = await AplicacionesEstudiantes.findByPk(id, {
-      include: {
-        model: ProyectosInstitucion,
-        as: 'proyecto'
-      },
+      include: [
+        {
+          model: ProyectosInstitucion,
+          as: 'proyecto'
+        },
+        {
+          model: Usuarios,
+          as: 'estudiante'
+        }
+      ],
     });
     if (aplicacion) {
       reply.send(aplicacion);

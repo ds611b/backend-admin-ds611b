@@ -136,6 +136,21 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
+  $id: 'Usuario',
+  type: 'object',
+  properties: {
+    nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+    apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+    email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
+    password_hash: { type: 'string', maxLength: 255, example: '$2b$10$EIXaN/Z8g1234567890abcdefg' },
+    telefono: { type: 'string', maxLength: 20, nullable: true, example: '+5491123456789' },
+    rol_id: { type: 'integer', example: 2 }
+  },
+  required: ['nombre', 'apellido', 'email', 'password_hash', 'rol_id']
+});
+
+
+fastify.addSchema({
   $id: 'AplicacionesEstudiantesID',
   type: 'object',
   properties: {
@@ -144,6 +159,7 @@ fastify.addSchema({
     proyecto_id: { type: 'number', example: 456 },
     estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
     proyecto: { $ref: 'ProyectosInstitucion' },
+    estudiante: { $ref: 'Usuario' },
     created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
     updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
   }
@@ -243,6 +259,22 @@ fastify.addSchema({
   },
   required: ['institucion_id', 'nombre', 'descripcion']
 });
+
+fastify.addSchema({
+  $id: 'UsuarioValidation',
+  allOf: [
+    { $ref: 'Usuario' },
+    {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 1 },
+        created_at: { type: 'string', format: 'date-time', example: '2025-04-21T14:30:00Z' },
+        updated_at: { type: 'string', format: 'date-time', example: '2025-04-21T15:00:00Z' }
+      }
+    }
+  ]
+});
+
 
 fastify.addSchema({
   $id: 'AplicacionesEstudiantesValidation',

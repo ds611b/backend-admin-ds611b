@@ -16,7 +16,7 @@ async function aplicacionesEstudiantesRoutes(fastify) {
         200: {
           description: 'Lista de aplicaciones obtenida exitosamente',
           type: 'array',
-          items: { $ref: 'AplicacionesEstudiantes' }
+          items: { $ref: 'AplicacionesEstudiantesID' }
         },
         500: {
           description: 'Error al obtener las aplicaciones',
