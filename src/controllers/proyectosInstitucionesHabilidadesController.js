@@ -1,4 +1,4 @@
-import { ProyectosInstitucionesHabilidades } from '../models/index.js';
+import { ProyectosInstitucionesHabilidades, ProyectosInstitucion, Habilidades } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -8,7 +8,18 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  */
 export async function getProyectosInstitucionesHabilidades(request, reply) {
   try {
-    const registros = await ProyectosInstitucionesHabilidades.findAll();
+    const registros = await ProyectosInstitucionesHabilidades.findAll({
+      include: [
+        {
+          model: ProyectosInstitucion,
+          as: 'proyecto'
+        },
+        {
+          model: Habilidades,
+          as: 'habilidades'
+        }
+      ]
+    });
     reply.send(registros);
   } catch (error) {
     request.log.error(error);
@@ -28,7 +39,18 @@ export async function getProyectosInstitucionesHabilidades(request, reply) {
 export async function getProyectosInstitucionesHabilidadById(request, reply) {
   const { id } = request.params;
   try {
-    const registro = await ProyectosInstitucionesHabilidades.findByPk(id);
+    const registro = await ProyectosInstitucionesHabilidades.findByPk(id, {
+      include: [
+        {
+          model: ProyectosInstitucion,
+          as: 'proyecto'
+        },
+        {
+          model: Habilidades,
+          as: 'habilidades'
+        }
+      ]
+    });
     if (registro) {
       reply.send(registro);
     } else {
@@ -54,8 +76,29 @@ export async function getProyectosInstitucionesHabilidadById(request, reply) {
  */
 export async function createProyectosInstitucionesHabilidad(request, reply) {
   try {
-    const registro = await ProyectosInstitucionesHabilidades.create(request.body);
-    reply.status(201).send(registro);
+    const registroCreado = await ProyectosInstitucionesHabilidades.create(request.body);
+
+    const registroConAsociaciones = await ProyectosInstitucionesHabilidades.findByPk(registroCreado.id, {
+      include: [
+        {
+          model: ProyectosInstitucion,
+          as: 'proyecto'
+        },
+        {
+          model: Habilidades,
+          as: 'habilidades'
+        }
+      ]
+    });
+    if (registroConAsociaciones) {
+      reply.status(201).send(registroConAsociaciones);
+    } else {
+      request.log.error(`Registro creado con ID ${registroCreado.id} pero no encontrado con asociaciones.`);
+      reply.status(500).send(createErrorResponse(
+        'Error al recuperar el registro con sus relaciones después de crearlo',
+        'NO_OBTENIDO_CREADO_ERROR'
+      ));
+    }
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
       reply.status(409).send(createErrorResponse(
@@ -86,9 +129,20 @@ export async function updateProyectosInstitucionesHabilidad(request, reply) {
       where: { id },
       validate: true
     });
-    
+
     if (updated) {
-      const registro = await ProyectosInstitucionesHabilidades.findByPk(id);
+      const registro = await ProyectosInstitucionesHabilidades.findByPk(id, {
+        include: [
+          {
+            model: ProyectosInstitucion,
+            as: 'proyecto'
+          },
+          {
+            model: Habilidades,
+            as: 'habilidades'
+          }
+        ]
+      });
       reply.send(registro);
     } else {
       reply.status(404).send(createErrorResponse(

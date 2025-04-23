@@ -195,6 +195,8 @@ fastify.addSchema({
     id: { type: 'number', example: 1 },
     proyecto_id: { type: 'number', example: 100 },
     habilidad_id: { type: 'number', example: 50 },
+    proyecto: { $ref: 'ProyectosInstitucion' },
+    habilidades: { $ref: 'Habilidades' },
     created_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' },
     updated_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' }
   }

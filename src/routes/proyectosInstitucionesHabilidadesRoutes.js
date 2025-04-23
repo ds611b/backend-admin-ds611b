@@ -34,7 +34,7 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
       params: {
         type: 'object',
         properties: {
-          id: { type: 'number', description: 'ID de la relación a obtener' }
+          id: { type: 'number', description: 'ID de la relación' }
         },
         required: ['id']
       },
