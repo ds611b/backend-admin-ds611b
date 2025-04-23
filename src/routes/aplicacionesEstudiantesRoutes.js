@@ -64,7 +64,7 @@ async function aplicacionesEstudiantesRoutes(fastify) {
       response: {
         201: {
           description: 'Aplicación creada exitosamente',
-          $ref: 'AplicacionesEstudiantes'
+          $ref: 'AplicacionesEstudiantesID'
         },
         409: {
           description: 'El estudiante ya tiene una aplicación para este proyecto',
@@ -94,7 +94,7 @@ async function aplicacionesEstudiantesRoutes(fastify) {
       response: {
         200: {
           description: 'Aplicación actualizada exitosamente',
-          $ref: 'AplicacionesEstudiantes'
+          $ref: 'AplicacionesEstudiantesID'
         },
         404: {
           description: 'Aplicación no encontrada',

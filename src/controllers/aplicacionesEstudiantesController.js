@@ -76,8 +76,29 @@ export async function getAplicacionEstudianteById(request, reply) {
  */
 export async function createAplicacionEstudiante(request, reply) {
   try {
-    const aplicacion = await AplicacionesEstudiantes.create(request.body);
-    reply.status(201).send(aplicacion);
+    const aplicacionCreada = await AplicacionesEstudiantes.create(request.body);
+
+    const aplicacionAsociaciones = await AplicacionesEstudiantes.findByPk(aplicacionCreada.id, {
+      include: [
+        {
+          model: ProyectosInstitucion,
+          as: 'proyecto'
+        },
+        {
+          model: Usuarios,
+          as: 'estudiante'
+        }
+      ],
+    });
+    if (aplicacionAsociaciones) {
+      reply.status(201).send(aplicacionAsociaciones);
+    } else {
+      request.log.error(`Registro creado con ID ${aplicacionCreada.id} pero no encontrado con asociaciones.`);
+      reply.status(500).send(createErrorResponse(
+        'Error al recuperar el registro con sus relaciones después de crearlo',
+        'NO_OBTENIDO_CREADO_ERROR'
+      ));
+    }
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
       reply.status(409).send(createErrorResponse(
@@ -109,7 +130,18 @@ export async function updateAplicacionEstudiante(request, reply) {
       validate: true
     });
     if (updated) {
-      const aplicacion = await AplicacionesEstudiantes.findByPk(id);
+      const aplicacion = await AplicacionesEstudiantes.findByPk(id, {
+        include: [
+          {
+            model: ProyectosInstitucion,
+            as: 'proyecto'
+          },
+          {
+            model: Usuarios,
+            as: 'estudiante'
+          }
+        ],
+      });
       reply.send(aplicacion);
     } else {
       reply.status(404).send(createErrorResponse(
