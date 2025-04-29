@@ -12,6 +12,10 @@ import { fileURLToPath } from 'url';
 import roleRoutes from './routes/roleRoutes.js';
 import institucionRoutes from './routes/institucionRoutes.js';
 import proyectoInstitucionRoutes from './routes/proyectoInstitucionRoutes.js';
+import aplicacionesEstudiantesRoutes from './routes/aplicacionesEstudiantesRoutes.js';
+import habilidadesRoutes from './routes/habilidadesRoutes.js';
+import usuariosHabilidadesRoutes from './routes/usuariosHabilidadesRoutes.js';
+import proyectosInstitucionesHabilidadesRoutes from './routes/proyectosInstitucionesHabilidadesRoutes.js';
 
 /**
  * Configuración para usar __dirname con ES modules.
@@ -58,7 +62,7 @@ await fastify.register(swagger, {
  * Definiciones de esquemas con ejemplos para la documentación y serialización.
  */
 fastify.addSchema({
-  $id: 'Role',
+  $id: 'Roles',
   type: 'object',
   properties: {
     id: { type: 'integer', example: 1 },
@@ -84,7 +88,7 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
-  $id: 'Institucion',
+  $id: 'Instituciones',
   type: 'object',
   properties: {
     id: { type: 'number', example: 1 },
@@ -100,7 +104,7 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
-  $id: 'ProyectoInstitucion',
+  $id: 'ProyectosInstitucion',
   type: 'object',
   properties: {
     id: { type: 'integer', example: 1 },
@@ -112,11 +116,92 @@ fastify.addSchema({
     modalidad: { type: 'string', example: 'Presencial' },
     direccion: { type: 'string', example: 'Calle Principal #123' },
     disponibilidad: { type: 'boolean', example: true },
-    institucion: { $ref: 'Institucion' },
+    institucion: { $ref: 'Instituciones' },
     created_at: { type: 'string', example: '2024-03-30T10:00:00Z' },
     updated_at: { type: 'string', example: '2024-03-30T10:30:00Z' }
   }
 });
+
+fastify.addSchema({
+  $id: 'AplicacionesEstudiantes',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 1 },
+    estudiante_id: { type: 'number', example: 123 },
+    proyecto_id: { type: 'number', example: 456 },
+    estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+    created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
+    updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'Usuario',
+  type: 'object',
+  properties: {
+    nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+    apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+    email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
+    password_hash: { type: 'string', maxLength: 255, example: '$2b$10$EIXaN/Z8g1234567890abcdefg' },
+    telefono: { type: 'string', maxLength: 20, nullable: true, example: '+5491123456789' },
+    rol_id: { type: 'integer', example: 2 }
+  },
+  required: ['nombre', 'apellido', 'email', 'password_hash', 'rol_id']
+});
+
+
+fastify.addSchema({
+  $id: 'AplicacionesEstudiantesID',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 1 },
+    estudiante_id: { type: 'number', example: 123 },
+    proyecto_id: { type: 'number', example: 456 },
+    estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+    proyecto: { $ref: 'ProyectosInstitucion' },
+    estudiante: { $ref: 'Usuario' },
+    created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
+    updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'Habilidades',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 1 },
+    descripcion: { type: 'string', example: 'Comunicación' },
+    created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
+    updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'UsuariosHabilidades',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 1 },
+    usuario_id: { type: 'number', example: 101 },
+    habilidad_id: { type: 'number', example: 202 },
+    created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
+    updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'ProyectosInstitucionesHabilidades',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 1 },
+    proyecto_id: { type: 'number', example: 100 },
+    habilidad_id: { type: 'number', example: 50 },
+    proyecto: { $ref: 'ProyectosInstitucion' },
+    habilidades: { $ref: 'Habilidades' },
+    created_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' },
+    updated_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' }
+  }
+});
+
 
 /**
  * Esquemas de validación sin ejemplos
@@ -177,6 +262,62 @@ fastify.addSchema({
   required: ['institucion_id', 'nombre', 'descripcion']
 });
 
+fastify.addSchema({
+  $id: 'UsuarioValidation',
+  allOf: [
+    { $ref: 'Usuario' },
+    {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 1 },
+        created_at: { type: 'string', format: 'date-time', example: '2025-04-21T14:30:00Z' },
+        updated_at: { type: 'string', format: 'date-time', example: '2025-04-21T15:00:00Z' }
+      }
+    }
+  ]
+});
+
+
+fastify.addSchema({
+  $id: 'AplicacionesEstudiantesValidation',
+  type: 'object',
+  properties: {
+    estudiante_id: { type: 'number' },
+    proyecto_id: { type: 'number' },
+    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+  },
+  required: ['estudiante_id', 'proyecto_id', 'estado']
+});
+
+fastify.addSchema({
+  $id: 'HabilidadesValidation',
+  type: 'object',
+  properties: {
+    descripcion: { type: 'string', maxLength: 50 }
+  },
+  required: ['descripcion']
+});
+
+fastify.addSchema({
+  $id: 'UsuariosHabilidadesValidation',
+  type: 'object',
+  properties: {
+    usuario_id: { type: 'number' },
+    habilidad_id: { type: 'number' }
+  },
+  required: ['usuario_id', 'habilidad_id']
+});
+
+fastify.addSchema({
+  $id: 'ProyectosInstitucionesHabilidadesValidation',
+  type: 'object',
+  properties: {
+    proyecto_id: { type: 'number' },
+    habilidad_id: { type: 'number' }
+  },
+  required: ['proyecto_id', 'habilidad_id'],
+});
+
 /**
  * Configuración de Swagger UI (interfaz).
  * Define la ruta donde estará disponible la documentación y opciones de la interfaz.
@@ -208,7 +349,11 @@ await fastify.register(staticFiles, {
 fastify.register(homeRoutes, { prefix: '/api' });
 fastify.register(roleRoutes, { prefix: '/api' });
 fastify.register(institucionRoutes, { prefix: '/api' });
-fastify.register(proyectoInstitucionRoutes, {prefix: '/api'})
+fastify.register(proyectoInstitucionRoutes, { prefix: '/api' });
+fastify.register(aplicacionesEstudiantesRoutes, { prefix: '/api' });
+fastify.register(habilidadesRoutes, { prefix: '/api' });
+fastify.register(usuariosHabilidadesRoutes, { prefix: '/api' });
+fastify.register(proyectosInstitucionesHabilidadesRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API

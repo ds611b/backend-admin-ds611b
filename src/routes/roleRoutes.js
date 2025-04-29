@@ -15,11 +15,11 @@ async function roleRoutes(fastify, options) {
         200: {
           description: 'Lista de roles obtenida exitosamente.',
           type: 'array',
-          items: { $ref: 'Role' },
+          items: { $ref: 'Roles' },
         },
         500: {
           description: 'Error al obtener los roles.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -40,15 +40,15 @@ async function roleRoutes(fastify, options) {
       response: {
         200: {
           description: 'Detalles del rol obtenidos exitosamente.',
-          $ref: 'Role',
+          $ref: 'Roles',
         },
         404: {
           description: 'Rol no encontrado.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
         500: {
           description: 'Error al obtener el rol.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -65,11 +65,11 @@ async function roleRoutes(fastify, options) {
       response: {
         201: {
           description: 'Rol creado exitosamente.',
-          $ref: 'Role',
+          $ref: 'Roles',
         },
         500: {
           description: 'Error al crear el rol.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -93,15 +93,15 @@ async function roleRoutes(fastify, options) {
       response: {
         200: {
           description: 'Rol actualizado exitosamente.',
-          $ref: 'Role',
+          $ref: 'Roles',
         },
         404: {
           description: 'Rol no encontrado.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
         500: {
           description: 'Error al actualizar el rol.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },
@@ -126,11 +126,11 @@ async function roleRoutes(fastify, options) {
         },
         404: {
           description: 'Rol no encontrado.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
         500: {
           description: 'Error al eliminar el rol.',
-          $ref: 'ErrorResponseValidation',
+          $ref: 'ErrorResponse',
         },
       },
     },

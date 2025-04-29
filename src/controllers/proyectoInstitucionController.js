@@ -1,6 +1,5 @@
-import ProyectoInstitucion from '../models/ProyectoInstitucion.js';
+import { ProyectosInstitucion, Instituciones } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
-import Institucion from '../models/Institucion.js';
 
 /**
  * Obtiene todos los proyectos de instituciones.
@@ -9,13 +8,17 @@ import Institucion from '../models/Institucion.js';
  */
 export async function getProyectosInstitucion(request, reply) {
   try {
-    const proyectos = await ProyectoInstitucion.findAll({
-      include: { model: Institucion, as: 'institucion' }
+    const proyectos = await ProyectosInstitucion.findAll({
+      include: { model: Instituciones, as: 'institucion' }
     });
     reply.send(proyectos);
   } catch (error) {
     request.log.error(error);
-    reply.status(500).send(createErrorResponse('Error al obtener los proyectos de instituciones', 'GET_PROYECTOS_INSTITUCION_ERROR', error));
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener los proyectos de instituciones', 
+      'GET_PROYECTOS_INSTITUCION_ERROR', 
+      error
+    ));
   }
 }
 
@@ -27,14 +30,17 @@ export async function getProyectosInstitucion(request, reply) {
 export async function getProyectoInstitucionById(request, reply) {
   const { id } = request.params;
   try {
-    const proyecto = await ProyectoInstitucion.findByPk(id, {
+    const proyecto = await ProyectosInstitucion.findByPk(id, {
       include: {
-        model: Institucion,
+        model: Instituciones,
         as: 'institucion'
       },
     });
     if (!proyecto) {
-      return reply.status(404).send(createErrorResponse('Proyecto de institución no encontrado', 'PROYECTO_INSTITUCION_NOT_FOUND'));
+      return reply.status(404).send(createErrorResponse(
+        'Proyecto de institución no encontrado', 
+        'PROYECTO_INSTITUCION_NOT_FOUND'
+      ));
     }
     reply.send(proyecto);
   } catch (error) {
@@ -44,14 +50,14 @@ export async function getProyectoInstitucionById(request, reply) {
 }
 
 /**
- * Crea un nuevo proyecto de institución.
+ * Crea un nuevo proyecto por Institución.
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
  */
 export async function createProyectoInstitucion(request, reply) {
   const { institucion_id, nombre, descripcion, fecha_inicio, fecha_fin, modalidad, direccion, disponibilidad } = request.body;
   try {
-    const nuevoProyecto = await ProyectoInstitucion.create({
+    const nuevoProyecto = await ProyectosInstitucion.create({
       institucion_id,
       nombre,
       descripcion,
@@ -61,19 +67,20 @@ export async function createProyectoInstitucion(request, reply) {
       direccion,
       disponibilidad
     });
-    console.log("objeto: ", nuevoProyecto)
-    console.log("id: ", nuevoProyecto.id)
-    const proyectoActualizado = await ProyectoInstitucion.findByPk(nuevoProyecto.id, {
+    const proyectoActualizado = await ProyectosInstitucion.findByPk(nuevoProyecto.id, {
       include: {
-        model: Institucion,
+        model: Instituciones,
         as: 'institucion'
       },
     });
-    console.log(proyectoActualizado);
     reply.status(201).send(proyectoActualizado);
   } catch (error) {
     request.log.error(error);
-    reply.status(500).send(createErrorResponse('Error al crear el proyecto de institución', 'CREATE_PROYECTO_INSTITUCION_ERROR', error));
+    reply.status(500).send(createErrorResponse(
+      'Error al crear el proyecto de institución', 
+      'CREATE_PROYECTO_INSTITUCION_ERROR', 
+      error
+    ));
   }
 }
 
@@ -86,7 +93,7 @@ export async function updateProyectoInstitucion(request, reply) {
   const { id } = request.params;
   const { institucion_id, nombre, descripcion, fecha_inicio, fecha_fin, modalidad, direccion, disponibilidad } = request.body;
   try {
-    const proyecto = await ProyectoInstitucion.findByPk(id);
+    const proyecto = await ProyectosInstitucion.findByPk(id);
     if (!proyecto) {
       return reply.status(404).send(createErrorResponse('Proyecto de institución no encontrado', 'PROYECTO_INSTITUCION_NOT_FOUND'));
     }
@@ -100,9 +107,9 @@ export async function updateProyectoInstitucion(request, reply) {
       direccion,
       disponibilidad
     });
-    const proyectoActualizado = await ProyectoInstitucion.findByPk(id, {
+    const proyectoActualizado = await ProyectosInstitucion.findByPk(id, {
       include: {
-        model: Institucion,
+        model: Instituciones,
         as: 'institucion',
       }
     });
@@ -121,9 +128,9 @@ export async function updateProyectoInstitucion(request, reply) {
 export async function deleteProyectoInstitucion(request, reply) {
   const { id } = request.params;
   try {
-    const proyecto = await ProyectoInstitucion.findByPk(id, {
+    const proyecto = await ProyectosInstitucion.findByPk(id, {
       include: {
-        model: Institucion,
+        model: Instituciones,
         as: 'institucion'
       },
     });
