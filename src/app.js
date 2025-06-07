@@ -6,6 +6,7 @@ import swaggerUI from '@fastify/swagger-ui';
 import staticFiles from '@fastify/static';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cors from '@fastify/cors';
 /**
  * Rutas de ADMIN
  */
@@ -32,6 +33,13 @@ const fastify = Fastify({ logger: true });
 
 // Obtenemos las configuraciones desde el config.js
 const { port, host, docsPath } = config;
+
+/**
+ * Se permiten todos los origenes en el CORS
+ */
+await fastify.register(cors, {
+  origin: '*', // Permite todos los orígenes. Cámbialo por un dominio específico en producción.
+});
 
 /**
  * Configuración de OpenAPI 3.0 (antes Swagger).
