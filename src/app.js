@@ -56,12 +56,6 @@ await fastify.register(swagger, {
       url: 'https://swagger.io',
       description: 'Encuentra más información aquí'
     },
-    servers: [
-      {
-        url: `http://${host}:${port}`,
-        description: 'Servidor de desarrollo'
-      }
-    ],
     components: {}
   }
 });
