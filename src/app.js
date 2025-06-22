@@ -100,6 +100,7 @@ fastify.addSchema({
     email: { type: 'string', example: 'contacto@institucion.com' },
     fecha_fundacion: { type: 'string', format: 'date', example: '2000-01-01' },
     nit: { type: 'string', example: '1234567890' },
+    estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
     created_at: { type: 'string', example: '2023-01-01T12:00:00Z' },
     updated_at: { type: 'string', example: '2023-01-02T12:00:00Z' }
   }
@@ -118,6 +119,7 @@ fastify.addSchema({
     modalidad: { type: 'string', example: 'Presencial' },
     direccion: { type: 'string', example: 'Calle Principal #123' },
     disponibilidad: { type: 'boolean', example: true },
+    estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
     institucion: { $ref: 'Instituciones' },
     created_at: { type: 'string', example: '2024-03-30T10:00:00Z' },
     updated_at: { type: 'string', example: '2024-03-30T10:30:00Z' }
@@ -245,6 +247,7 @@ fastify.addSchema({
     email: { type: 'string' },
     fecha_fundacion: { type: 'string', format: 'date' },
     nit: { type: 'string' },
+    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] }
   }
 });
 
@@ -260,6 +263,7 @@ fastify.addSchema({
     modalidad: { type: 'string', enum: ['Presencial', 'Virtual', 'Híbrida'] },
     direccion: { type: 'string' },
     disponibilidad: { type: 'boolean' },
+    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
   },
   required: ['institucion_id', 'nombre', 'descripcion']
 });
