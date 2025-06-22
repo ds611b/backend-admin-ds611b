@@ -4,6 +4,7 @@ import {
   createProyectoInstitucion,
   updateProyectoInstitucion,
   deleteProyectoInstitucion,
+  getProyectoInstitucionByEstado,
 } from '../controllers/proyectoInstitucionController.js';
 
 /**
@@ -141,6 +142,44 @@ async function proyectoInstitucionRoutes(fastify, options) {
       },
     },
   }, deleteProyectoInstitucion);
-}
+  
+  fastify.get('/proyectos-institucion/estado/:estado/:disponibilidad', {
+    schema: {
+      description: 'Obtiene proyectos de institución filtrados por estado y disponibilidad',
+      tags: ['Proyectos de Instituciones'],
+      params: {
+        type: 'object',
+        properties: {
+          estado: {
+            type: 'string',
+            description: 'Estado del proyecto (ej: Pendiente, Rechazado, Aprobado)',
+            enum: ['Pendiente', 'Rechazado', 'Aprobado']
+          },
+          disponibilidad: {
+            type: 'string',
+            description: 'Disponibilidad del proyecto (ej: true, false)',
+            enum: ['true', 'false']
+          }
+        },
+        required: ['estado', 'disponibilidad']
+      },
+      response: {
+        200: {
+          description: 'Proyectos filtrados obtenidos exitosamente',
+          type: 'array',
+          items: { $ref: 'ProyectosInstitucion' }
+        },
+        404: {
+          $ref: 'ErrorResponse',
+          description: 'No se encontraron proyectos con los filtros especificados'
+        },
+        500: {
+          $ref: 'ErrorResponse',
+          description: 'Error al filtrar proyectos'
+        }
+      }
+    }
+  }, getProyectoInstitucionByEstado);
 
+}
 export default proyectoInstitucionRoutes;
