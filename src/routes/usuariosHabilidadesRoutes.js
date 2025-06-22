@@ -6,8 +6,16 @@ import {
   deleteUsuariosHabilidad
 } from '../controllers/usuariosHabilidadesController.js';
 
+/**
+ * Define las rutas para manejar las asignaciones de habilidades a usuarios.
+ *
+ * @param {import('fastify').FastifyInstance} fastify 
+ */
 async function usuariosHabilidadesRoutes(fastify) {
-  // GET: Obtener todas las asignaciones
+  /**
+   * GET /usuarios-habilidades
+   * Obtiene todas las asignaciones.
+   */
   fastify.get('/usuarios-habilidades', {
     schema: {
       description: 'Obtiene todas las asignaciones de habilidades a usuarios',
@@ -26,7 +34,10 @@ async function usuariosHabilidadesRoutes(fastify) {
     }
   }, getUsuariosHabilidades);
 
-  // GET: Obtener una asignación por ID
+  /**
+   * GET /usuarios-habilidades/:id
+   * Obtiene una asignación por su ID.
+   */
   fastify.get('/usuarios-habilidades/:id', {
     schema: {
       description: 'Obtiene una asignación de habilidad a usuario por ID',
@@ -55,7 +66,10 @@ async function usuariosHabilidadesRoutes(fastify) {
     }
   }, getUsuariosHabilidadById);
 
-  // POST: Crear una nueva asignación
+  /**
+   * POST /usuarios-habilidades
+   * Crea una nueva asignación.
+   */
   fastify.post('/usuarios-habilidades', {
     schema: {
       description: 'Crea una nueva asignación de habilidad a usuario',
@@ -78,7 +92,10 @@ async function usuariosHabilidadesRoutes(fastify) {
     }
   }, createUsuariosHabilidad);
 
-  // PUT: Actualizar una asignación existente
+  /**
+   * PUT /usuarios-habilidades/:id
+   * Actualiza una asignación existente.
+   */
   fastify.put('/usuarios-habilidades/:id', {
     schema: {
       description: 'Actualiza una asignación de habilidad a usuario por ID',
@@ -112,7 +129,10 @@ async function usuariosHabilidadesRoutes(fastify) {
     }
   }, updateUsuariosHabilidad);
 
-  // DELETE: Eliminar una asignación
+  /**
+   * DELETE /usuarios-habilidades/:id
+   * Elimina una asignación por ID.
+   */
   fastify.delete('/usuarios-habilidades/:id', {
     schema: {
       description: 'Elimina una asignación de habilidad a usuario por ID',

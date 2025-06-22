@@ -1,7 +1,12 @@
-import { UsuariosHabilidades } from '../models/index.js'
+import { UsuariosHabilidades } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
-// GET: Obtener todas las asignaciones de habilidades a usuarios
+/**
+ * Obtiene todas las asignaciones de habilidades a usuarios.
+ *
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
 export async function getUsuariosHabilidades(request, reply) {
   try {
     const registros = await UsuariosHabilidades.findAll();
@@ -16,7 +21,12 @@ export async function getUsuariosHabilidades(request, reply) {
   }
 }
 
-// GET by ID: Obtener una asignación por ID
+/**
+ * Obtiene una asignación de habilidad por su ID.
+ *
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
 export async function getUsuariosHabilidadById(request, reply) {
   const { id } = request.params;
   try {
@@ -39,34 +49,40 @@ export async function getUsuariosHabilidadById(request, reply) {
   }
 }
 
-// POST: Crear una nueva asignación de habilidad a usuario
+/**
+ * Crea una nueva asignación de habilidad a un usuario.
+ *
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
 export async function createUsuariosHabilidad(request, reply) {
   try {
     const registro = await UsuariosHabilidades.create(request.body);
     reply.status(201).send(registro);
   } catch (error) {
-    if (error.name === "SequelizeUniqueConstraintError") {
-      reply.status(409).send(
-        createErrorResponse(
-          "Ya existe una asignación para este usuario y habilidad",
-          "DUPLICATE_USUARIO_HABILIDAD",
-          error
-        )
-      );
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      reply.status(409).send(createErrorResponse(
+        'Ya existe una asignación para este usuario y habilidad',
+        'DUPLICATE_USUARIO_HABILIDAD',
+        error
+      ));
     } else {
       request.log.error(error);
-      reply.status(500).send(
-        createErrorResponse(
-          "Error al crear la asignación",
-          "CREATE_USUARIOS_HABILIDAD_ERROR",
-          error
-        )
-      );
+      reply.status(500).send(createErrorResponse(
+        'Error al crear la asignación',
+        'CREATE_USUARIOS_HABILIDAD_ERROR',
+        error
+      ));
     }
   }
 }
 
-// PUT: Actualizar una asignación de habilidad a usuario existente
+/**
+ * Actualiza una asignación de habilidad existente.
+ *
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
 export async function updateUsuariosHabilidad(request, reply) {
   const { id } = request.params;
   try {
@@ -74,6 +90,7 @@ export async function updateUsuariosHabilidad(request, reply) {
       where: { id },
       validate: true
     });
+
     if (updated) {
       const registro = await UsuariosHabilidades.findByPk(id);
       reply.send(registro);
@@ -84,28 +101,29 @@ export async function updateUsuariosHabilidad(request, reply) {
       ));
     }
   } catch (error) {
-    if (error.name === "SequelizeUniqueConstraintError") {
-      reply.status(409).send(
-        createErrorResponse(
-          "Ya existe una asignación para este usuario y habilidad",
-          "DUPLICATE_USUARIO_HABILIDAD",
-          error
-        )
-      );
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      reply.status(409).send(createErrorResponse(
+        'Ya existe una asignación para este usuario y habilidad',
+        'DUPLICATE_USUARIO_HABILIDAD',
+        error
+      ));
     } else {
       request.log.error(error);
-      reply.status(500).send(
-        createErrorResponse(
-          "Error al actualizar la asignación",
-          "UPDATE_USUARIOS_HABILIDAD_ERROR",
-          error
-        )
-      );
+      reply.status(500).send(createErrorResponse(
+        'Error al actualizar la asignación',
+        'UPDATE_USUARIOS_HABILIDAD_ERROR',
+        error
+      ));
     }
   }
 }
 
-// DELETE: Eliminar una asignación de habilidad a usuario
+/**
+ * Elimina una asignación de habilidad por su ID.
+ *
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply
+ */
 export async function deleteUsuariosHabilidad(request, reply) {
   const { id } = request.params;
   try {

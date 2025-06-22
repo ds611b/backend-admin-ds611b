@@ -6,8 +6,17 @@ import {
   deleteProyectosInstitucionesHabilidad
 } from '../controllers/proyectosInstitucionesHabilidadesController.js';
 
+/**
+ * Define las rutas para gestionar las relaciones entre proyectos, instituciones y habilidades.
+ *
+ * @param {import('fastify').FastifyInstance} fastify 
+ */
 async function proyectosInstitucionesHabilidadesRoutes(fastify) {
-  // GET: Obtener todas las relaciones
+
+  /**
+   * GET /proyectos-instituciones-habilidades
+   * Obtiene todas las relaciones registradas.
+   */
   fastify.get('/proyectos-instituciones-habilidades', {
     schema: {
       description: 'Obtiene todas las relaciones de habilidades para proyectos de instituciones',
@@ -26,7 +35,10 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
     }
   }, getProyectosInstitucionesHabilidades);
 
-  // GET by ID: Obtener una relación por ID
+  /**
+   * GET /proyectos-instituciones-habilidades/:id
+   * Obtiene una relación específica por su ID.
+   */
   fastify.get('/proyectos-instituciones-habilidades/:id', {
     schema: {
       description: 'Obtiene una relación de habilidad por ID',
@@ -55,7 +67,10 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
     }
   }, getProyectosInstitucionesHabilidadById);
 
-  // POST: Crear una nueva relación
+  /**
+   * POST /proyectos-instituciones-habilidades
+   * Crea una nueva relación.
+   */
   fastify.post('/proyectos-instituciones-habilidades', {
     schema: {
       description: 'Crea una nueva relación de habilidad para un proyecto de institución',
@@ -78,7 +93,10 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
     }
   }, createProyectosInstitucionesHabilidad);
 
-  // PUT: Actualizar una relación existente
+  /**
+   * PUT /proyectos-instituciones-habilidades/:id
+   * Actualiza una relación existente.
+   */
   fastify.put('/proyectos-instituciones-habilidades/:id', {
     schema: {
       description: 'Actualiza una relación de habilidad por ID',
@@ -112,7 +130,10 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
     }
   }, updateProyectosInstitucionesHabilidad);
 
-  // DELETE: Eliminar una relación
+  /**
+   * DELETE /proyectos-instituciones-habilidades/:id
+   * Elimina una relación existente por ID.
+   */
   fastify.delete('/proyectos-instituciones-habilidades/:id', {
     schema: {
       description: 'Elimina una relación de habilidad por ID',
@@ -127,7 +148,7 @@ async function proyectosInstitucionesHabilidadesRoutes(fastify) {
       response: {
         204: {
           description: 'Proyecto institución habilidad eliminado exitosamente.',
-          type: 'null',
+          type: 'null'
         },
         404: {
           description: 'Relación no encontrada',
