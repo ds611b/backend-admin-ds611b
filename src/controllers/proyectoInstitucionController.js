@@ -91,7 +91,7 @@ export async function createProyectoInstitucion(request, reply) {
  */
 export async function updateProyectoInstitucion(request, reply) {
   const { id } = request.params;
-  const { institucion_id, nombre, descripcion, fecha_inicio, fecha_fin, modalidad, direccion, disponibilidad } = request.body;
+  const { institucion_id, nombre, descripcion, fecha_inicio, fecha_fin, modalidad, direccion, disponibilidad, estado} = request.body;
   try {
     const proyecto = await ProyectosInstitucion.findByPk(id);
     if (!proyecto) {
@@ -105,7 +105,8 @@ export async function updateProyectoInstitucion(request, reply) {
       fecha_fin: fecha_fin ? new Date(fecha_fin) : null,
       modalidad,
       direccion,
-      disponibilidad
+      disponibilidad,
+      estado
     });
     const proyectoActualizado = await ProyectosInstitucion.findByPk(id, {
       include: {

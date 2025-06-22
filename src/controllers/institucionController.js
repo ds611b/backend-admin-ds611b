@@ -72,7 +72,7 @@ export async function createInstitucion(request, reply) {
  */
 export async function updateInstitucion(request, reply) {
   const { id } = request.params;
-  const { nombre, direccion, telefono, email, fecha_fundacion, nit } = request.body;
+  const { nombre, direccion, telefono, email, fecha_fundacion, nit, estado } = request.body;
   try {
     const institucion = await Instituciones.findByPk(id);
     if (!institucion) {
@@ -84,7 +84,8 @@ export async function updateInstitucion(request, reply) {
       telefono,
       email,
       fecha_fundacion: fecha_fundacion ? new Date(fecha_fundacion) : null,
-      nit
+      nit,
+      estado
     });
     reply.send(institucion);
   } catch (error) {

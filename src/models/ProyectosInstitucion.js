@@ -38,6 +38,11 @@ const ProyectosInstitucion = sequelize.define('ProyectosInstitucion', {
   disponibilidad: {
     type: DataTypes.BOOLEAN,
     allowNull: true,
+  },
+  estado: {
+    type: DataTypes.ENUM('Pendiente', 'Aprobado', 'Rechazado'),
+    defaultValue: 'Pendiente',
+    allowNull: false,
   }
 }, {
   tableName: 'ProyectosInstitucion',
