@@ -17,6 +17,7 @@ import aplicacionesEstudiantesRoutes from './routes/aplicacionesEstudiantesRoute
 import habilidadesRoutes from './routes/habilidadesRoutes.js';
 import usuariosHabilidadesRoutes from './routes/usuariosHabilidadesRoutes.js';
 import proyectosInstitucionesHabilidadesRoutes from './routes/proyectosInstitucionesHabilidadesRoutes.js';
+import perfilUsuarioRoutes from './routes/perfilUsuarioRoutes.js';
 
 /**
  * Configuración para usar __dirname con ES modules.
@@ -206,6 +207,44 @@ fastify.addSchema({
   }
 });
 
+fastify.addSchema({
+  $id: 'PerfilUsuario',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    usuario_id: { type: 'integer', example: 101 },
+    direccion: { type: 'string', example: 'Calle Falsa 123', nullable: true },
+    fecha_nacimiento: { 
+      type: 'string', 
+      format: 'date', 
+      example: '1990-01-01', 
+      nullable: true 
+    },
+    genero: { 
+      type: 'string', 
+      example: 'Masculino', 
+      enum: ['Masculino', 'Femenino', 'Otro'],
+      nullable: true
+    },
+    foto_perfil: { 
+      type: 'string', 
+      example: 'uploads/perfil.jpg', 
+      nullable: true 
+    },
+    created_at: { 
+      type: 'string', 
+      format: 'date-time', 
+      example: '2023-01-01T00:00:00Z' 
+    },
+    updated_at: { 
+      type: 'string', 
+      format: 'date-time', 
+      example: '2023-01-01T00:00:00Z' 
+    },
+    usuario: { $ref: 'Usuario' } // Referencia al esquema Usuario
+  }
+});
+
 
 /**
  * Esquemas de validación sin ejemplos
@@ -324,6 +363,27 @@ fastify.addSchema({
   required: ['proyecto_id', 'habilidad_id'],
 });
 
+fastify.addSchema({
+  $id: 'PerfilUsuarioValidation',
+  type: 'object',
+  properties: {
+    usuario_id: { type: 'integer' },
+    direccion: { type: 'string', nullable: true },
+    fecha_nacimiento: { 
+      type: 'string', 
+      format: 'date', 
+      nullable: true 
+    },
+    genero: { 
+      type: 'string', 
+      enum: ['Masculino', 'Femenino', 'Otro'],
+      nullable: true
+    },
+    foto_perfil: { type: 'string', nullable: true }
+  },
+  required: ['usuario_id']
+});
+
 /**
  * Configuración de Swagger UI (interfaz).
  * Define la ruta donde estará disponible la documentación y opciones de la interfaz.
@@ -360,6 +420,7 @@ fastify.register(aplicacionesEstudiantesRoutes, { prefix: '/api' });
 fastify.register(habilidadesRoutes, { prefix: '/api' });
 fastify.register(usuariosHabilidadesRoutes, { prefix: '/api' });
 fastify.register(proyectosInstitucionesHabilidadesRoutes, { prefix: '/api' });
+fastify.register(perfilUsuarioRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
