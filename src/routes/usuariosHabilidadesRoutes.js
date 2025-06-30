@@ -68,10 +68,10 @@ async function usuariosHabilidadesRoutes(fastify) {
   }, getUsuariosHabilidadById);
 
   /**
-   * GET /usuarios/:usuarioId/habilidades
+   * GET /usuarios-habilidades/usuario/:usuarioId/
    * Obtiene todas las habilidades de un usuario específico
    */
-  fastify.get('/usuarios/:usuarioId/habilidades', {
+  fastify.get('/usuarios-habilidades/usuario/:usuarioId', {
     schema: {
       description: 'Obtiene todas las habilidades de un usuario específico',
       tags: ['Usuarios Habilidades'],
@@ -87,7 +87,7 @@ async function usuariosHabilidadesRoutes(fastify) {
           description: 'Habilidades del usuario obtenidas exitosamente',
           type: 'object',
           properties: {
-            usuario: { $ref: 'Usuario' },
+            usuario_id: { type: 'number' },
             habilidades: {
               type: 'array',
               items: {
