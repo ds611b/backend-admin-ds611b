@@ -1,4 +1,4 @@
-import { UsuariosHabilidades } from '../models/index.js';
+import { UsuariosHabilidades, Habilidades } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -9,7 +9,12 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  */
 export async function getUsuariosHabilidades(request, reply) {
   try {
-    const registros = await UsuariosHabilidades.findAll();
+    const registros = await UsuariosHabilidades.findAll({
+      include: [
+        {
+          model: Habilidades,
+          as: 'habilidad'
+        }]});
     reply.send(registros);
   } catch (error) {
     request.log.error(error);
@@ -30,7 +35,15 @@ export async function getUsuariosHabilidades(request, reply) {
 export async function getUsuariosHabilidadById(request, reply) {
   const { id } = request.params;
   try {
-    const registro = await UsuariosHabilidades.findByPk(id);
+    const registro = await UsuariosHabilidades.findByPk(id, {
+      include: [
+        {
+          model: Habilidades,
+          as: 'habilidad',
+          attributes: {
+            exclude: ['created_at', 'updated_at'] 
+          }
+        }]});
     if (registro) {
       reply.send(registro);
     } else {
@@ -145,3 +158,54 @@ export async function deleteUsuariosHabilidad(request, reply) {
     ));
   }
 }
+
+
+/**
+ * Obtiene todas las habilidades de un usuario específico
+ *
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
+export async function getHabilidadesByUsuario(request, reply) {
+  const { usuarioId } = request.params;
+  
+  try {
+    const habilidades = await UsuariosHabilidades.findAll({
+      where: { usuario_id: usuarioId },
+      include: [
+        {
+          model: Habilidades,
+          as: 'habilidad'
+        }
+      ]
+    });
+
+    if (habilidades.length === 0) {
+      reply.status(404).send(createErrorResponse(
+        'No se encontraron habilidades para este usuario',
+        'USER_SKILLS_NOT_FOUND'
+      ));
+      return;
+    }
+
+    // Estructura la respuesta con información del usuario y sus habilidades
+    const response = {
+        usuario_id: usuarioId,
+        habilidades: habilidades.map(h => ({
+          id: h.habilidad.id,
+          descripcion: h.habilidad.descripcion
+        }))
+    };
+
+    reply.send(response);
+  } catch (error) {
+    console.error('Error en getHabilidadesByUsuario:', error);
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener las habilidades del usuario',
+      'GET_USER_SKILLS_ERROR',
+      error
+    ));
+  }
+}
+

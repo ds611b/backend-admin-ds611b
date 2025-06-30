@@ -36,8 +36,13 @@ Habilidades.belongsToMany(Usuarios, { through: UsuariosHabilidades, foreignKey: 
 // ProyectosInstitucion y Habilidades (N:M)
 ProyectosInstitucion.belongsToMany(Habilidades, { through: ProyectosInstitucionesHabilidades, foreignKey: 'proyecto_id', onDelete: 'CASCADE' });
 Habilidades.belongsToMany(ProyectosInstitucion, { through: ProyectosInstitucionesHabilidades, foreignKey: 'habilidad_id', onDelete: 'CASCADE' });
-ProyectosInstitucionesHabilidades.belongsTo(ProyectosInstitucion, { foreignKey: 'proyecto_id', as: 'proyecto'});
-ProyectosInstitucionesHabilidades.belongsTo(Habilidades, { foreignKey: 'habilidad_id', as: 'habilidades', onDelete: 'CASCADE'});
+ProyectosInstitucionesHabilidades.belongsTo(ProyectosInstitucion, { foreignKey: 'proyecto_id', as: 'proyecto' });
+ProyectosInstitucionesHabilidades.belongsTo(Habilidades, { foreignKey: 'habilidad_id', as: 'habilidades', onDelete: 'CASCADE' });
+
+// UsuariosHabilidades y Habilidades (N:M)
+UsuariosHabilidades.belongsTo(Usuarios, {  foreignKey: 'usuario_id',  as: 'usuario'});
+UsuariosHabilidades.belongsTo(Habilidades, {  foreignKey: 'habilidad_id',  as: 'habilidad',  onDelete: 'CASCADE'});
+Habilidades.hasMany(UsuariosHabilidades, {  foreignKey: 'habilidad_id',  as: 'habilidadesUsuarios',  onDelete: 'CASCADE'});
 
 
 // Exportar todos los modelos
