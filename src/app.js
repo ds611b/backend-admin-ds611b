@@ -187,7 +187,8 @@ fastify.addSchema({
   properties: {
     id: { type: 'number', example: 1 },
     usuario_id: { type: 'number', example: 101 },
-    habilidad_id: { type: 'number', example: 202 },
+    habilidad: { $ref: 'Habilidades' },
+    //habilidad_id: { type: 'number', example: 202 },
     created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
     updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
   }

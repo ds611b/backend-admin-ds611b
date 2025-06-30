@@ -1,6 +1,7 @@
 import {
   getUsuariosHabilidades,
   getUsuariosHabilidadById,
+  getHabilidadesByUsuario,
   createUsuariosHabilidad,
   updateUsuariosHabilidad,
   deleteUsuariosHabilidad
@@ -65,6 +66,53 @@ async function usuariosHabilidadesRoutes(fastify) {
       }
     }
   }, getUsuariosHabilidadById);
+
+  /**
+   * GET /usuarios/:usuarioId/habilidades
+   * Obtiene todas las habilidades de un usuario específico
+   */
+  fastify.get('/usuarios/:usuarioId/habilidades', {
+    schema: {
+      description: 'Obtiene todas las habilidades de un usuario específico',
+      tags: ['Usuarios Habilidades'],
+      params: {
+        type: 'object',
+        properties: {
+          usuarioId: { type: 'number', description: 'ID del usuario' }
+        },
+        required: ['usuarioId']
+      },
+      response: {
+        200: {
+          description: 'Habilidades del usuario obtenidas exitosamente',
+          type: 'object',
+          properties: {
+            usuario: { $ref: 'Usuario' },
+            habilidades: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'number' },
+                  habilidad_id: { type: 'number' },
+                  descripcion: { type: 'string' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'No se encontraron habilidades para este usuario',
+          $ref: 'ErrorResponse'
+        },
+        500: {
+          description: 'Error al obtener las habilidades del usuario',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, getHabilidadesByUsuario);
+
 
   /**
    * POST /usuarios-habilidades
