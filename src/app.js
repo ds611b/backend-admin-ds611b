@@ -154,6 +154,18 @@ fastify.addSchema({
   required: ['nombre', 'apellido', 'email', 'password_hash', 'rol_id']
 });
 
+fastify.addSchema({
+  $id: 'Estudiante',
+  type: 'object',
+  properties: {
+    id: { type: 'number', example: 123 },
+    nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+    apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+    email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
+    telefono: { type: 'string', maxLength: 20, nullable: true, example: '+5491123456789' }
+  }
+});
+
 
 fastify.addSchema({
   $id: 'AplicacionesEstudiantesID',
@@ -164,11 +176,60 @@ fastify.addSchema({
     proyecto_id: { type: 'number', example: 456 },
     estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
     proyecto: { $ref: 'ProyectosInstitucion' },
-    estudiante: { $ref: 'Usuario' },
+    estudiante: { $ref: 'Estudiante' },
     created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
     updated_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' }
   }
 });
+
+fastify.addSchema({
+  $id: 'AplicacionesEstudiantePorProyecto',
+  type: 'object',
+  properties: {
+    proyecto_id: { type: 'integer', example: 2 },
+    estado: {
+      type: 'string',
+      example: 'Pendiente',
+      enum: ['Pendiente', 'Aprobado', 'Rechazado']
+    },
+    proyectos: {
+      type: 'array',
+      items: {
+        $ref: 'ProyectosInstitucion'
+      }
+    },
+    estudiante: {
+      $ref: 'Estudiante'
+    },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'AplicacionesEstudiante',
+  type: 'object',
+  properties: {
+    proyecto_id: { type: 'integer', example: 2 },
+    estado: {
+      type: 'string',
+      example: 'Pendiente',
+      enum: ['Pendiente', 'Aprobado', 'Rechazado']
+    },
+    proyecto: {
+      $ref: 'ProyectosInstitucion'
+    },
+    estudiantes: {
+      type: 'array',
+      items: {
+        $ref: 'Estudiante'
+      }
+    },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' }
+  }
+});
+
 
 fastify.addSchema({
   $id: 'Habilidades',
@@ -215,32 +276,32 @@ fastify.addSchema({
     id: { type: 'integer', example: 1 },
     usuario_id: { type: 'integer', example: 101 },
     direccion: { type: 'string', example: 'Calle Falsa 123', nullable: true },
-    fecha_nacimiento: { 
-      type: 'string', 
-      format: 'date', 
-      example: '1990-01-01', 
-      nullable: true 
+    fecha_nacimiento: {
+      type: 'string',
+      format: 'date',
+      example: '1990-01-01',
+      nullable: true
     },
-    genero: { 
-      type: 'string', 
-      example: 'Masculino', 
+    genero: {
+      type: 'string',
+      example: 'Masculino',
       enum: ['Masculino', 'Femenino', 'Otro'],
       nullable: true
     },
-    foto_perfil: { 
-      type: 'string', 
-      example: 'uploads/perfil.jpg', 
-      nullable: true 
+    foto_perfil: {
+      type: 'string',
+      example: 'uploads/perfil.jpg',
+      nullable: true
     },
-    created_at: { 
-      type: 'string', 
-      format: 'date-time', 
-      example: '2023-01-01T00:00:00Z' 
+    created_at: {
+      type: 'string',
+      format: 'date-time',
+      example: '2023-01-01T00:00:00Z'
     },
-    updated_at: { 
-      type: 'string', 
-      format: 'date-time', 
-      example: '2023-01-01T00:00:00Z' 
+    updated_at: {
+      type: 'string',
+      format: 'date-time',
+      example: '2023-01-01T00:00:00Z'
     },
     usuario: { $ref: 'Usuario' } // Referencia al esquema Usuario
   }
@@ -370,13 +431,13 @@ fastify.addSchema({
   properties: {
     usuario_id: { type: 'integer' },
     direccion: { type: 'string', nullable: true },
-    fecha_nacimiento: { 
-      type: 'string', 
-      format: 'date', 
-      nullable: true 
+    fecha_nacimiento: {
+      type: 'string',
+      format: 'date',
+      nullable: true
     },
-    genero: { 
-      type: 'string', 
+    genero: {
+      type: 'string',
       enum: ['Masculino', 'Femenino', 'Otro'],
       nullable: true
     },

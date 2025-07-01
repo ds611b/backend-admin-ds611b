@@ -16,7 +16,8 @@ export async function getAplicacionesEstudiantes(request, reply) {
         },
         {
           model: Usuarios,
-          as: 'estudiante'
+          as: 'estudiante',
+          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
         }
       ]
     });
@@ -47,7 +48,8 @@ export async function getAplicacionEstudianteById(request, reply) {
         },
         {
           model: Usuarios,
-          as: 'estudiante'
+          as: 'estudiante',
+          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
         }
       ],
     });
@@ -64,6 +66,127 @@ export async function getAplicacionEstudianteById(request, reply) {
     reply.status(500).send(createErrorResponse(
       'Error al obtener la aplicación de estudiante',
       'GET_APLICACION_ERROR',
+      error
+    ));
+  }
+}
+
+/**
+ * Obtiene todas las aplicaciones de un estudiante específico
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
+export async function getAplicacionesByEstudiante(request, reply) {
+  const { estudianteId } = request.params;
+
+  try {
+    const aplicaciones = await AplicacionesEstudiantes.findAll({
+      where: { estudiante_id: estudianteId },
+      include: [
+        {
+          model: ProyectosInstitucion,
+          as: 'proyecto'
+        },
+        {
+          model: Usuarios,
+          as: 'estudiante',
+          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+        }
+      ],
+      attributes: {
+        exclude: ['created_at', 'updated_at']
+      }
+    });
+
+    if (aplicaciones.length === 0) {
+      reply.status(404).send(createErrorResponse(
+        'No se encontraron aplicaciones para este estudiante',
+        'STUDENT_APPLICATIONS_NOT_FOUND'
+      ));
+      return;
+    }
+
+    const proyectos = aplicaciones.map(app => ({
+      ...app.proyecto.get({ plain: true })
+    }));
+
+
+    // Estructura la respuesta similar a tu ejemplo
+    const response = {
+      proyecto_id: aplicaciones[0].proyecto_id,
+      estado: aplicaciones[0].estado,
+      proyectos: proyectos,
+      estudiante: aplicaciones[0].estudiante.get({ plain: true }),
+      created_at: aplicaciones[0].created_at,
+      updated_at: aplicaciones[0].updated_at
+    };
+
+    reply.send(response);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener las aplicaciones del estudiante',
+      'GET_STUDENT_APPLICATIONS_ERROR',
+      error
+    ));
+  }
+}
+
+/**
+ * Obtiene todas las aplicaciones para un proyecto específico
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
+export async function getAplicacionesByProyecto(request, reply) {
+  const { proyectoId } = request.params;
+
+  try {
+    const aplicaciones = await AplicacionesEstudiantes.findAll({
+      where: { proyecto_id: proyectoId },
+      include: [
+        {
+          model: ProyectosInstitucion,
+          as: 'proyecto'
+        },
+        {
+          model: Usuarios,
+          as: 'estudiante',
+          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    if (aplicaciones.length === 0) {
+      reply.status(404).send(createErrorResponse(
+        'No se encontraron aplicaciones para este proyecto',
+        'PROJECT_APPLICATIONS_NOT_FOUND'
+      ));
+      return;
+    }
+    const estudiantes = aplicaciones.map(app => ({
+      ...app.estudiante.get({ plain: true })
+    }));
+
+
+    // Estructura la respuesta similar a tu ejemplo
+    const response = {
+      proyecto_id: aplicaciones[0].proyecto_id,
+      estado: aplicaciones[0].estado,
+      proyecto: aplicaciones[0].proyecto.get({ plain: true }),
+      estudiantes: estudiantes,
+      created_at: aplicaciones[0].created_at,
+      updated_at: aplicaciones[0].updated_at
+    };
+
+    console.log('Aplicaciones del proyecto:', JSON.stringify(response, null, 2));
+
+    reply.send(response);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener las aplicaciones del proyecto',
+      'GET_PROJECT_APPLICATIONS_ERROR',
       error
     ));
   }

@@ -3,7 +3,9 @@ import {
   getAplicacionEstudianteById,
   createAplicacionEstudiante,
   updateAplicacionEstudiante,
-  deleteAplicacionEstudiante
+  deleteAplicacionEstudiante,
+  getAplicacionesByEstudiante,
+  getAplicacionesByProyecto
 } from '../controllers/aplicacionesEstudiantesController.js';
 
 async function aplicacionesEstudiantesRoutes(fastify) {
@@ -54,6 +56,65 @@ async function aplicacionesEstudiantesRoutes(fastify) {
       }
     }
   }, getAplicacionEstudianteById);
+
+  // Agrega estas rutas dentro de la función de rutas
+fastify.get('/aplicaciones-estudiantes/estudiante/:estudianteId', {
+  schema: {
+    description: 'Obtiene todas las aplicaciones de un estudiante específico',
+    tags: ['Aplicaciones Estudiantes'],
+    params: {
+      type: 'object',
+      properties: {
+        estudianteId: { type: 'number', description: 'ID del estudiante' }
+      },
+      required: ['estudianteId']
+    },
+    response: {
+      200: {
+        description: 'Aplicaciones del estudiante obtenidas exitosamente',
+        type: 'object',
+        $ref: 'AplicacionesEstudiantePorProyecto'
+      },
+      404: {
+        description: 'No se encontraron aplicaciones para este estudiante',
+        $ref: 'ErrorResponse'
+      },
+      500: {
+        description: 'Error al obtener las aplicaciones',
+        $ref: 'ErrorResponse'
+      }
+    }
+  }
+}, getAplicacionesByEstudiante);
+
+fastify.get('/aplicaciones-estudiantes/proyecto/:proyectoId', {
+  schema: {
+    description: 'Obtiene todas las aplicaciones para un proyecto específico',
+    tags: ['Aplicaciones Estudiantes'],
+    params: {
+      type: 'object',
+      properties: {
+        proyectoId: { type: 'number', description: 'ID del proyecto' }
+      },
+      required: ['proyectoId']
+    },
+    response: {
+      200: {
+        description: 'Aplicaciones del proyecto obtenidas exitosamente',
+        type: 'object',
+        $ref: 'AplicacionesEstudiante'
+      },
+      404: {
+        description: 'No se encontraron aplicaciones para este proyecto',
+        $ref: 'ErrorResponse'
+      },
+      500: {
+        description: 'Error al obtener las aplicaciones',
+        $ref: 'ErrorResponse'
+      }
+    }
+  }
+}, getAplicacionesByProyecto);
 
   // POST: Crear una nueva aplicación
   fastify.post('/aplicaciones-estudiantes', {
