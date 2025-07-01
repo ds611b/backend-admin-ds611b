@@ -112,14 +112,15 @@ export async function getAplicacionesByEstudiante(request, reply) {
 
 
     // Estructura la respuesta similar a tu ejemplo
-    const response = {
-      proyecto_id: aplicaciones[0].proyecto_id,
-      estado: aplicaciones[0].estado,
-      proyectos: proyectos,
-      estudiante: aplicaciones[0].estudiante.get({ plain: true }),
-      created_at: aplicaciones[0].created_at,
-      updated_at: aplicaciones[0].updated_at
-    };
+    const response = aplicaciones.map(app => ({
+      id: app.id,
+      proyecto_id: app.proyecto_id,
+      estado: app.estado,
+      proyecto: app.proyecto.get({ plain: true }),
+      estudiante: app.estudiante.get({ plain: true }),
+      created_at: app.created_at,
+      updated_at: app.updated_at
+    }));
 
     reply.send(response);
   } catch (error) {
@@ -165,21 +166,19 @@ export async function getAplicacionesByProyecto(request, reply) {
       return;
     }
     const estudiantes = aplicaciones.map(app => ({
-      ...app.estudiante.get({ plain: true })
+      ...app.estudiante.get({ plain: true }),
+        aplicacion_id: app.id, 
+        estado: app.estado 
     }));
 
 
     // Estructura la respuesta similar a tu ejemplo
     const response = {
-      proyecto_id: aplicaciones[0].proyecto_id,
-      estado: aplicaciones[0].estado,
       proyecto: aplicaciones[0].proyecto.get({ plain: true }),
       estudiantes: estudiantes,
       created_at: aplicaciones[0].created_at,
       updated_at: aplicaciones[0].updated_at
     };
-
-    console.log('Aplicaciones del proyecto:', JSON.stringify(response, null, 2));
 
     reply.send(response);
   } catch (error) {

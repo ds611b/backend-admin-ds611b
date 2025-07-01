@@ -72,8 +72,8 @@ fastify.get('/aplicaciones-estudiantes/estudiante/:estudianteId', {
     response: {
       200: {
         description: 'Aplicaciones del estudiante obtenidas exitosamente',
-        type: 'object',
-        $ref: 'AplicacionesEstudiantePorProyecto'
+        type: 'array',
+        items: { $ref: 'AplicacionesEstudiantesID' }
       },
       404: {
         description: 'No se encontraron aplicaciones para este estudiante',
