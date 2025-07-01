@@ -193,10 +193,7 @@ fastify.addSchema({
       enum: ['Pendiente', 'Aprobado', 'Rechazado']
     },
     proyectos: {
-      type: 'array',
-      items: {
-        $ref: 'ProyectosInstitucion'
-      }
+      $ref: 'ProyectosInstitucion'
     },
     estudiante: {
       $ref: 'Estudiante'
@@ -222,7 +219,21 @@ fastify.addSchema({
     estudiantes: {
       type: 'array',
       items: {
-        $ref: 'Estudiante'
+        type: 'object',
+        allOf: [
+          { $ref: 'Estudiante' },  // Hereda todas las propiedades del esquema Estudiante
+          {
+            type: 'object',
+            properties: {
+              aplicacion_id: { type: 'integer', example: 1 },
+              estado: {
+                type: 'string',
+                enum: ['Pendiente', 'Aprobado', 'Rechazado'],
+                example: 'Pendiente'
+              }
+            }
+          }
+        ]
       }
     },
     created_at: { type: 'string', format: 'date-time' },
