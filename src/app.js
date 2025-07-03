@@ -144,11 +144,12 @@ fastify.addSchema({
   $id: 'Usuario',
   type: 'object',
   properties: {
-    nombre: { type: 'string', maxLength: 100, example: 'Juan' },
-    apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+    primer_nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+    segundo_nombre: { type: 'string', maxLength: 100, example: 'Jose' },
+    primer_apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+    segundo_apellido: { type: 'string', maxLength: 100, example: 'Santos' },
     email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
-    password_hash: { type: 'string', maxLength: 255, example: '$2b$10$EIXaN/Z8g1234567890abcdefg' },
-    telefono: { type: 'string', maxLength: 20, nullable: true, example: '+5491123456789' },
+    //password_hash: { type: 'string', maxLength: 255, example: '$2b$10$EIXaN/Z8g1234567890abcdefg' },
     rol_id: { type: 'integer', example: 2 }
   },
   required: ['nombre', 'apellido', 'email', 'password_hash', 'rol_id']
@@ -159,10 +160,11 @@ fastify.addSchema({
   type: 'object',
   properties: {
     id: { type: 'number', example: 123 },
-    nombre: { type: 'string', maxLength: 100, example: 'Juan' },
-    apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
-    email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
-    telefono: { type: 'string', maxLength: 20, nullable: true, example: '+5491123456789' }
+    primer_nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+    segundo_nombre: { type: 'string', maxLength: 100, example: 'Jose' },
+    primer_apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+    segundo_apellido: { type: 'string', maxLength: 100, example: 'Santos' },
+    email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' }
   }
 });
 
@@ -286,7 +288,9 @@ fastify.addSchema({
   properties: {
     id: { type: 'integer', example: 1 },
     usuario_id: { type: 'integer', example: 101 },
+    telefono: { type: 'string', example: '+5491123456789', nullable: true },
     direccion: { type: 'string', example: 'Calle Falsa 123', nullable: true },
+    anio_academico: { type: 'string', example: '2', nullable: true },
     fecha_nacimiento: {
       type: 'string',
       format: 'date',

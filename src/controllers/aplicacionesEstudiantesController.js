@@ -17,7 +17,7 @@ export async function getAplicacionesEstudiantes(request, reply) {
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre','primero_apellido','segundo_apellido', 'email']
         }
       ]
     });
@@ -49,7 +49,7 @@ export async function getAplicacionEstudianteById(request, reply) {
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre','primero_apellido','segundo_apellido', 'email']
         }
       ],
     });
@@ -90,7 +90,7 @@ export async function getAplicacionesByEstudiante(request, reply) {
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre','primero_apellido','segundo_apellido', 'email']
         }
       ],
       attributes: {
@@ -152,7 +152,7 @@ export async function getAplicacionesByProyecto(request, reply) {
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre','primero_apellido','segundo_apellido', 'email']
         }
       ],
       order: [['created_at', 'DESC']]

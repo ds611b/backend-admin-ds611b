@@ -11,8 +11,16 @@ const PerfilUsuario = sequelize.define('PerfilUsuario', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  telefono: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+  },
   direccion: {
     type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  anio_academico: {
+    type: DataTypes.STRING(4),
     allowNull: true,
   },
   fecha_nacimiento: {
