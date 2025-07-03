@@ -82,7 +82,9 @@ export async function createPerfilUsuario(request, reply) {
   try {
     const nuevoPerfil = await PerfilUsuario.create({
       usuario_id,
+      telefono,
       direccion,
+      anio_academico,
       fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
       genero,
       foto_perfil
@@ -116,7 +118,9 @@ export async function updatePerfilUsuario(request, reply) {
     }
     
     await perfil.update({
+      telefono,
       direccion,
+      anio_academico,
       fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
       genero,
       foto_perfil

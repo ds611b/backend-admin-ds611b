@@ -7,11 +7,19 @@ const Usuarios = sequelize.define('Usuarios', {
     autoIncrement: true,
     primaryKey: true,
   },
-  nombre: {
+  primer_nombre: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+  }, 
+  segundo_nombre: {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
-  apellido: {
+  primer_apellido: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+  },
+  segundo_apellido: {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
@@ -23,10 +31,6 @@ const Usuarios = sequelize.define('Usuarios', {
   password_hash: {
     type: DataTypes.STRING(255),
     allowNull: false,
-  },
-  telefono: {
-    type: DataTypes.STRING(20),
-    allowNull: true,
   },
   rol_id: {
     type: DataTypes.INTEGER,
