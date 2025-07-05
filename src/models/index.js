@@ -8,6 +8,16 @@ import AplicacionesEstudiantes from './AplicacionesEstudiantes.js';
 import Habilidades from './Habilidades.js';
 import UsuariosHabilidades from './UsuariosHabilidades.js';
 import ProyectosInstitucionesHabilidades from './ProyectosInstitucionesHabilidades.js';
+import Carreras from './Carreras.js'; 
+import Escuelas from './Escuelas.js';
+import CoordinadoresCarrera from './CoordinadoresCarrera.js';
+import BitacoraProyectoBitacoraItems from './BitacoraProyectoBitacoraItems.js'; 
+import ContactoEmergencia from './ContactoEmergencia.js';
+import ActividadesProyecto from './ActividadesProyecto.js';
+import BitacoraProyecto from './BitacoraProyecto.js';
+import BitacoraPerfilUsuario from './BitacoraPerfilUsuario.js';
+import BitacoraItems from './BitacoraItems.js';
+
 
 // Definir relaciones
 
@@ -44,6 +54,32 @@ UsuariosHabilidades.belongsTo(Usuarios, {  foreignKey: 'usuario_id',  as: 'usuar
 UsuariosHabilidades.belongsTo(Habilidades, {  foreignKey: 'habilidad_id',  as: 'habilidad',  onDelete: 'CASCADE'});
 Habilidades.hasMany(UsuariosHabilidades, {  foreignKey: 'habilidad_id',  as: 'habilidadesUsuarios',  onDelete: 'CASCADE'});
 
+
+// CoordinadoresCarrera y Carreras (1:N)
+CoordinadoresCarrera.belongsTo(Carreras, {  foreignKey: 'id_carrera',  onDelete: 'CASCADE'});
+
+
+// Carreras y Escuelas (N:1)
+Carreras.belongsTo(Escuelas, {  foreignKey: 'id_escuela', onDelete: 'CASCADE'});
+
+
+// ContactoEmergencia y PerfilUsuario (1:N)
+ContactoEmergencia.belongsTo(PerfilUsuario, {  foreignKey: 'id_perfil_usuario',  onDelete: 'CASCADE'});
+
+
+// ActividadesProyecto y ProyectosInstitucion (N:1)
+ActividadesProyecto.belongsTo(ProyectosInstitucion, {  foreignKey: 'id_proyecto',  onDelete: 'CASCADE'});
+
+
+// BitacoraProyecto y ProyectosInstitucion (N:1)
+BitacoraProyecto.belongsTo(ProyectosInstitucion, {  foreignKey: 'id_proyecto',  onDelete: 'CASCADE'});
+
+// BitacoraProyecto y ActividadesProyecto (N:1)
+BitacoraPerfilUsuario.belongsTo(BitacoraProyecto, {  foreignKey: 'id_bitacora',  onDelete: 'CASCADE'});
+BitacoraPerfilUsuario.belongsTo(PerfilUsuario, {  foreignKey: 'id_perfil_usuario',  onDelete: 'CASCADE'});
+
+BitacoraProyectoBitacoraItems.belongsTo(BitacoraProyecto, {  foreignKey: 'id_bitacora',  onDelete: 'CASCADE'});
+BitacoraProyectoBitacoraItems.belongsTo(BitacoraItems, { foreignKey: 'id_bitacora_item',  onDelete: 'CASCADE'});
 
 // Exportar todos los modelos
 export {

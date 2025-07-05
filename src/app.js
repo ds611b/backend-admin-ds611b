@@ -152,7 +152,7 @@ fastify.addSchema({
     //password_hash: { type: 'string', maxLength: 255, example: '$2b$10$EIXaN/Z8g1234567890abcdefg' },
     rol_id: { type: 'integer', example: 2 }
   },
-  required: ['nombre', 'apellido', 'email', 'password_hash', 'rol_id']
+  required: ['primer_nombre', 'primer_apellido', 'email', 'password_hash', 'rol_id']
 });
 
 fastify.addSchema({
