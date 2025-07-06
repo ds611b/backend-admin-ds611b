@@ -216,7 +216,15 @@ fastify.addSchema({
       enum: ['Pendiente', 'Aprobado', 'Rechazado']
     },
     proyecto: {
-      $ref: 'ProyectosInstitucion'
+      allOf: [
+        { $ref: 'ProyectosInstitucion' },
+        {
+          type: 'object',
+          properties: {
+            institucion: { $ref: 'Institucion' }
+          }
+        }
+      ]
     },
     estudiantes: {
       type: 'array',

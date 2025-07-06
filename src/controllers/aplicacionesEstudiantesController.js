@@ -1,4 +1,4 @@
-import { AplicacionesEstudiantes, ProyectosInstitucion, Usuarios } from '../models/index.js';
+import { AplicacionesEstudiantes, ProyectosInstitucion, Usuarios, Instituciones } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -17,7 +17,7 @@ export async function getAplicacionesEstudiantes(request, reply) {
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'primer_nombre', 'segundo_nombre','primer_apellido','segundo_apellido', 'email']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
         }
       ]
     });
@@ -44,12 +44,18 @@ export async function getAplicacionEstudianteById(request, reply) {
       include: [
         {
           model: ProyectosInstitucion,
-          as: 'proyecto'
+          as: 'proyecto',
+          include: [
+            {
+              model: Instituciones,
+              as: 'institucion'
+            }
+          ]
         },
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'primer_nombre', 'segundo_nombre','primer_apellido','segundo_apellido', 'email']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
         }
       ],
     });
@@ -85,12 +91,18 @@ export async function getAplicacionesByEstudiante(request, reply) {
       include: [
         {
           model: ProyectosInstitucion,
-          as: 'proyecto'
+          as: 'proyecto',
+          include: [  
+            {
+              model: Instituciones,
+              as: 'institucion'
+            }
+          ]
         },
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'primer_nombre', 'segundo_nombre','primer_apellido','segundo_apellido', 'email']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
         }
       ],
       attributes: {
@@ -108,6 +120,7 @@ export async function getAplicacionesByEstudiante(request, reply) {
 
     const proyectos = aplicaciones.map(app => ({
       ...app.proyecto.get({ plain: true })
+
     }));
 
 
@@ -116,12 +129,16 @@ export async function getAplicacionesByEstudiante(request, reply) {
       id: app.id,
       proyecto_id: app.proyecto_id,
       estado: app.estado,
-      proyecto: app.proyecto.get({ plain: true }),
+      proyecto: {
+        ...app.proyecto.get({ plain: true }),  // Todas las propiedades del proyecto
+        institucion: app.proyecto.institucion ? app.proyecto.institucion.get({ plain: true }) : null
+      },
       estudiante: app.estudiante.get({ plain: true }),
       created_at: app.created_at,
       updated_at: app.updated_at
     }));
 
+    
     reply.send(response);
   } catch (error) {
     request.log.error(error);
@@ -147,12 +164,18 @@ export async function getAplicacionesByProyecto(request, reply) {
       include: [
         {
           model: ProyectosInstitucion,
-          as: 'proyecto'
+          as: 'proyecto',
+          include: [  
+            {
+              model: Instituciones,
+              as: 'institucion'
+            }
+          ]
         },
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'primer_nombre', 'segundo_nombre','primer_apellido','segundo_apellido', 'email']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
         }
       ],
       order: [['created_at', 'DESC']]
@@ -167,14 +190,16 @@ export async function getAplicacionesByProyecto(request, reply) {
     }
     const estudiantes = aplicaciones.map(app => ({
       ...app.estudiante.get({ plain: true }),
-        aplicacion_id: app.id, 
-        estado: app.estado 
+      aplicacion_id: app.id,
+      estado: app.estado
     }));
 
 
-    // Estructura la respuesta similar a tu ejemplo
     const response = {
-      proyecto: aplicaciones[0].proyecto.get({ plain: true }),
+      proyecto: {
+        ...aplicaciones[0].proyecto.get({ plain: true }), 
+        institucion: aplicaciones[0].proyecto.institucion?.get({ plain: true }) || null 
+      },
       estudiantes: estudiantes,
       created_at: aplicaciones[0].created_at,
       updated_at: aplicaciones[0].updated_at
