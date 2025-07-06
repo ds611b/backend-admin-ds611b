@@ -78,6 +78,7 @@ BitacoraProyecto.belongsTo(ProyectosInstitucion, {  foreignKey: 'id_proyecto',  
 BitacoraPerfilUsuario.belongsTo(BitacoraProyecto, {  foreignKey: 'id_bitacora',  onDelete: 'CASCADE'});
 BitacoraPerfilUsuario.belongsTo(PerfilUsuario, {  foreignKey: 'id_perfil_usuario',  onDelete: 'CASCADE'});
 
+// BitacoraItems y BitacoraProyecto (N:1)
 BitacoraProyectoBitacoraItems.belongsTo(BitacoraProyecto, {  foreignKey: 'id_bitacora',  onDelete: 'CASCADE'});
 BitacoraProyectoBitacoraItems.belongsTo(BitacoraItems, { foreignKey: 'id_bitacora_item',  onDelete: 'CASCADE'});
 
