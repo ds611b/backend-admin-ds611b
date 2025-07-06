@@ -17,6 +17,7 @@ import ActividadesProyecto from './ActividadesProyecto.js';
 import BitacoraProyecto from './BitacoraProyecto.js';
 import BitacoraPerfilUsuario from './BitacoraPerfilUsuario.js';
 import BitacoraItems from './BitacoraItems.js';
+import EncargadoInstitucion from './EncargadoInstitucion.js'; 
 
 
 // Definir relaciones
@@ -101,5 +102,6 @@ export {
   ActividadesProyecto,
   BitacoraProyecto,
   BitacoraPerfilUsuario,
-  BitacoraItems
+  BitacoraItems,
+  EncargadoInstitucion
 };
