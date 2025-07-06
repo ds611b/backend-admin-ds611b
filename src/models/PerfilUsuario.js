@@ -23,6 +23,10 @@ const PerfilUsuario = sequelize.define('PerfilUsuario', {
     type: DataTypes.STRING(4),
     allowNull: true,
   },
+  carnet: {
+    type: DataTypes.STRING(7),
+    allowNull: false,
+  },
   id_carrera: {
     type: DataTypes.INTEGER,
     allowNull: true,

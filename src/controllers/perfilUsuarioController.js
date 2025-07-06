@@ -1,5 +1,5 @@
 import { json } from 'sequelize';
-import { PerfilUsuario, Carreras, Usuarios } from '../models/index.js';
+import { PerfilUsuario, Carreras, Usuarios, Escuelas } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -11,7 +11,12 @@ export async function getPerfilesUsuario(request, reply) {
       include: [{
         model: Carreras,
         as: 'carrera',
-        attributes: ['id', 'nombre']
+        attributes: ['id', 'nombre'],
+        include: [{
+          model: Escuelas,
+          as: 'escuela',
+          attributes: ['id', 'nombre']
+        }]
       },
       {
         model: Usuarios,
@@ -46,7 +51,12 @@ export async function getPerfilUsuarioById(request, reply) {
       include: [{
         model: Carreras,
         as: 'carrera',
-        attributes: ['id', 'nombre']
+        attributes: ['id', 'nombre'],
+        include: [{
+          model: Escuelas,
+          as: 'escuela',
+          attributes: ['id', 'nombre']
+        }]
       },
       {
         model: Usuarios,
@@ -84,7 +94,13 @@ export async function getPerfilUsuarioByUsuarioId(request, reply) {
       include: [{
         model: Carreras,
         as: 'carrera',
-        attributes: ['id', 'nombre']
+        attributes: ['id', 'nombre'],
+        include: [{
+          model: Escuelas,
+          as: 'escuela',
+          attributes: ['id', 'nombre']
+        }]
+
       },
       {
         model: Usuarios,
@@ -146,7 +162,7 @@ export async function createPerfilUsuario(request, reply) {
         as: 'usuario',
         attributes: ['id', 'primer_nombre', 'primer_apellido', 'email']
       }
-    ]
+      ]
     });
 
     reply.status(201).send(perfilCompleto);
