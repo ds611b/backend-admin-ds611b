@@ -18,6 +18,10 @@ import habilidadesRoutes from './routes/habilidadesRoutes.js';
 import usuariosHabilidadesRoutes from './routes/usuariosHabilidadesRoutes.js';
 import proyectosInstitucionesHabilidadesRoutes from './routes/proyectosInstitucionesHabilidadesRoutes.js';
 import perfilUsuarioRoutes from './routes/perfilUsuarioRoutes.js';
+import escuelasRoutes from './routes/escuelasRoutes.js';
+import carrerasRoutes from './routes/carrerasRoutes.js';
+import coordinadoresCarreraRoutes from './routes/coordinadoresCarreraRoutes.js';
+
 
 /**
  * Configuración para usar __dirname con ES modules.
@@ -469,6 +473,135 @@ fastify.addSchema({
   required: ['usuario_id']
 });
 
+fastify.addSchema({
+  $id: 'EscuelaValidation',
+  type: 'object',
+  properties: {
+    nombre: { 
+      type: 'string',
+      maxLength: 300,
+      description: 'Nombre de la escuela académica'
+    }
+  },
+  required: ['nombre']
+});
+
+fastify.addSchema({
+  $id: 'Escuelas',
+  type: 'object',
+  properties: {
+    id: { type: 'integer' },
+    nombre: { type: 'string' },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' }
+  }
+});
+fastify.addSchema({
+  $id: 'CarreraValidation',
+  type: 'object',
+  properties: {
+    nombre: { 
+      type: 'string',
+      description: 'Nombre de la carrera'
+    },
+    id_escuela: { 
+      type: 'integer',
+      description: 'ID de la escuela a la que pertenece la carrera'
+    }
+  },
+  required: ['nombre', 'id_escuela']
+});
+
+fastify.addSchema({
+  $id: 'Carreras',
+  type: 'object',
+  properties: {
+    id: { type: 'integer' },
+    nombre: { type: 'string' },
+    id_escuela: { type: 'integer' },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'CarrerasWithEscuela',
+  type: 'object',
+  properties: {
+    id: { type: 'integer' },
+    nombre: { type: 'string' },
+    id_escuela: { type: 'integer' },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' },
+    Escuela: { $ref: 'Escuelas' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'CoordinadorValidation',
+  type: 'object',
+  properties: {
+    nombres: { 
+      type: 'string',
+      maxLength: 100,
+      description: 'Nombres del coordinador'
+    },
+    apellidos: { 
+      type: 'string',
+      maxLength: 100,
+      description: 'Apellidos del coordinador'
+    },
+    correo_institucional: { 
+      type: 'string',
+      format: 'email',
+      maxLength: 100,
+      description: 'Correo institucional del coordinador'
+    },
+    telefono: { 
+      type: 'string',
+      maxLength: 15,
+      description: 'Teléfono del coordinador'
+    },
+    id_carrera: { 
+      type: 'integer',
+      description: 'ID de la carrera que coordina'
+    }
+  },
+  required: ['nombres', 'apellidos', 'correo_institucional', 'id_carrera']
+});
+
+fastify.addSchema({
+  $id: 'Coordinadores',
+  type: 'object',
+  properties: {
+    id: { type: 'integer' },
+    nombres: { type: 'string' },
+    apellidos: { type: 'string' },
+    correo_institucional: { type: 'string' },
+    telefono: { type: 'string' },
+    id_carrera: { type: 'integer' },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'CoordinadoresWithCarrera',
+  type: 'object',
+  properties: {
+    id: { type: 'integer' },
+    nombres: { type: 'string' },
+    apellidos: { type: 'string' },
+    correo_institucional: { type: 'string' },
+    telefono: { type: 'string' },
+    id_carrera: { type: 'integer' },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' },
+    Carrera: { $ref: 'CarrerasWithEscuela' }
+  }
+});
+
+
 /**
  * Configuración de Swagger UI (interfaz).
  * Define la ruta donde estará disponible la documentación y opciones de la interfaz.
@@ -483,6 +616,12 @@ await fastify.register(swaggerUI, {
   transformSpecification: (swaggerObject, request, reply) => { return swaggerObject },
   transformSpecificationClone: true
 });
+
+
+
+
+
+
 
 /**
  * Configuración para servir archivos estáticos.
@@ -506,6 +645,9 @@ fastify.register(habilidadesRoutes, { prefix: '/api' });
 fastify.register(usuariosHabilidadesRoutes, { prefix: '/api' });
 fastify.register(proyectosInstitucionesHabilidadesRoutes, { prefix: '/api' });
 fastify.register(perfilUsuarioRoutes, { prefix: '/api' });
+fastify.register(escuelasRoutes, { prefix: '/api' });
+fastify.register(carrerasRoutes, { prefix: '/api' });
+fastify.register(coordinadoresCarreraRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
