@@ -322,6 +322,7 @@ fastify.addSchema({
       example: 'uploads/perfil.jpg',
       nullable: true
     },
+    carnet: { type: 'string', example: '1234567', maxLength: 7 },
     carrera: { $ref: 'Carreras' },
     usuario: { $ref: 'Usuario' }, 
     created_at: {
@@ -526,6 +527,7 @@ fastify.addSchema({
     id: { type: 'integer' },
     nombre: { type: 'string' },
     id_escuela: { type: 'integer' },
+    escuela: { $ref: 'Escuelas' },
     created_at: { type: 'string', format: 'date-time' },
     updated_at: { type: 'string', format: 'date-time' }
   }

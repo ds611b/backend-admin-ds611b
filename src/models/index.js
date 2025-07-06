@@ -62,7 +62,7 @@ CoordinadoresCarrera.belongsTo(Carreras, {  foreignKey: 'id_carrera',  onDelete:
 
 
 // Carreras y Escuelas (N:1)
-Carreras.belongsTo(Escuelas, {  foreignKey: 'id_escuela', onDelete: 'CASCADE'});
+Carreras.belongsTo(Escuelas, {  foreignKey: 'id_escuela', as: 'escuela',  onDelete: 'CASCADE'});
 
 
 // Escuelas y Carreras (1:N)
