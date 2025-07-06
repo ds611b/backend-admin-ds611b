@@ -322,6 +322,8 @@ fastify.addSchema({
       example: 'uploads/perfil.jpg',
       nullable: true
     },
+    carrera: { $ref: 'Carreras' },
+    usuario: { $ref: 'Usuario' }, 
     created_at: {
       type: 'string',
       format: 'date-time',
@@ -332,7 +334,7 @@ fastify.addSchema({
       format: 'date-time',
       example: '2023-01-01T00:00:00Z'
     },
-    usuario: { $ref: 'Usuario' } // Referencia al esquema Usuario
+    usuario: { $ref: 'Estudiante' } // Referencia al esquema Usuario
   }
 });
 
@@ -470,7 +472,10 @@ fastify.addSchema({
       enum: ['Masculino', 'Femenino', 'Otro'],
       nullable: true
     },
-    foto_perfil: { type: 'string', nullable: true }
+    foto_perfil: { type: 'string', nullable: true },
+    telefono: { type: 'string', maxLength: 20, nullable: true },
+    anio_academico: { type: 'string', maxLength: 4, nullable: true },
+    id_carrera: { type: 'integer', nullable: true }
   },
   required: ['usuario_id']
 });

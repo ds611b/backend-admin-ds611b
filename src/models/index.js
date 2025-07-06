@@ -28,7 +28,8 @@ Usuarios.belongsTo(Roles, { foreignKey: 'rol_id', onDelete: 'RESTRICT' });
 
 // Usuarios y PerfilUsuario (1:1)
 Usuarios.hasOne(PerfilUsuario, { foreignKey: 'usuario_id', onDelete: 'CASCADE' });
-PerfilUsuario.belongsTo(Usuarios, { foreignKey: 'usuario_id', onDelete: 'CASCADE' });
+PerfilUsuario.belongsTo(Usuarios, { foreignKey: 'usuario_id', as:  'usuario', onDelete: 'CASCADE' });
+
 
 // Instituciones y ProyectosInstitucion (1:N)
 Instituciones.hasMany(ProyectosInstitucion, { foreignKey: 'institucion_id', onDelete: 'CASCADE' });
@@ -62,6 +63,11 @@ CoordinadoresCarrera.belongsTo(Carreras, {  foreignKey: 'id_carrera',  onDelete:
 
 // Carreras y Escuelas (N:1)
 Carreras.belongsTo(Escuelas, {  foreignKey: 'id_escuela', onDelete: 'CASCADE'});
+
+
+// Escuelas y Carreras (1:N)
+PerfilUsuario.belongsTo(Carreras, {  foreignKey: 'id_carrera',  as: 'carrera',  onDelete: 'SET NULL'});
+Carreras.hasMany(PerfilUsuario, {  foreignKey: 'id_carrera',  as: 'perfiles'});
 
 
 // ContactoEmergencia y PerfilUsuario (1:N)
