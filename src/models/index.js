@@ -93,4 +93,13 @@ export {
   Habilidades,
   UsuariosHabilidades,
   ProyectosInstitucionesHabilidades,
+  Carreras,
+  Escuelas,
+  CoordinadoresCarrera,
+  BitacoraProyectoBitacoraItems,
+  ContactoEmergencia,
+  ActividadesProyecto,
+  BitacoraProyecto,
+  BitacoraPerfilUsuario,
+  BitacoraItems
 };
