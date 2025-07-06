@@ -23,6 +23,14 @@ const PerfilUsuario = sequelize.define('PerfilUsuario', {
     type: DataTypes.STRING(4),
     allowNull: true,
   },
+  id_carrera: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'Carreras',
+      key: 'id'
+    }
+  },
   fecha_nacimiento: {
     type: DataTypes.DATE,
     allowNull: true,
