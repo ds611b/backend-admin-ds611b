@@ -110,14 +110,6 @@ export async function getAplicacionesByEstudiante(request, reply) {
       }
     });
 
-    if (aplicaciones.length === 0) {
-      reply.status(404).send(createErrorResponse(
-        'No se encontraron aplicaciones para este estudiante',
-        'STUDENT_APPLICATIONS_NOT_FOUND'
-      ));
-      return;
-    }
-
     const proyectos = aplicaciones.map(app => ({
       ...app.proyecto.get({ plain: true })
 
