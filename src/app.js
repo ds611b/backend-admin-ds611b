@@ -21,6 +21,8 @@ import perfilUsuarioRoutes from './routes/perfilUsuarioRoutes.js';
 import escuelasRoutes from './routes/escuelasRoutes.js';
 import carrerasRoutes from './routes/carrerasRoutes.js';
 import coordinadoresCarreraRoutes from './routes/coordinadoresCarreraRoutes.js';
+import contactoEmergenciaRoutes from './routes/contactoEmergenciaRoutes.js';
+import encargadoInstitucionRoutes from './routes/encargadoInstitucionRoutes.js';
 
 
 /**
@@ -477,7 +479,7 @@ fastify.addSchema({
   $id: 'EscuelaValidation',
   type: 'object',
   properties: {
-    nombre: { 
+    nombre: {
       type: 'string',
       maxLength: 300,
       description: 'Nombre de la escuela académica'
@@ -500,11 +502,11 @@ fastify.addSchema({
   $id: 'CarreraValidation',
   type: 'object',
   properties: {
-    nombre: { 
+    nombre: {
       type: 'string',
       description: 'Nombre de la carrera'
     },
-    id_escuela: { 
+    id_escuela: {
       type: 'integer',
       description: 'ID de la escuela a la que pertenece la carrera'
     }
@@ -541,28 +543,28 @@ fastify.addSchema({
   $id: 'CoordinadorValidation',
   type: 'object',
   properties: {
-    nombres: { 
+    nombres: {
       type: 'string',
       maxLength: 100,
       description: 'Nombres del coordinador'
     },
-    apellidos: { 
+    apellidos: {
       type: 'string',
       maxLength: 100,
       description: 'Apellidos del coordinador'
     },
-    correo_institucional: { 
+    correo_institucional: {
       type: 'string',
       format: 'email',
       maxLength: 100,
       description: 'Correo institucional del coordinador'
     },
-    telefono: { 
+    telefono: {
       type: 'string',
       maxLength: 15,
       description: 'Teléfono del coordinador'
     },
-    id_carrera: { 
+    id_carrera: {
       type: 'integer',
       description: 'ID de la carrera que coordina'
     }
@@ -600,6 +602,151 @@ fastify.addSchema({
     Carrera: { $ref: 'CarrerasWithEscuela' }
   }
 });
+
+fastify.addSchema({
+  $id: 'ContactoEmergenciaValidation',
+  type: 'object',
+  properties: {
+    nombres: {
+      type: 'string',
+      maxLength: 200,
+      description: 'Nombres del contacto de emergencia'
+    },
+    apellidos: {
+      type: 'string',
+      maxLength: 200,
+      description: 'Apellidos del contacto de emergencia'
+    },
+    telefono: {
+      type: 'string',
+      maxLength: 14,
+      description: 'Número de teléfono del contacto'
+    },
+    direccion: {
+      type: 'string',
+      nullable: true,
+      description: 'Dirección del contacto'
+    },
+    id_perfil_usuario: {
+      type: 'integer',
+      description: 'ID del perfil de usuario asociado'
+    }
+  },
+  required: ['nombres', 'apellidos', 'telefono', 'id_perfil_usuario']
+});
+
+fastify.addSchema({
+  $id: 'ContactoEmergencia',
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      description: 'ID único del contacto de emergencia'
+    },
+    nombres: {
+      type: 'string',
+      description: 'Nombres del contacto de emergencia'
+    },
+    apellidos: {
+      type: 'string',
+      description: 'Apellidos del contacto de emergencia'
+    },
+    telefono: {
+      type: 'string',
+      description: 'Número de teléfono del contacto'
+    },
+    direccion: {
+      type: 'string',
+      nullable: true,
+      description: 'Dirección del contacto'
+    },
+    id_perfil_usuario: {
+      type: 'integer',
+      description: 'ID del perfil de usuario asociado'
+    },
+    created_at: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Fecha de creación del registro'
+    },
+    updated_at: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Fecha de última actualización'
+    },
+    PerfilUsuario: {
+      $ref: 'PerfilUsuario',
+      description: 'Información del perfil de usuario asociado'
+    }
+  }
+});
+
+fastify.addSchema({
+  $id: 'EncargadoInstitucionValidation',
+  type: 'object',
+  properties: {
+    nombres: {
+      type: 'string',
+      maxLength: 100,
+      description: 'Nombres del encargado'
+    },
+    apellidos: {
+      type: 'string',
+      maxLength: 100,
+      description: 'Apellidos del encargado'
+    },
+    correo: {
+      type: 'string',
+      format: 'email',
+      maxLength: 100,
+      description: 'Correo electrónico institucional'
+    },
+    telefono: {
+      type: 'string',
+      maxLength: 15,
+      description: 'Número de teléfono del encargado'
+    }
+  },
+  required: ['nombres', 'apellidos', 'correo', 'telefono']
+});
+
+fastify.addSchema({
+  $id: 'EncargadoInstitucion',
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      description: 'ID único del encargado'
+    },
+    nombres: {
+      type: 'string',
+      description: 'Nombres del encargado'
+    },
+    apellidos: {
+      type: 'string',
+      description: 'Apellidos del encargado'
+    },
+    correo: {
+      type: 'string',
+      description: 'Correo electrónico institucional'
+    },
+    telefono: {
+      type: 'string',
+      description: 'Número de teléfono del encargado'
+    },
+    created_at: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Fecha de creación del registro'
+    },
+    updated_at: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Fecha de última actualización'
+    }
+  }
+});
+
 
 
 /**
@@ -648,6 +795,8 @@ fastify.register(perfilUsuarioRoutes, { prefix: '/api' });
 fastify.register(escuelasRoutes, { prefix: '/api' });
 fastify.register(carrerasRoutes, { prefix: '/api' });
 fastify.register(coordinadoresCarreraRoutes, { prefix: '/api' });
+fastify.register(contactoEmergenciaRoutes, { prefix: '/api' });
+fastify.register(encargadoInstitucionRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
