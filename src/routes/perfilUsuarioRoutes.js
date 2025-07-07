@@ -105,7 +105,7 @@ async function perfilUsuarioRoutes(fastify, options) {
           $ref: 'PerfilUsuario',
         },
         400: {
-          description: 'Datos de entrada no válidos.',
+          description: 'Datos de entrada no validos.',
           $ref: 'ErrorResponse',
         },
         500: {
