@@ -9,7 +9,7 @@ const BitacoraProyecto = sequelize.define('BitacoraProyecto', {
     primaryKey: true,
   },
   fecha_inicio: {
-    type: DataTypes.DATEONLY, // Sequelize equivalent for DATE
+    type: DataTypes.DATEONLY,
     allowNull: true,
   },
   fecha_fin: {
