@@ -60,7 +60,7 @@ async function institucionRoutes(fastify, options) {
       description: 'Crea una nueva institución',
       tags: ['Instituciones'],
       body: {
-        $ref: 'InstitucionValidation',
+        $ref: 'InstitucionesValidation',
       },
       response: {
         201: {
@@ -88,7 +88,7 @@ async function institucionRoutes(fastify, options) {
         required: ['id']
       },
       body: {
-        $ref: 'InstitucionValidation',
+        $ref: 'InstitucionesValidation',
       },
       response: {
         200: {
