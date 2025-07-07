@@ -231,7 +231,7 @@ fastify.addSchema({
         {
           type: 'object',
           properties: {
-            institucion: { $ref: 'Institucion' }
+            institucion: { $ref: 'Instituciones' }
           }
         }
       ]
@@ -386,8 +386,7 @@ fastify.addSchema({
     nit: { type: 'string' },
     estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
     id_encargado: { type: 'integer' }
-  },
-  required: ['id_encargado']
+  }
 });
 
 fastify.addSchema({
