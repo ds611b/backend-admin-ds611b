@@ -1,4 +1,4 @@
-import { Instituciones } from '../models/index.js';
+import { Instituciones, EncargadoInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -8,13 +8,18 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  */
 export async function getInstituciones(request, reply) {
   try {
-    const instituciones = await Instituciones.findAll();
+    const instituciones = await Instituciones.findAll({
+      include: [{
+        model: EncargadoInstitucion,
+        as: 'encargado'
+      }]
+    });
     reply.send(instituciones);
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
-      'Error al obtener las instituciones', 
-      'GET_INSTITUCIONES_ERROR', 
+      'Error al obtener las instituciones',
+      'GET_INSTITUCIONES_ERROR',
       error
     ));
   }
@@ -28,10 +33,15 @@ export async function getInstituciones(request, reply) {
 export async function getInstitucionById(request, reply) {
   const { id } = request.params;
   try {
-    const institucion = await Instituciones.findByPk(id);
+    const institucion = await Instituciones.findByPk(id, {
+      include: [{
+        model: EncargadoInstitucion,
+        as: 'encargado'
+      }]
+    });
     if (!institucion) {
       return reply.status(404).send(createErrorResponse(
-        'Institución no encontrada', 
+        'Institución no encontrada',
         'INSTITUCION_NOT_FOUND'
       ));
     }
@@ -48,7 +58,7 @@ export async function getInstitucionById(request, reply) {
  * @param {import('fastify').FastifyReply} reply
  */
 export async function createInstitucion(request, reply) {
-  const { nombre, direccion, telefono, email, fecha_fundacion, nit } = request.body;
+  const { nombre, direccion, telefono, email, fecha_fundacion, nit, estado, id_encargado } = request.body;
   try {
     const nuevaInstitucion = await Instituciones.create({
       nombre,
@@ -56,9 +66,18 @@ export async function createInstitucion(request, reply) {
       telefono,
       email,
       fecha_fundacion: fecha_fundacion ? new Date(fecha_fundacion) : null,
-      nit
+      nit,
+      estado,
+      id_encargado
     });
-    reply.status(201).send(nuevaInstitucion);
+
+    const institucionCompleta = await Instituciones.findByPk(nuevaInstitucion.id, {
+      include: [{
+        model: EncargadoInstitucion,
+        as: 'encargado'
+      }]
+    });
+    reply.status(201).send(institucionCompleta);
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse('Error al crear la institución', 'CREATE_INSTITUCION_ERROR', error));
@@ -72,7 +91,7 @@ export async function createInstitucion(request, reply) {
  */
 export async function updateInstitucion(request, reply) {
   const { id } = request.params;
-  const { nombre, direccion, telefono, email, fecha_fundacion, nit, estado } = request.body;
+  const { nombre, direccion, telefono, email, fecha_fundacion, nit, estado, id_encargado } = request.body;
   try {
     const institucion = await Instituciones.findByPk(id);
     if (!institucion) {
@@ -85,9 +104,17 @@ export async function updateInstitucion(request, reply) {
       email,
       fecha_fundacion: fecha_fundacion ? new Date(fecha_fundacion) : null,
       nit,
-      estado
+      estado,
+      id_encargado
     });
-    reply.send(institucion);
+
+    const institucionActualizada = await Instituciones.findByPk(id, {
+      include: [{
+        model: EncargadoInstitucion,
+        as: 'encargado'
+      }]
+    });
+    reply.send(institucionActualizada);
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse('Error al actualizar la institución', 'UPDATE_INSTITUCION_ERROR', error));

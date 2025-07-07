@@ -108,6 +108,10 @@ fastify.addSchema({
     fecha_fundacion: { type: 'string', format: 'date', example: '2000-01-01' },
     nit: { type: 'string', example: '1234567890' },
     estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+    id_encargado: { type: 'integer', example: 1 },
+    encargado: {
+      $ref: 'EncargadoInstitucion'
+    },
     created_at: { type: 'string', example: '2023-01-01T12:00:00Z' },
     updated_at: { type: 'string', example: '2023-01-02T12:00:00Z' }
   }
@@ -227,7 +231,7 @@ fastify.addSchema({
         {
           type: 'object',
           properties: {
-            institucion: { $ref: 'Institucion' }
+            institucion: { $ref: 'Instituciones' }
           }
         }
       ]
@@ -371,7 +375,7 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
-  $id: 'InstitucionValidation',
+  $id: 'InstitucionesValidation',
   type: 'object',
   properties: {
     nombre: { type: 'string' },
@@ -380,7 +384,8 @@ fastify.addSchema({
     email: { type: 'string' },
     fecha_fundacion: { type: 'string', format: 'date' },
     nit: { type: 'string' },
-    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] }
+    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+    id_encargado: { type: 'integer' }
   }
 });
 
