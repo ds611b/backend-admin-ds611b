@@ -2,6 +2,7 @@ import {
   getPerfilesUsuario,
   getPerfilUsuarioById,
   getPerfilUsuarioByUsuarioId,
+  getPerfilesUsuarioByGenero,
   createPerfilUsuario,
   updatePerfilUsuario,
   deletePerfilUsuario
@@ -208,34 +209,7 @@ async function perfilUsuarioRoutes(fastify, options) {
         }
       }
     }
-  }, async (request, reply) => {
-    const { genero } = request.params;
-    try {
-      const perfiles = await PerfilUsuario.findAll({ 
-        where: { genero },
-        include: {
-          model: Usuario,
-          as: 'usuario'
-        }
-      });
-      
-      if (!perfiles || perfiles.length === 0) {
-        return reply.status(404).send(createErrorResponse(
-          'No se encontraron perfiles con el género especificado',
-          'PERFILES_NOT_FOUND'
-        ));
-      }
-      
-      reply.send(perfiles);
-    } catch (error) {
-      request.log.error(error);
-      reply.status(500).send(createErrorResponse(
-        'Error al obtener perfiles por género',
-        'GET_PERFILES_GENERO_ERROR',
-        error
-      ));
-    }
-  });
+  }, getPerfilesUsuarioByGenero);
 }
 
 export default perfilUsuarioRoutes;

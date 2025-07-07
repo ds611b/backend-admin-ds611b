@@ -1,4 +1,3 @@
-import { json } from 'sequelize';
 import { PerfilUsuario, Carreras, Usuarios, Escuelas } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
@@ -121,11 +120,40 @@ export async function getPerfilUsuarioByUsuarioId(request, reply) {
   }
 }
 
+export async function getPerfilesUsuarioByGenero(request, reply) {
+  const { genero } = request.params;
+  try {
+    const perfiles = await PerfilUsuario.findAll({
+      where: { genero },
+      include: {
+        model: Usuarios,
+        as: 'usuario'
+      }
+    });
+
+    if (!perfiles || perfiles.length === 0) {
+      return reply.status(404).send(createErrorResponse(
+        'No se encontraron perfiles con el género especificado',
+        'PERFILES_NOT_FOUND'
+      ));
+    }
+
+    reply.send(perfiles);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener perfiles por género',
+      'GET_PERFILES_GENERO_ERROR',
+      error
+    ));
+  }
+}
+
 /**
  * Crea un nuevo perfil de usuario con opción de carrera.
  */
 export async function createPerfilUsuario(request, reply) {
-  const { usuario_id, direccion, telefono, anio_academico, fecha_nacimiento, genero, foto_perfil, id_carrera } = request.body;
+  const { usuario_id, direccion, telefono, fecha_nacimiento, genero, foto_perfil, carnet, anio_academico, id_carrera } = request.body;
 
   try {
     // Verificar si la carrera existe si se proporciona
@@ -141,12 +169,13 @@ export async function createPerfilUsuario(request, reply) {
 
     const nuevoPerfil = await PerfilUsuario.create({
       usuario_id,
-      telefono,
       direccion,
-      anio_academico,
+      telefono,
       fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
       genero,
       foto_perfil,
+      carnet,
+      anio_academico,
       id_carrera
     });
 
@@ -181,7 +210,7 @@ export async function createPerfilUsuario(request, reply) {
  */
 export async function updatePerfilUsuario(request, reply) {
   const { id } = request.params;
-  const { direccion, telefono, anio_academico, fecha_nacimiento, genero, foto_perfil, id_carrera } = request.body;
+  const { direccion, telefono, fecha_nacimiento, genero, foto_perfil, carnet, anio_academico, id_carrera } = request.body;
 
   try {
     const perfil = await PerfilUsuario.findByPk(id);
@@ -204,12 +233,13 @@ export async function updatePerfilUsuario(request, reply) {
     }
 
     await perfil.update({
-      telefono,
       direccion,
-      anio_academico,
+      telefono,
       fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
       genero,
       foto_perfil,
+      carnet,
+      anio_academico,
       id_carrera
     });
 
