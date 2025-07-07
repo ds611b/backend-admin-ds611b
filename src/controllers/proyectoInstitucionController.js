@@ -1,4 +1,4 @@
-import { ProyectosInstitucion, Instituciones } from '../models/index.js';
+import { ProyectosInstitucion, Instituciones, EncargadoInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -9,7 +9,10 @@ import { createErrorResponse } from '../utils/errorResponse.js';
 export async function getProyectosInstitucion(request, reply) {
   try {
     const proyectos = await ProyectosInstitucion.findAll({
-      include: { model: Instituciones, as: 'institucion' }
+      include: [
+        { model: Instituciones, as: 'institucion' },
+        { model: EncargadoInstitucion, as: 'encargado' }
+      ]
     });
     reply.send(proyectos);
   } catch (error) {
@@ -31,10 +34,10 @@ export async function getProyectoInstitucionById(request, reply) {
   const { id } = request.params;
   try {
     const proyecto = await ProyectosInstitucion.findByPk(id, {
-      include: {
-        model: Instituciones,
-        as: 'institucion'
-      },
+      include: [
+        { model: Instituciones, as: 'institucion' },
+        { model: EncargadoInstitucion, as: 'encargado' }
+      ]
     });
     if (!proyecto) {
       return reply.status(404).send(createErrorResponse(
@@ -55,23 +58,29 @@ export async function getProyectoInstitucionById(request, reply) {
  * @param {import('fastify').FastifyReply} reply
  */
 export async function createProyectoInstitucion(request, reply) {
-  const { institucion_id, nombre, descripcion, fecha_inicio, fecha_fin, modalidad, direccion, disponibilidad } = request.body;
+  const { institucion_id, nombre, descripcion, sitio_web,
+    fecha_inicio, fecha_fin, modalidad, direccion, actividad_principal,
+    horario_requerido, disponibilidad, id_encargado } = request.body;
   try {
     const nuevoProyecto = await ProyectosInstitucion.create({
       institucion_id,
       nombre,
       descripcion,
+      sitio_web,
       fecha_inicio: fecha_inicio ? new Date(fecha_inicio) : null,
       fecha_fin: fecha_fin ? new Date(fecha_fin) : null,
       modalidad,
       direccion,
-      disponibilidad
+      actividad_principal,
+      horario_requerido,
+      disponibilidad,
+      id_encargado
     });
     const proyectoActualizado = await ProyectosInstitucion.findByPk(nuevoProyecto.id, {
-      include: {
-        model: Instituciones,
-        as: 'institucion'
-      },
+      include: [
+        { model: Instituciones, as: 'institucion' },
+        { model: EncargadoInstitucion, as: 'encargado' }
+      ]
     });
     reply.status(201).send(proyectoActualizado);
   } catch (error) {
@@ -91,7 +100,9 @@ export async function createProyectoInstitucion(request, reply) {
  */
 export async function updateProyectoInstitucion(request, reply) {
   const { id } = request.params;
-  const { institucion_id, nombre, descripcion, fecha_inicio, fecha_fin, modalidad, direccion, disponibilidad, estado } = request.body;
+  const { institucion_id, nombre, descripcion, sitio_web,
+    fecha_inicio, fecha_fin, modalidad, direccion, actividad_principal,
+    horario_requerido, disponibilidad, id_encargado } = request.body;
   try {
     const proyecto = await ProyectosInstitucion.findByPk(id);
     if (!proyecto) {
@@ -101,18 +112,21 @@ export async function updateProyectoInstitucion(request, reply) {
       institucion_id,
       nombre,
       descripcion,
+      sitio_web,
       fecha_inicio: fecha_inicio ? new Date(fecha_inicio) : null,
       fecha_fin: fecha_fin ? new Date(fecha_fin) : null,
       modalidad,
       direccion,
+      actividad_principal,
+      horario_requerido,
       disponibilidad,
-      estado
+      id_encargado
     });
     const proyectoActualizado = await ProyectosInstitucion.findByPk(id, {
-      include: {
-        model: Instituciones,
-        as: 'institucion',
-      }
+      include: [
+        { model: Instituciones, as: 'institucion' },
+        { model: EncargadoInstitucion, as: 'encargado' }
+      ]
     });
     reply.send(proyectoActualizado);
   } catch (error) {
@@ -167,10 +181,10 @@ export async function getProyectoInstitucionByEstado(request, reply) {
 
     const proyectos = await ProyectosInstitucion.findAll({
       where: whereClause,
-      include: {
-        model: Instituciones,
-        as: 'institucion'
-      }
+      include: [
+        { model: Instituciones, as: 'institucion' },
+        { model: EncargadoInstitucion, as: 'encargado' }
+      ]
     });
 
     if (!proyectos || proyectos.length === 0) {

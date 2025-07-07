@@ -125,11 +125,18 @@ fastify.addSchema({
     institucion_id: { type: 'integer', example: 1 },
     nombre: { type: 'string', example: 'Proyecto de Modernización' },
     descripcion: { type: 'string', example: 'Implementación de nuevas tecnologías en la institución.' },
+    sitio_web: { type: 'string', example: 'https://www.institucion.com/proyecto' },
     fecha_inicio: { type: 'string', format: 'date', example: '2024-01-15' },
     fecha_fin: { type: 'string', format: 'date', example: '2024-12-31' },
     modalidad: { type: 'string', example: 'Presencial' },
     direccion: { type: 'string', example: 'Calle Principal #123' },
+    actividad_principal: { type: 'string', example: 'Capacitación en nuevas tecnologías' },
+    horario_requerido: { type: 'string', example: 'Lunes a Viernes, 9:00 AM - 5:00 PM' },
     disponibilidad: { type: 'boolean', example: true },
+    id_encargado: { type: 'integer', example: 1 },
+    encargado: {
+      $ref: 'EncargadoInstitucion'
+    },
     estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
     institucion: { $ref: 'Instituciones' },
     created_at: { type: 'string', example: '2024-03-30T10:00:00Z' },
@@ -328,7 +335,7 @@ fastify.addSchema({
     },
     carnet: { type: 'string', example: '1234567', maxLength: 7 },
     carrera: { $ref: 'Carreras' },
-    usuario: { $ref: 'Usuario' }, 
+    usuario: { $ref: 'Usuario' },
     created_at: {
       type: 'string',
       format: 'date-time',
@@ -390,20 +397,23 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
-  $id: 'ProyectoInstitucionValidation',
+  $id: 'ProyectosInstitucionValidation',
   type: 'object',
   properties: {
     institucion_id: { type: 'integer' },
     nombre: { type: 'string' },
     descripcion: { type: 'string' },
+    sitio_web: { type: 'string', format: 'uri' },
     fecha_inicio: { type: 'string', format: 'date' },
     fecha_fin: { type: 'string', format: 'date' },
     modalidad: { type: 'string', enum: ['Presencial', 'Virtual', 'Híbrida'] },
     direccion: { type: 'string' },
+    actividad_principal: { type: 'string' },
+    horario_requerido: { type: 'string' },
     disponibilidad: { type: 'boolean' },
+    id_encargado: { type: 'integer' },
     estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
-  },
-  required: ['institucion_id', 'nombre', 'descripcion']
+  }
 });
 
 fastify.addSchema({
