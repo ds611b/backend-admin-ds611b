@@ -463,6 +463,7 @@ fastify.addSchema({
   properties: {
     usuario_id: { type: 'integer' },
     direccion: { type: 'string', nullable: true },
+    telefono: { type: 'string', maxLength: 20, nullable: true },
     fecha_nacimiento: {
       type: 'string',
       format: 'date',
@@ -474,7 +475,7 @@ fastify.addSchema({
       nullable: true
     },
     foto_perfil: { type: 'string', nullable: true },
-    telefono: { type: 'string', maxLength: 20, nullable: true },
+    carnet: { type: 'string', maxLength: 7, nullable: true },
     anio_academico: { type: 'string', maxLength: 4, nullable: true },
     id_carrera: { type: 'integer', nullable: true }
   },

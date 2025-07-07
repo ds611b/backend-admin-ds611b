@@ -36,7 +36,7 @@ const PerfilUsuario = sequelize.define('PerfilUsuario', {
     allowNull: false,
   },
   anio_academico: {
-    type: DataTypes.STRING(4),
+    type: DataTypes.STRING(25),
     allowNull: true,
   },
   id_carrera: {
