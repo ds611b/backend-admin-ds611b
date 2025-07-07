@@ -9,8 +9,8 @@ export async function getCarreras(request, reply) {
     const carreras = await Carreras.findAll({
       include: [{
         model: Escuelas,
-        as: 'Escuela',
-        attributes: ['id', 'nombre']
+        as: 'escuela',
+        //attributes: ['id', 'nombre']
       }],
       order: [['nombre', 'ASC']]
     });

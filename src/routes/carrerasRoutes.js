@@ -16,7 +16,7 @@ async function carrerasRoutes(fastify, options) {
         200: {
           description: 'Lista de carreras obtenida exitosamente',
           type: 'array',
-          items: { $ref: 'CarrerasWithEscuela' }
+          items: { $ref: 'Carreras' }
         },
         500: {
           description: 'Error al obtener las carreras',
