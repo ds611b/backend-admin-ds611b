@@ -23,6 +23,7 @@ import carrerasRoutes from './routes/carrerasRoutes.js';
 import coordinadoresCarreraRoutes from './routes/coordinadoresCarreraRoutes.js';
 import contactoEmergenciaRoutes from './routes/contactoEmergenciaRoutes.js';
 import encargadoInstitucionRoutes from './routes/encargadoInstitucionRoutes.js';
+import usuariosRoutes from './routes/usuariosRoutes.js';
 
 
 /**
@@ -158,9 +159,10 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
-  $id: 'Usuario',
+  $id: 'Usuarios',
   type: 'object',
   properties: {
+    id: { type: 'integer', example: 1 },
     primer_nombre: { type: 'string', maxLength: 100, example: 'Juan' },
     segundo_nombre: { type: 'string', maxLength: 100, example: 'Jose' },
     primer_apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
@@ -168,8 +170,8 @@ fastify.addSchema({
     email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
     //password_hash: { type: 'string', maxLength: 255, example: '$2b$10$EIXaN/Z8g1234567890abcdefg' },
     rol_id: { type: 'integer', example: 2 }
-  },
-  required: ['primer_nombre', 'primer_apellido', 'email', 'password_hash', 'rol_id']
+  }
+  //required: ['primer_nombre', 'primer_apellido', 'email', 'password_hash', 'rol_id']
 });
 
 fastify.addSchema({
@@ -335,7 +337,7 @@ fastify.addSchema({
     },
     carnet: { type: 'string', example: '1234567', maxLength: 7 },
     carrera: { $ref: 'Carreras' },
-    usuario: { $ref: 'Usuario' },
+    usuario: { $ref: 'Usuarios' },
     created_at: {
       type: 'string',
       format: 'date-time',
@@ -346,7 +348,7 @@ fastify.addSchema({
       format: 'date-time',
       example: '2023-01-01T00:00:00Z'
     },
-    usuario: { $ref: 'Estudiante' } // Referencia al esquema Usuario
+    //usuario: { $ref: 'Estudiantes' } // Referencia al esquema Usuario
   }
 });
 
@@ -416,20 +418,24 @@ fastify.addSchema({
   }
 });
 
+// En tu punto de arranque (p. ej. app.js o server.js)
 fastify.addSchema({
-  $id: 'UsuarioValidation',
-  allOf: [
-    { $ref: 'Usuario' },
-    {
-      type: 'object',
-      properties: {
-        id: { type: 'integer', example: 1 },
-        created_at: { type: 'string', format: 'date-time', example: '2025-04-21T14:30:00Z' },
-        updated_at: { type: 'string', format: 'date-time', example: '2025-04-21T15:00:00Z' }
-      }
-    }
-  ]
+  $id: 'UsuariosValidation',
+  type: 'object',
+  properties: {
+    primer_nombre:   { type: 'string', maxLength: 100 },
+    segundo_nombre:  { type: 'string', maxLength: 100 },
+    primer_apellido: { type: 'string', maxLength: 100 },
+    segundo_apellido:{ type: 'string', maxLength: 100 },
+    email: {
+      type: 'string',
+      format: 'email',
+      maxLength: 150
+    },
+    rol_id: { type: 'integer' }
+  }
 });
+
 
 
 fastify.addSchema({
@@ -806,6 +812,7 @@ fastify.register(carrerasRoutes, { prefix: '/api' });
 fastify.register(coordinadoresCarreraRoutes, { prefix: '/api' });
 fastify.register(contactoEmergenciaRoutes, { prefix: '/api' });
 fastify.register(encargadoInstitucionRoutes, { prefix: '/api' });
+fastify.register(usuariosRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
