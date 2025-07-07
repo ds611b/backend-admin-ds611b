@@ -67,7 +67,7 @@ async function proyectoInstitucionRoutes(fastify, options) {
       description: 'Crea un nuevo proyecto de institución en el sistema.',
       tags: ['Proyectos de Instituciones'],
       body: {
-        $ref: 'ProyectoInstitucionValidation',
+        $ref: 'ProyectosInstitucionValidation',
       },
       response: {
         201: {
@@ -95,7 +95,7 @@ async function proyectoInstitucionRoutes(fastify, options) {
         required: ['id'],
       },
       body: {
-        $ref: 'ProyectoInstitucionValidation',
+        $ref: 'ProyectosInstitucionValidation',
       },
       response: {
         200: {
