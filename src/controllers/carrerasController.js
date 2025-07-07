@@ -34,8 +34,7 @@ export async function getCarreraById(request, reply) {
     const carrera = await Carreras.findByPk(id, {
       include: [{
         model: Escuelas,
-        as: 'Escuela',
-        attributes: ['id', 'nombre']
+        as: 'escuela'
       }]
     });
 
@@ -81,8 +80,7 @@ export async function createCarrera(request, reply) {
     const carreraCreada = await Carreras.findByPk(nuevaCarrera.id, {
       include: [{
         model: Escuelas,
-        as: 'Escuela',
-        attributes: ['id', 'nombre']
+        as: 'escuela'
       }]
     });
 
@@ -141,7 +139,7 @@ export async function updateCarrera(request, reply) {
     const carreraActualizada = await Carreras.findByPk(id, {
       include: [{
         model: Escuelas,
-        as: 'Escuela',
+        as: 'escuela',
         attributes: ['id', 'nombre']
       }]
     });

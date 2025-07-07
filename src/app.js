@@ -534,19 +534,6 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
-  $id: 'CarrerasWithEscuela',
-  type: 'object',
-  properties: {
-    id: { type: 'integer' },
-    nombre: { type: 'string' },
-    id_escuela: { type: 'integer' },
-    created_at: { type: 'string', format: 'date-time' },
-    updated_at: { type: 'string', format: 'date-time' },
-    Escuela: { $ref: 'Escuelas' }
-  }
-});
-
-fastify.addSchema({
   $id: 'CoordinadorValidation',
   type: 'object',
   properties: {
@@ -606,7 +593,7 @@ fastify.addSchema({
     id_carrera: { type: 'integer' },
     created_at: { type: 'string', format: 'date-time' },
     updated_at: { type: 'string', format: 'date-time' },
-    Carrera: { $ref: 'CarrerasWithEscuela' }
+    Carrera: { $ref: 'Carreras' }
   }
 });
 
