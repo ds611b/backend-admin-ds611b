@@ -37,7 +37,11 @@ const Instituciones = sequelize.define('Instituciones', {
     type: DataTypes.ENUM('Pendiente', 'Aprobado', 'Rechazado'),
     defaultValue: 'Pendiente',
     allowNull: false,
-  }
+  },
+    id_encargado: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
 }, {
   tableName: 'Instituciones',
   timestamps: true,

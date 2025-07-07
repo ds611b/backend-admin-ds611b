@@ -17,18 +17,17 @@ const BitacoraItems = sequelize.define('BitacoraItems', {
   },
   punch_in: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW, // Equivalent to CURRENT_TIMESTAMP
+    defaultValue: DataTypes.NOW,
     allowNull: false,
   },
   punch_out: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW, // Equivalent to CURRENT_TIMESTAMP
+    defaultValue: DataTypes.NOW,
     allowNull: false,
   },
 }, {
   tableName: 'BitacoraItems',
-  timestamps: false, // No created_at/updated_at since not in your SQL definition
-  // You might want to add paranoid: true for soft deletes if needed
+  timestamps: false,
 });
 
 export default BitacoraItems;

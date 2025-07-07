@@ -19,6 +19,10 @@ const ProyectosInstitucion = sequelize.define('ProyectosInstitucion', {
     type: DataTypes.TEXT,
     allowNull: false,
   },
+  sitio_web: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+  },
   fecha_inicio: {
     type: DataTypes.DATE,
     allowNull: true,
@@ -35,8 +39,21 @@ const ProyectosInstitucion = sequelize.define('ProyectosInstitucion', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  actividad_principal: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  horario_requerido: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+  },
   disponibilidad: {
     type: DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue: true,
+  },
+  id_encargado: {
+    type: DataTypes.INTEGER,
     allowNull: true,
   },
   estado: {

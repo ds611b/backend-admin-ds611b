@@ -89,6 +89,10 @@ BitacoraPerfilUsuario.belongsTo(PerfilUsuario, {  foreignKey: 'id_perfil_usuario
 BitacoraProyectoBitacoraItems.belongsTo(BitacoraProyecto, {  foreignKey: 'id_bitacora',  onDelete: 'CASCADE'});
 BitacoraProyectoBitacoraItems.belongsTo(BitacoraItems, { foreignKey: 'id_bitacora_item',  onDelete: 'CASCADE'});
 
+// Instituciones y EncargadoInstitucion (1:N)
+Instituciones.belongsTo(EncargadoInstitucion, { foreignKey: 'id_encargado', as: 'encargado' });
+EncargadoInstitucion.hasMany(Instituciones, { foreignKey: 'id_encargado', as: 'instituciones' });
+
 // Exportar todos los modelos
 export {
   Roles,
