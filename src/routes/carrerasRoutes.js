@@ -41,7 +41,7 @@ async function carrerasRoutes(fastify, options) {
       response: {
         200: {
           description: 'Carrera encontrada',
-          $ref: 'CarrerasWithEscuela'
+          $ref: 'Carreras'
         },
         404: {
           description: 'Carrera no encontrada',
@@ -66,7 +66,7 @@ async function carrerasRoutes(fastify, options) {
       response: {
         201: {
           description: 'Carrera creada exitosamente',
-          $ref: 'CarrerasWithEscuela'
+          $ref: 'Carreras'
         },
         400: {
           description: 'La escuela especificada no existe',
@@ -102,7 +102,7 @@ async function carrerasRoutes(fastify, options) {
       response: {
         200: {
           description: 'Carrera actualizada exitosamente',
-          $ref: 'CarrerasWithEscuela'
+          $ref: 'Carreras'
         },
         400: {
           description: 'La escuela especificada no existe',
