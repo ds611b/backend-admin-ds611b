@@ -1,4 +1,4 @@
-import { getInstituciones, getInstitucionById, createInstitucion, updateInstitucion, deleteInstitucion } from '../controllers/institucionController.js';
+import { getInstituciones, getInstitucionById, createInstitucion, getInstitucionesActivas, updateInstitucion, deleteInstitucion } from '../controllers/institucionController.js';
 
 /**
  * Define las rutas para las instituciones.
@@ -53,6 +53,25 @@ async function institucionRoutes(fastify, options) {
       }
     }
   }, getInstitucionById);
+
+  // GET /instituciones/activas
+  fastify.get('/instituciones/activas', {
+    schema: {
+      description: 'Obtiene instituciones con estado Pendiente o Aceptado (excluye Rechazadas)',
+      tags: ['Instituciones'],
+      response: {
+        200: {
+          description: 'Lista de instituciones activas obtenida exitosamente',
+          type: 'array',
+          items: { $ref: 'Instituciones' }
+        },
+        500: {
+          description: 'Error al obtener las instituciones activas',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, getInstitucionesActivas);
 
   // POST /instituciones
   fastify.post('/instituciones', {
