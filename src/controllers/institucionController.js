@@ -85,6 +85,33 @@ export async function createInstitucion(request, reply) {
 }
 
 /**
+ * Obtiene instituciones con estado Pendiente o Aceptado (excluye Rechazadas)
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
+ */
+export async function getInstitucionesActivas(request, reply) {
+  try {
+    const instituciones = await Instituciones.findAll({
+      where: {
+        estado: ['Pendiente', 'Aprobado']
+      },
+      include: [{
+        model: EncargadoInstitucion,
+        as: 'encargado'
+      }]
+    });
+    reply.send(instituciones);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener las instituciones activas',
+      'GET_INSTITUCIONES_ACTIVAS_ERROR',
+      error
+    ));
+  }
+}
+
+/**
  * Actualiza una institución existente.
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
