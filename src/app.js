@@ -228,6 +228,7 @@ fastify.addSchema({
   $id: 'AplicacionesEstudiante',
   type: 'object',
   properties: {
+    id: { type: 'integer', example: 1 },
     proyecto_id: { type: 'integer', example: 2 },
     estado: {
       type: 'string',
