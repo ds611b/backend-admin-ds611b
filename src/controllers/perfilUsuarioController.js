@@ -295,3 +295,153 @@ export async function deletePerfilUsuario(request, reply) {
     }
   }
 }
+
+/**
+ * Actualiza de forma conjunta los datos del Usuario y su Perfil asociado.
+ */
+export async function updateUsuarioConPerfil(request, reply) {
+  const { id } = request.params; // ID del usuario
+  const {
+    // Campos de Usuario
+    primer_nombre,
+    segundo_nombre,
+    primer_apellido,
+    segundo_apellido,
+    email,
+    // Campos de PerfilUsuario
+    direccion,
+    telefono,
+    fecha_nacimiento,
+    genero,
+    carnet,
+    anio_academico,
+    id_carrera
+  } = request.body;
+
+  try {
+    // 1. Verificar que el usuario existe
+    const usuario = await Usuarios.findByPk(id);
+    if (!usuario) {
+      return reply.status(404).send(createErrorResponse(
+        'Usuario no encontrado',
+        'USUARIO_NOT_FOUND'
+      ));
+    }
+
+    // 2. Validar email único (si se está cambiando)
+    if (email && email !== usuario.email) {
+      const emailExistente = await Usuarios.findOne({
+        where: { email }
+      });
+      if (emailExistente) {
+        return reply.status(409).send(createErrorResponse(
+          'El email ya está registrado por otro usuario',
+          'EMAIL_DUPLICATED'
+        ));
+      }
+    }
+
+    // 3. Buscar perfil del usuario
+    let perfil = await PerfilUsuario.findOne({
+      where: { usuario_id: id }
+    });
+
+    // 4. Validar carnet único (si se proporciona)
+    if (carnet) {
+      const perfilConCarnet = await PerfilUsuario.findOne({
+        where: { carnet }
+      });
+      
+      // Verificar que el carnet no esté usado por otro perfil
+      if (perfilConCarnet && perfilConCarnet.usuario_id !== parseInt(id)) {
+        return reply.status(409).send(createErrorResponse(
+          'El carné estudiantil ya está registrado por otro usuario',
+          'CARNET_DUPLICATED'
+        ));
+      }
+    }
+
+    // 5. Verificar si la carrera existe (si se proporciona)
+    if (id_carrera) {
+      const carrera = await Carreras.findByPk(id_carrera);
+      if (!carrera) {
+        return reply.status(400).send(createErrorResponse(
+          'La carrera especificada no existe',
+          'CARRERA_NOT_FOUND'
+        ));
+      }
+    }
+
+    // 6. Actualizar datos del Usuario
+    await Usuarios.update(
+      {
+        primer_nombre,
+        segundo_nombre,
+        primer_apellido,
+        segundo_apellido,
+        email
+      },
+      { where: { id }, validate: true }
+    );
+
+    // 7. Actualizar o crear perfil de usuario
+    if (perfil) {
+      // Actualizar perfil existente
+      await perfil.update({
+        direccion,
+        telefono,
+        fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : perfil.fecha_nacimiento,
+        genero,
+        carnet,
+        anio_academico,
+        id_carrera
+      });
+    } else {
+      // Crear nuevo perfil si no existe
+      if (!carnet) {
+        return reply.status(400).send(createErrorResponse(
+          'El carné estudiantil es obligatorio para crear un perfil',
+          'CARNET_REQUIRED'
+        ));
+      }
+      await PerfilUsuario.create({
+        usuario_id: id,
+        direccion,
+        telefono,
+        fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
+        genero,
+        carnet,
+        anio_academico,
+        id_carrera
+      });
+    }
+
+    // 8. Obtener datos actualizados con relaciones
+    const usuarioActualizado = await Usuarios.findByPk(id, {
+      attributes: { exclude: ['password_hash'] },
+      include: [{
+        model: PerfilUsuario,
+        include: [{
+          model: Carreras,
+          as: 'carrera',
+          attributes: ['id', 'nombre'],
+          include: [{
+            model: Escuelas,
+            as: 'escuela',
+            attributes: ['id', 'nombre']
+          }]
+        }]
+      }]
+    });
+
+    reply.send(usuarioActualizado);
+
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al actualizar el usuario y perfil',
+      'UPDATE_USUARIO_PERFIL_ERROR',
+      error
+    ));
+  }
+}

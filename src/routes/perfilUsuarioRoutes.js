@@ -5,7 +5,8 @@ import {
   getPerfilesUsuarioByGenero,
   createPerfilUsuario,
   updatePerfilUsuario,
-  deletePerfilUsuario
+  deletePerfilUsuario,
+  updateUsuarioConPerfil
 } from '../controllers/perfilUsuarioController.js';
 
 /**
@@ -210,6 +211,47 @@ async function perfilUsuarioRoutes(fastify, options) {
       }
     }
   }, getPerfilesUsuarioByGenero);
+
+  /* -----------------------------------------------------------------------
+   * PUT /usuarios/:id/perfil-completo – actualizar usuario y perfil en conjunto
+   * ---------------------------------------------------------------------*/
+  fastify.put('/usuarios/:id/perfil-completo', {
+    schema: {
+      description: 'Actualiza de forma conjunta los datos del usuario y su perfil asociado',
+      tags: ['Perfiles de Usuario'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'ID del usuario' }
+        },
+        required: ['id']
+      },
+      body: {
+        type: 'object',
+        properties: {
+          primer_nombre: { type: 'string', maxLength: 100 },
+          segundo_nombre: { type: 'string', maxLength: 100 },
+          primer_apellido: { type: 'string', maxLength: 100 },
+          segundo_apellido: { type: 'string', maxLength: 100 },
+          email: { type: 'string', format: 'email' },
+          direccion: { type: 'string' },
+          telefono: { type: 'string', maxLength: 20 },
+          fecha_nacimiento: { type: 'string', format: 'date' },
+          genero: { type: 'string', enum: ['Masculino', 'Femenino', 'Otro'] },
+          carnet: { type: 'string', maxLength: 7 },
+          anio_academico: { type: 'string', maxLength: 25 },
+          id_carrera: { type: 'integer' }
+        }
+      },
+      response: {
+        200: { description: 'Usuario y perfil actualizados exitosamente', type: 'object' },
+        400: { description: 'Carnet requerido o carrera no encontrada', $ref: 'ErrorResponse' },
+        404: { description: 'Usuario no encontrado', $ref: 'ErrorResponse' },
+        409: { description: 'Email o carnet duplicado', $ref: 'ErrorResponse' },
+        500: { description: 'Error al actualizar', $ref: 'ErrorResponse' }
+      }
+    }
+  }, updateUsuarioConPerfil);
 }
 
 export default perfilUsuarioRoutes;

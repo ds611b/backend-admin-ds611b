@@ -159,11 +159,7 @@ export async function deleteProyectoInstitucion(request, reply) {
     reply.status(500).send(createErrorResponse('Error al eliminar el proyecto de institución', 'DELETE_PROYECTO_INSTITUCION_ERROR', error));
   }
 }
-/**
- * Obtiene todos los proyectos de institución filtrados por estado.
- * @param {import('fastify').FastifyRequest} request
- * @param {import('fastify').FastifyReply} reply
- */
+
 /**
  * Obtiene todos los proyectos de institución filtrados por estado y disponibilidad.
  * @param {import('fastify').FastifyRequest} request
