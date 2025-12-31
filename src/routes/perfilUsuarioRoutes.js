@@ -244,7 +244,7 @@ async function perfilUsuarioRoutes(fastify, options) {
         }
       },
       response: {
-        200: { description: 'Usuario y perfil actualizados exitosamente', type: 'object' },
+        200: { description: 'Usuario y perfil actualizados exitosamente', $ref: 'PerfilUsuario' },
         400: { description: 'Carnet requerido o carrera no encontrada', $ref: 'ErrorResponse' },
         404: { description: 'Usuario no encontrado', $ref: 'ErrorResponse' },
         409: { description: 'Email o carnet duplicado', $ref: 'ErrorResponse' },

@@ -385,6 +385,7 @@ export async function updateUsuarioConPerfil(request, reply) {
     );
 
     // 7. Actualizar o crear perfil de usuario
+    let perfilId;
     if (perfil) {
       // Actualizar perfil existente
       await perfil.update({
@@ -396,6 +397,7 @@ export async function updateUsuarioConPerfil(request, reply) {
         anio_academico,
         id_carrera
       });
+      perfilId = perfil.id;
     } else {
       // Crear nuevo perfil si no existe
       if (!carnet) {
@@ -404,7 +406,7 @@ export async function updateUsuarioConPerfil(request, reply) {
           'CARNET_REQUIRED'
         ));
       }
-      await PerfilUsuario.create({
+      const nuevoPerfil = await PerfilUsuario.create({
         usuario_id: id,
         direccion,
         telefono,
@@ -414,27 +416,38 @@ export async function updateUsuarioConPerfil(request, reply) {
         anio_academico,
         id_carrera
       });
+      perfilId = nuevoPerfil.id;
     }
 
-    // 8. Obtener datos actualizados con relaciones
-    const usuarioActualizado = await Usuarios.findByPk(id, {
-      attributes: { exclude: ['password_hash'] },
+    // 8. Obtener perfil actualizado
+    const perfilActualizado = await PerfilUsuario.findByPk(perfilId, {
       include: [{
-        model: PerfilUsuario,
+        model: Carreras,
+        as: 'carrera',
+        attributes: ['id', 'nombre'],
         include: [{
-          model: Carreras,
-          as: 'carrera',
-          attributes: ['id', 'nombre'],
-          include: [{
-            model: Escuelas,
-            as: 'escuela',
-            attributes: ['id', 'nombre']
-          }]
+          model: Escuelas,
+          as: 'escuela',
+          attributes: ['id', 'nombre']
         }]
-      }]
+      },
+      {
+        model: Usuarios,
+        as: 'usuario',
+        attributes: ['id', 'primer_nombre', 'primer_apellido', 'email']
+      }
+      ]
     });
 
-    reply.send(usuarioActualizado);
+    if (!perfilActualizado) {
+      request.log.error(`No se pudo recuperar el perfil con id: ${perfilId}`);
+      return reply.status(404).send(createErrorResponse(
+        'No se pudo recuperar el perfil actualizado',
+        'PERFIL_NOT_RECOVERED'
+      ));
+    }
+
+    reply.send(perfilActualizado);
 
   } catch (error) {
     request.log.error(error);
