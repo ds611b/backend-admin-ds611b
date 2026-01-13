@@ -1,5 +1,6 @@
 // routes/usuariosRoutes.js
 import {
+  createUsuario,
   getUsuarios,
   getUsuarioById,
   updateUsuario,
@@ -13,8 +14,22 @@ import {
  */
 async function usuariosRoutes (fastify) {
 
-  /* -----------------------------------------------------------------------
-   * GET /usuarios – lista de usuarios
+  /* -----------------------------------------------------------------------   * POST /usuarios – crear un nuevo usuario
+   * ---------------------------------------------------------------------*/
+  fastify.post('/usuarios', {
+    schema: {
+      description: 'Crea un nuevo usuario',
+      tags: ['Usuarios'],
+      body: { $ref: 'UsuariosCreation' },
+      response: {
+        201: { description: 'Usuario creado exitosamente', $ref: 'Usuarios' },
+        409: { description: 'Email duplicado', $ref: 'ErrorResponse' },
+        500: { description: 'Error al crear el usuario', $ref: 'ErrorResponse' }
+      }
+    }
+  }, createUsuario);
+
+  /* -----------------------------------------------------------------------   * GET /usuarios – lista de usuarios
    * ---------------------------------------------------------------------*/
   fastify.get('/usuarios', {
     schema: {

@@ -170,10 +170,11 @@ fastify.addSchema({
     primer_apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
     segundo_apellido: { type: 'string', maxLength: 100, example: 'Santos' },
     email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
-    //password_hash: { type: 'string', maxLength: 255, example: '$2b$10$EIXaN/Z8g1234567890abcdefg' },
-    rol_id: { type: 'integer', example: 2 }
+    rol_id: { type: 'integer', example: 2 },
+    status: { type: 'integer', enum: [0, 1], example: 1, description: '0 = Inactivo, 1 = Activo' },
+    created_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' },
+    updated_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' }
   }
-  //required: ['primer_nombre', 'primer_apellido', 'email', 'password_hash', 'rol_id']
 });
 
 fastify.addSchema({
@@ -435,8 +436,29 @@ fastify.addSchema({
       format: 'email',
       maxLength: 150
     },
-    rol_id: { type: 'integer' }
+    rol_id: { type: 'integer' },
+    status: { type: 'integer', enum: [0, 1], description: '0 = Inactivo, 1 = Activo' }
   }
+});
+
+fastify.addSchema({
+  $id: 'UsuariosCreation',
+  type: 'object',
+  properties: {
+    primer_nombre:   { type: 'string', maxLength: 100 },
+    segundo_nombre:  { type: 'string', maxLength: 100 },
+    primer_apellido: { type: 'string', maxLength: 100 },
+    segundo_apellido:{ type: 'string', maxLength: 100 },
+    email: {
+      type: 'string',
+      format: 'email',
+      maxLength: 150
+    },
+    password_hash: { type: 'string' },
+    rol_id: { type: 'integer' },
+    status: { type: 'integer', enum: [0, 1], description: '0 = Inactivo, 1 = Activo', default: 1 }
+  },
+  required: ['primer_nombre', 'primer_apellido', 'email', 'password_hash', 'rol_id']
 });
 
 

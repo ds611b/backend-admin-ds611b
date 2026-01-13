@@ -13,7 +13,7 @@ const Usuarios = sequelize.define('Usuarios', {
   },
   segundo_nombre: {
     type: DataTypes.STRING(100),
-    allowNull: false,
+    allowNull: true,
   },
   primer_apellido: {
     type: DataTypes.STRING(100),
@@ -21,7 +21,7 @@ const Usuarios = sequelize.define('Usuarios', {
   },
   segundo_apellido: {
     type: DataTypes.STRING(100),
-    allowNull: false,
+    allowNull: true,
   },
   email: {
     type: DataTypes.STRING(150),

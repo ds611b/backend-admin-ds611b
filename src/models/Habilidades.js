@@ -9,7 +9,7 @@ const Habilidades = sequelize.define('Habilidades', {
   },
   descripcion: {
     type: DataTypes.STRING(50),
-    allowNull: true,
+    allowNull: false,
   },
 }, {
   tableName: 'Habilidades',
