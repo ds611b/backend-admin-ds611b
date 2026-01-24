@@ -129,7 +129,7 @@ async function contactoEmergenciaRoutes(fastify) {
       params: {
         type: 'object',
         properties: {
-          id_perfil_usuario: { type: 'number', description: 'ID del perfil de usuario' }
+          id_usuario: { type: 'number', description: 'ID del usuario' }
         },
         required: ['id_usuario']
       },
