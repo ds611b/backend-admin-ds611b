@@ -1,4 +1,4 @@
-import { PerfilUsuario, Carreras, Usuarios, Escuelas } from '../models/index.js';
+import { PerfilUsuario, Carreras, Usuarios, Escuelas, AplicacionesEstudiantes } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -65,6 +65,7 @@ export async function getPerfilUsuarioById(request, reply) {
       ]
     });
 
+
     if (!perfil) {
       return reply.status(404).send(createErrorResponse(
         'Perfil de usuario no encontrado',
@@ -108,6 +109,25 @@ export async function getPerfilUsuarioByUsuarioId(request, reply) {
       }
       ]
     });
+
+    // AGREGAR CANTIDAD DE PROYECTOS ASOCIADOS A ESTE PERFIL
+
+    // AGREGAR CANTIDAD DE PROYECTOS ASIGNADOS
+    const proyectosAsginados = await AplicacionesEstudiantes.count({
+      where: {
+        estudiante_id: usuario_id // o perfil.id según tu FK real
+      }
+    });
+
+    if (!perfil) {
+      return reply.status(404).send(createErrorResponse(
+        'Perfil de usuario no encontrado',
+        'PERFIL_USUARIO_NOT_FOUND'
+      ));
+    }
+
+    perfil.dataValues.proyectos_asignados = proyectosAsginados;           
+
 
     reply.send(perfil);
   } catch (error) {
