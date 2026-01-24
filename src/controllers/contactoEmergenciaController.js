@@ -124,29 +124,34 @@ export async function updateContactoEmergencia(request, reply) {
 export async function getContactoEmergenciaByPerfilUsuarioId(request, reply) {
   try {
     const contacto = await ContactoEmergencia.findOne({
-      where: { id_perfil_usuario: request.params.id_perfil_usuario },
       include: [{
         model: PerfilUsuario,
         as: 'PerfilUsuario',
+        where: {
+          usuario_id: request.params.id_perfil_usuario
+        },
         attributes: ['id', 'usuario_id']
       }]
     });
+
     if (!contacto) {
       return reply.status(404).send(createErrorResponse(
-        'Contacto de emergencia no encontrado para el perfil de usuario especificado',  
+        'Contacto de emergencia no encontrado para el perfil de usuario especificado',
         'CONTACTO_NOT_FOUND'
       ));
     }
+
     reply.send(contacto);
   } catch (error) {
     request.log.error(error);
-    reply.status(500).send(createErrorResponse( 
+    reply.status(500).send(createErrorResponse(
       'Error al obtener contacto de emergencia por perfil de usuario',
       'GET_CONTACTO_BY_PERFIL_ERROR',
       error
     ));
   }
 }
+
 
 
 
