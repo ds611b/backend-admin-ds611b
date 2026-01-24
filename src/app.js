@@ -322,6 +322,7 @@ fastify.addSchema({
     telefono: { type: 'string', example: '+5491123456789', nullable: true },
     direccion: { type: 'string', example: 'Calle Falsa 123', nullable: true },
     anio_academico: { type: 'string', example: '2', nullable: true },
+    proyectos_asignados: { type: 'integer', example: '2', nullable: true },
     fecha_nacimiento: {
       type: 'string',
       format: 'date',
