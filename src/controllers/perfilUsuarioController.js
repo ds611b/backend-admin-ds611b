@@ -20,7 +20,7 @@ export async function getPerfilesUsuario(request, reply) {
       {
         model: Usuarios,
         as: 'usuario',
-        attributes: ['id', 'primer_nombre', 'primer_apellido', 'email']
+        attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
       }
       ]
     });
@@ -60,7 +60,7 @@ export async function getPerfilUsuarioById(request, reply) {
       {
         model: Usuarios,
         as: 'usuario',
-        attributes: ['id', 'primer_nombre', 'primer_apellido', 'email']
+        attributes: ['id',  'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
       }
       ]
     });
@@ -104,7 +104,7 @@ export async function getPerfilUsuarioByUsuarioId(request, reply) {
       {
         model: Usuarios,
         as: 'usuario',
-        attributes: ['id', 'primer_nombre', 'primer_apellido', 'email']
+        attributes: ['id',  'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
       }
       ]
     });
@@ -189,7 +189,7 @@ export async function createPerfilUsuario(request, reply) {
       {
         model: Usuarios,
         as: 'usuario',
-        attributes: ['id', 'primer_nombre', 'primer_apellido', 'email']
+        attributes: ['id',  'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido',  'email']
       }
       ]
     });
