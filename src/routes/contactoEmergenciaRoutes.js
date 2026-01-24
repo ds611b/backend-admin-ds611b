@@ -3,6 +3,7 @@ import {
   getContactoEmergenciaById,
   createContactoEmergencia,
   updateContactoEmergencia,
+  getContactoEmergenciaByPerfilUsuarioId,
   deleteContactoEmergencia
 } from '../controllers/contactoEmergenciaController.js';
 
@@ -119,6 +120,36 @@ async function contactoEmergenciaRoutes(fastify) {
       }
     }
   }, updateContactoEmergencia);
+
+  // OBTENER CONTANTO DE EMERGENCIA POR ID DEL PERFEIL DE USUARIO
+  fastify.get('/contactos-emergencia/perfil-usuario/:id_perfil_usuario', {
+    schema: {
+      description: 'Obtiene un contacto de emergencia por ID del perfil de usuario',
+      tags: ['Contactos Emergencia'],
+      params: {
+        type: 'object',
+        properties: {
+          id_perfil_usuario: { type: 'number', description: 'ID del perfil de usuario' }
+        },
+        required: ['id_perfil_usuario']
+      },
+      response: {
+        200: {
+          description: 'Contacto obtenido exitosamente',
+          $ref: 'ContactoEmergencia'
+        },
+        404: {
+          description: 'Contacto no encontrado para el perfil de usuario especificado',
+          $ref: 'ErrorResponse'
+        },
+        500: {
+          description: 'Error al obtener el contacto',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, getContactoEmergenciaByPerfilUsuarioId);
+
 
   // DELETE: Eliminar un contacto
   fastify.delete('/contactos-emergencia/:id', {
