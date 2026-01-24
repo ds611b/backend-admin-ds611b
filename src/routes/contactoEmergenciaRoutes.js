@@ -122,7 +122,7 @@ async function contactoEmergenciaRoutes(fastify) {
   }, updateContactoEmergencia);
 
   // OBTENER CONTANTO DE EMERGENCIA POR ID DEL PERFEIL DE USUARIO
-  fastify.get('/contactos-emergencia/perfil-usuario/:id_perfil_usuario', {
+  fastify.get('/contactos-emergencia/usuario/:id_usuario', {
     schema: {
       description: 'Obtiene un contacto de emergencia por ID del perfil de usuario',
       tags: ['Contactos Emergencia'],
@@ -131,7 +131,7 @@ async function contactoEmergenciaRoutes(fastify) {
         properties: {
           id_perfil_usuario: { type: 'number', description: 'ID del perfil de usuario' }
         },
-        required: ['id_perfil_usuario']
+        required: ['id_usuario']
       },
       response: {
         200: {
@@ -139,7 +139,7 @@ async function contactoEmergenciaRoutes(fastify) {
           $ref: 'ContactoEmergencia'
         },
         404: {
-          description: 'Contacto no encontrado para el perfil de usuario especificado',
+          description: 'Contacto no encontrado para el usuario especificado',
           $ref: 'ErrorResponse'
         },
         500: {

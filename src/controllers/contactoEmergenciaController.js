@@ -128,7 +128,7 @@ export async function getContactoEmergenciaByPerfilUsuarioId(request, reply) {
         model: PerfilUsuario,
         as: 'PerfilUsuario',
         where: {
-          usuario_id: request.params.id_perfil_usuario
+          usuario_id: request.params.id_usuario
         },
         attributes: ['id', 'usuario_id']
       }]
