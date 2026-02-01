@@ -190,9 +190,10 @@ export async function getHabilidadesByUsuario(request, reply) {
 
     // Estructura la respuesta con información del usuario y sus habilidades
     const response = {
-        usuario_id: usuarioId,
+        usuario_id: parseInt(usuarioId),
         habilidades: habilidades.map(h => ({
-          id: h.habilidad.id,
+          id: h.id,  // ID del registro en UsuariosHabilidades (para DELETE)
+          habilidad_id: h.habilidad.id,  // ID de la habilidad
           descripcion: h.habilidad.descripcion
         }))
     };
