@@ -158,26 +158,65 @@ export async function updateUsuariosHabilidad(request, reply) {
 }
 
 /**
- * Elimina una asignación de habilidad por su ID.
+ * Elimina asignaciones de habilidades de un usuario.
+ * Acepta un array de habilidad_id para eliminar múltiples asignaciones.
  *
  * @param {import('fastify').FastifyRequest} request 
  * @param {import('fastify').FastifyReply} reply
  */
 export async function deleteUsuariosHabilidad(request, reply) {
-  const { id } = request.params;
   try {
-    const deleted = await UsuariosHabilidades.destroy({ where: { id } });
+    const payload = request.body;
+    const { usuario_id, habilidad_id } = payload;
+
+    // Si habilidad_id es un array, eliminar múltiples asignaciones
+    if (Array.isArray(habilidad_id)) {
+      const deleted = await UsuariosHabilidades.destroy({
+        where: {
+          usuario_id: usuario_id,
+          habilidad_id: habilidad_id
+        }
+      });
+
+      if (deleted > 0) {
+        return reply.status(200).send({
+          message: `Se eliminaron ${deleted} asignación(es) de habilidades`,
+          deleted_count: deleted,
+          usuario_id: usuario_id,
+          habilidades_eliminadas: habilidad_id
+        });
+      } else {
+        return reply.status(404).send(createErrorResponse(
+          'No se encontraron asignaciones para eliminar con los datos proporcionados',
+          'USUARIOS_HABILIDADES_NOT_FOUND_ERROR'
+        ));
+      }
+    }
+
+    // Si es un solo ID (compatibilidad)
+    const deleted = await UsuariosHabilidades.destroy({
+      where: {
+        usuario_id: usuario_id,
+        habilidad_id: habilidad_id
+      }
+    });
+
     if (deleted) {
-      reply.code(204).send();
+      return reply.status(200).send({
+        message: 'Asignación eliminada exitosamente',
+        deleted_count: deleted,
+        usuario_id: usuario_id,
+        habilidad_id: habilidad_id
+      });
     } else {
-      reply.status(404).send(createErrorResponse(
+      return reply.status(404).send(createErrorResponse(
         'Asignación no encontrada',
         'USUARIOS_HABILIDADES_NOT_FOUND_ERROR'
       ));
     }
   } catch (error) {
     request.log.error(error);
-    reply.status(500).send(createErrorResponse(
+    return reply.status(500).send(createErrorResponse(
       'Error al eliminar la asignación',
       'DELETE_USUARIOS_HABILIDAD_ERROR',
       error

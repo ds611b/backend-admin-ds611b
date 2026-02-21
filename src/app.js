@@ -307,6 +307,22 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
+  $id: 'UsuariosHabilidadesDeleteResponse',
+  type: 'object',
+  properties: {
+    message: { type: 'string', description: 'Mensaje descriptivo de la operación' },
+    deleted_count: { type: 'number', description: 'Cantidad de asignaciones eliminadas' },
+    usuario_id: { type: 'number', description: 'ID del usuario' },
+    habilidades_eliminadas: {
+      type: 'array',
+      items: { type: 'number' },
+      description: 'IDs de las habilidades eliminadas'
+    }
+  },
+  required: ['message', 'deleted_count', 'usuario_id', 'habilidades_eliminadas']
+});
+
+fastify.addSchema({
   $id: 'ProyectosInstitucionesHabilidades',
   type: 'object',
   properties: {
