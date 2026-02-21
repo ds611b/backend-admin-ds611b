@@ -70,23 +70,46 @@ export async function getUsuariosHabilidadById(request, reply) {
  */
 export async function createUsuariosHabilidad(request, reply) {
   try {
-    const registro = await UsuariosHabilidades.create(request.body);
-    reply.status(201).send(registro);
+    const payload = request.body;
+
+    if (payload && Array.isArray(payload.habilidad_id)) {
+      const { habilidad_id, ...rest } = payload;
+      const data = habilidad_id.map((id) => ({ ...rest, habilidad_id: id }));
+
+      await UsuariosHabilidades.bulkCreate(data);
+
+      const registros = await UsuariosHabilidades.findAll({
+        where: {
+          usuario_id: rest.usuario_id,
+          habilidad_id: habilidad_id
+        },
+        order: [['id', 'DESC']]
+      });
+
+      return reply.status(201).send(registros);
+    }
+
+    const registro = await UsuariosHabilidades.create(payload);
+    return reply.status(201).send(registro);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
-      reply.status(409).send(createErrorResponse(
-        'Ya existe una asignación para este usuario y habilidad',
-        'DUPLICATE_USUARIO_HABILIDAD',
-        error
-      ));
-    } else {
-      request.log.error(error);
-      reply.status(500).send(createErrorResponse(
+      return reply.status(409).send(
+        createErrorResponse(
+          'Ya existe una asignación para este usuario y habilidad',
+          'DUPLICATE_USUARIO_HABILIDAD',
+          error
+        )
+      );
+    }
+
+    request.log.error(error);
+    return reply.status(500).send(
+      createErrorResponse(
         'Error al crear la asignación',
         'CREATE_USUARIOS_HABILIDAD_ERROR',
         error
-      ));
-    }
+      )
+    );
   }
 }
 

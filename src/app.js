@@ -489,9 +489,14 @@ fastify.addSchema({
   type: 'object',
   properties: {
     usuario_id: { type: 'number' },
-    habilidad_id: { type: 'number' }
+    habilidad_id: {
+      anyOf: [
+        { type: 'number' },
+        { type: 'array', items: { type: 'number' }, minItems: 1 }
+      ]
+    }
   },
-  required: ['usuario_id', 'habilidad_id']
+  required: ['usuario_id', 'habilidad_id'],
 });
 
 fastify.addSchema({
