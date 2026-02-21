@@ -300,6 +300,13 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
+  $id: 'UsuariosHabilidadesArray',
+  type: 'array',
+  items: { $ref: 'UsuariosHabilidades' },
+  description: 'Array de asignaciones de habilidades a usuario con los detalles de cada habilidad'
+});
+
+fastify.addSchema({
   $id: 'ProyectosInstitucionesHabilidades',
   type: 'object',
   properties: {
@@ -490,10 +497,10 @@ fastify.addSchema({
   properties: {
     usuario_id: { type: 'number' },
     habilidad_id: {
-      anyOf: [
-        { type: 'number' },
-        { type: 'array', items: { type: 'number' }, minItems: 1 }
-      ]
+      type: 'array',
+      items: { type: 'number' },
+      minItems: 1,
+      description: 'Array de IDs de habilidades a asignar al usuario'
     }
   },
   required: ['usuario_id', 'habilidad_id'],

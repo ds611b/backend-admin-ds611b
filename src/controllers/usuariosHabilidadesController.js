@@ -83,9 +83,12 @@ export async function createUsuariosHabilidad(request, reply) {
           usuario_id: rest.usuario_id,
           habilidad_id: habilidad_id
         },
+        include: [{
+          model: Habilidades,
+          as: 'habilidad'
+        }],
         order: [['id', 'DESC']]
       });
-
       return reply.status(201).send(registros);
     }
 

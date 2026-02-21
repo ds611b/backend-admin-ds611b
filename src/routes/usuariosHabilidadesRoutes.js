@@ -126,7 +126,7 @@ async function usuariosHabilidadesRoutes(fastify) {
       response: {
         201: {
           description: 'Asignación creada exitosamente',
-          $ref: 'UsuariosHabilidades'
+          $ref: 'UsuariosHabilidadesArray'
         },
         409: {
           description: 'Conflicto - Combinación duplicada',
