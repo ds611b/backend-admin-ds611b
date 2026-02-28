@@ -488,6 +488,28 @@ fastify.addSchema({
 
 
 fastify.addSchema({
+  $id: 'UsuarioCompleto',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    primer_nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+    segundo_nombre: { type: 'string', maxLength: 100, example: 'Jose' },
+    primer_apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+    segundo_apellido: { type: 'string', maxLength: 100, example: 'Santos' },
+    email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
+    rol_id: { type: 'integer', example: 2 },
+    status: { type: 'integer', enum: [0, 1], example: 1, description: '0 = Inactivo, 1 = Activo' },
+    created_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' },
+    updated_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' },
+    PerfilUsuario: { $ref: 'PerfilUsuario' },
+    proyectos: {
+      type: 'array',
+      items: { $ref: 'ProyectosInstitucion' }
+    }
+  }
+});
+
+fastify.addSchema({
   $id: 'AplicacionesEstudiantesValidation',
   type: 'object',
   properties: {
