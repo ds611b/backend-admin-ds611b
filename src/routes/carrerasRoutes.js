@@ -3,7 +3,8 @@ import {
   getCarreraById, 
   createCarrera, 
   updateCarrera, 
-  deleteCarrera 
+  deleteCarrera,
+  getEstudiantesByCarreraId
 } from '../controllers/carrerasController.js';
 
 async function carrerasRoutes(fastify, options) {
@@ -156,6 +157,36 @@ async function carrerasRoutes(fastify, options) {
       }
     }
   }, deleteCarrera);
+
+  // GET /carreras/:id/estudiantes
+  fastify.get('/carreras/:id/estudiantes', {
+    schema: {
+      description: 'Obtiene la lista de estudiantes (Usuario & Perfil) por ID de carrera',
+      tags: ['Carreras'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'number', description: 'ID de la carrera' }
+        },
+        required: ['id']
+      },
+      response: {
+        200: {
+          description: 'Lista de estudiantes obtenida exitosamente',
+          type: 'array',
+          items: { $ref: 'EstudianteConPerfil' }
+        },
+        404: {
+          description: 'Carrera no encontrada',
+          $ref: 'ErrorResponse'
+        },
+        500: {
+          description: 'Error al obtener los estudiantes de la carrera',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, getEstudiantesByCarreraId);
 }
 
 export default carrerasRoutes;

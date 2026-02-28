@@ -1,5 +1,7 @@
-import { Carreras, Escuelas } from '../models/index.js';
+import { Carreras, Escuelas, Usuarios, PerfilUsuario } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
+import config from '../config/config.js';
+import { getRolIdByName } from '../services/roleService.js';
 
 /**
  * Obtiene todas las carreras con información de su escuela asociada
@@ -198,10 +200,71 @@ export async function deleteCarrera(request, reply) {
   }
 }
 
+/**
+ * Obtiene la lista de estudiantes (Usuario & Perfil) por ID de carrera
+ */
+export async function getEstudiantesByCarreraId(request, reply) {
+  const { id } = request.params;
+  
+  try {
+    // Verificar que la carrera existe
+    const carrera = await Carreras.findByPk(id);
+    if (!carrera) {
+      return reply.status(404).send(createErrorResponse(
+        'Carrera no encontrada',
+        'CARRERA_NOT_FOUND'
+      ));
+    }
+
+    // Obtener el ID del rol Estudiante desde la BD
+    const rolEstudianteId = await getRolIdByName(config.roleNames.ESTUDIANTE);
+    
+    if (!rolEstudianteId) {
+      return reply.status(500).send(createErrorResponse(
+        'Error de configuración: Rol "Estudiante" no encontrado en la base de datos',
+        'ROLE_NOT_FOUND'
+      ));
+    }
+
+    // Obtener estudiantes con su perfil
+    const estudiantes = await Usuarios.findAll({
+      where: { 
+        rol_id: rolEstudianteId,
+        status: 1 
+      },
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        {
+          model: PerfilUsuario,
+          where: { id_carrera: id },
+          required: true,
+          include: [
+            {
+              model: Carreras,
+              as: 'carrera'
+            }
+          ]
+        }
+      ],
+      order: [['primer_apellido', 'ASC'], ['segundo_apellido', 'ASC']]
+    });
+
+    reply.send(estudiantes);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener los estudiantes de la carrera',
+      'GET_ESTUDIANTES_CARRERA_ERROR',
+      error
+    ));
+  }
+}
+
 export default {
   getCarreras,
   getCarreraById,
   createCarrera,
   updateCarrera,
-  deleteCarrera
+  deleteCarrera,
+  getEstudiantesByCarreraId
 };
