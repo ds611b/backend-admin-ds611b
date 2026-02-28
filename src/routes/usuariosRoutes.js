@@ -4,7 +4,8 @@ import {
   getUsuarios,
   getUsuarioById,
   updateUsuario,
-  deleteUsuario
+  deleteUsuario,
+  getUsuarioAllById
 } from '../controllers/usuariosController.js';
 
 /**
@@ -14,7 +15,8 @@ import {
  */
 async function usuariosRoutes (fastify) {
 
-  /* -----------------------------------------------------------------------   * POST /usuarios – crear un nuevo usuario
+  /* -----------------------------------------------------------------------   
+   * POST /usuarios – crear un nuevo usuario
    * ---------------------------------------------------------------------*/
   fastify.post('/usuarios', {
     schema: {
@@ -29,7 +31,8 @@ async function usuariosRoutes (fastify) {
     }
   }, createUsuario);
 
-  /* -----------------------------------------------------------------------   * GET /usuarios – lista de usuarios
+  /* -----------------------------------------------------------------------
+   * GET /usuarios – lista de usuarios
    * ---------------------------------------------------------------------*/
   fastify.get('/usuarios', {
     schema: {
@@ -116,6 +119,29 @@ async function usuariosRoutes (fastify) {
       }
     }
   }, deleteUsuario);
+
+    /* -----------------------------------------------------------------------
+   * GET /usuarios/:id – un usuario por ID
+   * ---------------------------------------------------------------------*/
+  fastify.get('/usuarios/all/:id', {
+    schema: {
+      description: 'Obtiene toda la informacion de un usuario Perfil, Usuario, Proyectos',
+      tags: ['Usuarios'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'number', description: 'ID del usuario' }
+        },
+        required: ['id']
+      },
+      response: {
+        200: { description: 'Usuario obtenido con perfil y proyectos', $ref: 'UsuarioCompleto' },
+        404: { description: 'Usuario no encontrado', $ref: 'ErrorResponse' },
+        500: { description: 'Error al obtener el usuario', $ref: 'ErrorResponse' }
+      }
+    }
+  }, getUsuarioAllById);
+
 }
 
 export default usuariosRoutes;
