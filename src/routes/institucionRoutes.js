@@ -1,4 +1,4 @@
-import { getInstituciones, getInstitucionById, createInstitucion, getInstitucionesActivas, updateInstitucion, deleteInstitucion } from '../controllers/institucionController.js';
+import { getInstituciones, getInstitucionById, createInstitucion, getInstitucionesActivas, updateInstitucion, deleteInstitucion, getProyectosByInstitucionId } from '../controllers/institucionController.js';
 
 /**
  * Define las rutas para las instituciones.
@@ -154,6 +154,36 @@ async function institucionRoutes(fastify, options) {
       }
     }
   }, deleteInstitucion);
+
+  // GET /instituciones/:id/proyectos
+  fastify.get('/instituciones/:id/proyectos', {
+    schema: {
+      description: 'Obtiene el listado de proyectos de una institución específica',
+      tags: ['Instituciones'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'number', description: 'ID de la institución' }
+        },
+        required: ['id']
+      },
+      response: {
+        200: {
+          description: 'Lista de proyectos obtenida exitosamente',
+          type: 'array',
+          items: { $ref: 'ProyectosInstitucion' }
+        },
+        404: {
+          description: 'Institución no encontrada',
+          $ref: 'ErrorResponse'
+        },
+        500: {
+          description: 'Error al obtener los proyectos de la institución',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, getProyectosByInstitucionId);
 }
 
 export default institucionRoutes;

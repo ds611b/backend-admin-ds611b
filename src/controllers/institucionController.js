@@ -1,4 +1,4 @@
-import { Instituciones, EncargadoInstitucion } from '../models/index.js';
+import { Instituciones, EncargadoInstitucion, ProyectosInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /**
@@ -165,5 +165,50 @@ export async function deleteInstitucion(request, reply) {
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse('Error al eliminar la institución', 'DELETE_INSTITUCION_ERROR', error));
+  }
+}
+
+/**
+ * Obtiene el listado de proyectos de una institución específica
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
+ */
+export async function getProyectosByInstitucionId(request, reply) {
+  const { id } = request.params;
+  
+  try {
+    // Verificar que la institución existe
+    const institucion = await Instituciones.findByPk(id);
+    if (!institucion) {
+      return reply.status(404).send(createErrorResponse(
+        'Institución no encontrada',
+        'INSTITUCION_NOT_FOUND'
+      ));
+    }
+
+    // Obtener proyectos de la institución
+    const proyectos = await ProyectosInstitucion.findAll({
+      where: { institucion_id: id },
+      include: [
+        {
+          model: EncargadoInstitucion,
+          as: 'encargado'
+        },
+        {
+          model: Instituciones,
+          as: 'institucion'
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    reply.send(proyectos);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener los proyectos de la institución',
+      'GET_PROYECTOS_INSTITUCION_ERROR',
+      error
+    ));
   }
 }
