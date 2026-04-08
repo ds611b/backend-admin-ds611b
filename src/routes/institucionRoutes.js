@@ -1,4 +1,4 @@
-import { getInstituciones, getInstitucionById, createInstitucion, getInstitucionesActivas, updateInstitucion, deleteInstitucion, getProyectosByInstitucionId } from '../controllers/institucionController.js';
+import { getInstituciones, getInstitucionById, createInstitucionCompleta, getInstitucionesActivas, updateInstitucion, deleteInstitucion, getProyectosByInstitucionId } from '../controllers/institucionController.js';
 
 /**
  * Define las rutas para las instituciones.
@@ -76,15 +76,23 @@ async function institucionRoutes(fastify, options) {
   // POST /instituciones
   fastify.post('/instituciones', {
     schema: {
-      description: 'Crea una nueva institución',
+      description: 'Crea una institución nueva junto con su encargado y usuario de acceso en el servicio de seguridad',
       tags: ['Instituciones'],
       body: {
-        $ref: 'InstitucionesValidation',
+        $ref: 'InstitucionesCompletaValidation',
       },
       response: {
         201: {
           description: 'Institución creada exitosamente',
           $ref: 'Instituciones'
+        },
+        400: {
+          description: 'Datos inválidos',
+          $ref: 'ErrorResponse'
+        },
+        503: {
+          description: 'Error de conexión con el servicio de seguridad',
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al crear la institución',
@@ -92,7 +100,7 @@ async function institucionRoutes(fastify, options) {
         }
       }
     }
-  }, createInstitucion);
+  }, createInstitucionCompleta);
 
   // PUT /instituciones/:id
   fastify.put('/instituciones/:id', {

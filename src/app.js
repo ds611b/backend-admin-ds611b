@@ -844,6 +844,10 @@ fastify.addSchema({
       type: 'string',
       description: 'Número de teléfono del encargado'
     },
+    usuario_id: {
+      type: 'integer',
+      description: 'ID del usuario en el servicio de seguridad'
+    },
     created_at: {
       type: 'string',
       format: 'date-time',
@@ -855,6 +859,58 @@ fastify.addSchema({
       description: 'Fecha de última actualización'
     }
   }
+});
+
+fastify.addSchema({
+  $id: 'InstitucionInput',
+  type: 'object',
+  properties: {
+    nombre:          { type: 'string', description: 'Nombre de la institución' },
+    direccion:       { type: 'string', description: 'Dirección física' },
+    telefono:        { type: 'string', description: 'Teléfono de contacto' },
+    email:           { type: 'string', format: 'email', description: 'Correo de la institución' },
+    nit:             { type: 'string', description: 'NIT de la institución' },
+    fecha_fundacion: { type: 'string', format: 'date', description: 'Fecha de fundación (YYYY-MM-DD)' }
+  },
+  required: ['nombre', 'email', 'nit']
+});
+
+fastify.addSchema({
+  $id: 'EncargadoInput',
+  type: 'object',
+  properties: {
+    nombres:   { type: 'string', description: 'Nombres del encargado' },
+    apellidos: { type: 'string', description: 'Apellidos del encargado' },
+    correo:    { type: 'string', format: 'email', description: 'Correo electrónico del encargado' },
+    telefono:  { type: 'string', description: 'Teléfono del encargado' }
+  },
+  required: ['nombres', 'apellidos', 'correo', 'telefono']
+});
+
+fastify.addSchema({
+  $id: 'UsuarioSecuridadInput',
+  type: 'object',
+  properties: {
+    primer_nombre:    { type: 'string', maxLength: 100, description: 'Primer nombre' },
+    segundo_nombre:   { type: 'string', maxLength: 100, description: 'Segundo nombre' },
+    primer_apellido:  { type: 'string', maxLength: 100, description: 'Primer apellido' },
+    segundo_apellido: { type: 'string', maxLength: 100, description: 'Segundo apellido' },
+    email:            { type: 'string', format: 'email', maxLength: 150, description: 'Correo del usuario' },
+    password:         { type: 'string', description: 'Contraseña del usuario' }
+  },
+  required: ['primer_nombre', 'primer_apellido', 'email', 'password']
+});
+
+fastify.addSchema({
+  $id: 'InstitucionesCompletaValidation',
+  type: 'object',
+  description: 'Payload para crear institución, encargado y usuario de acceso en un solo request',
+  properties: {
+    institucion: { $ref: 'InstitucionInput#' },
+    encargado:   { $ref: 'EncargadoInput#' },
+    usuario:     { $ref: 'UsuarioSecuridadInput#' }
+  },
+  required: ['institucion', 'encargado', 'usuario']
 });
 
 

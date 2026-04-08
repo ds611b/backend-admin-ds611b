@@ -1,5 +1,6 @@
 import { Instituciones, EncargadoInstitucion, ProyectosInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
+import { createInstitucionCompleta as createInstitucionCompletaService } from '../services/institucionService.js';
 
 /**
  * Obtiene todas las instituciones.
@@ -165,6 +166,29 @@ export async function deleteInstitucion(request, reply) {
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse('Error al eliminar la institución', 'DELETE_INSTITUCION_ERROR', error));
+  }
+}
+
+/**
+ * Crea una institución completa: registra el usuario en el servicio de seguridad,
+ * luego crea el EncargadoInstitucion y la Institución en ConnectPRO en un único flujo.
+ * @param {import('fastify').FastifyRequest} request
+ * @param {import('fastify').FastifyReply} reply
+ */
+export async function createInstitucionCompleta(request, reply) {
+  const { institucion, encargado, usuario } = request.body;
+  try {
+    const result = await createInstitucionCompletaService({ institucion, encargado, usuario });
+    reply.status(201).send(result);
+  } catch (error) {
+    request.log.error(error);
+    const statusCode = error.statusCode || 500;
+    const errorCode = `CREATE_INSTITUCION_COMPLETA_ERROR_${error.step || 'UNKNOWN'}`;
+    const response = createErrorResponse(error.message, errorCode, error);
+    if (error.createdResources) {
+      response.createdResources = error.createdResources;
+    }
+    reply.status(statusCode).send(response);
   }
 }
 
