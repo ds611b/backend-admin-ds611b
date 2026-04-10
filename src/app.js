@@ -31,6 +31,7 @@ import documentosHorasRoutes from './routes/documentosHorasRoutes.js';
 import gruposRoutes from './routes/gruposRoutes.js';
 import grupoEstudiantesRoutes from './routes/grupoEstudiantesRoutes.js';
 
+import { preloadRoles } from './services/roleService.js';
 
 
 /**
@@ -307,6 +308,29 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
+  $id: 'UsuariosHabilidadesArray',
+  type: 'array',
+  items: { $ref: 'UsuariosHabilidades' },
+  description: 'Array de asignaciones de habilidades a usuario con los detalles de cada habilidad'
+});
+
+fastify.addSchema({
+  $id: 'UsuariosHabilidadesDeleteResponse',
+  type: 'object',
+  properties: {
+    message: { type: 'string', description: 'Mensaje descriptivo de la operación' },
+    deleted_count: { type: 'number', description: 'Cantidad de asignaciones eliminadas' },
+    usuario_id: { type: 'number', description: 'ID del usuario' },
+    habilidades_eliminadas: {
+      type: 'array',
+      items: { type: 'number' },
+      description: 'IDs de las habilidades eliminadas'
+    }
+  },
+  required: ['message', 'deleted_count', 'usuario_id', 'habilidades_eliminadas']
+});
+
+fastify.addSchema({
   $id: 'ProyectosInstitucionesHabilidades',
   type: 'object',
   properties: {
@@ -577,6 +601,46 @@ fastify.addSchema({
 
 
 fastify.addSchema({
+  $id: 'EstudianteConPerfil',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    primer_nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+    segundo_nombre: { type: 'string', maxLength: 100, example: 'Jose' },
+    primer_apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+    segundo_apellido: { type: 'string', maxLength: 100, example: 'Santos' },
+    email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
+    rol_id: { type: 'integer', example: 1 },
+    status: { type: 'integer', enum: [0, 1], example: 1, description: '0 = Inactivo, 1 = Activo' },
+    created_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' },
+    updated_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' },
+    PerfilUsuario: { $ref: 'PerfilUsuario' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'UsuarioCompleto',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    primer_nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+    segundo_nombre: { type: 'string', maxLength: 100, example: 'Jose' },
+    primer_apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+    segundo_apellido: { type: 'string', maxLength: 100, example: 'Santos' },
+    email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
+    rol_id: { type: 'integer', example: 2 },
+    status: { type: 'integer', enum: [0, 1], example: 1, description: '0 = Inactivo, 1 = Activo' },
+    created_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' },
+    updated_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' },
+    PerfilUsuario: { $ref: 'PerfilUsuario' },
+    proyectos: {
+      type: 'array',
+      items: { $ref: 'ProyectosInstitucion' }
+    }
+  }
+});
+
+fastify.addSchema({
   $id: 'AplicacionesEstudiantesValidation',
   type: 'object',
   properties: {
@@ -601,9 +665,14 @@ fastify.addSchema({
   type: 'object',
   properties: {
     usuario_id: { type: 'number' },
-    habilidad_id: { type: 'number' }
+    habilidad_id: {
+      type: 'array',
+      items: { type: 'number' },
+      minItems: 1,
+      description: 'Array de IDs de habilidades a asignar al usuario'
+    }
   },
-  required: ['usuario_id', 'habilidad_id']
+  required: ['usuario_id', 'habilidad_id'],
 });
 
 fastify.addSchema({
@@ -887,6 +956,10 @@ fastify.addSchema({
       type: 'string',
       description: 'Número de teléfono del encargado'
     },
+    usuario_id: {
+      type: 'integer',
+      description: 'ID del usuario en el servicio de seguridad'
+    },
     created_at: {
       type: 'string',
       format: 'date-time',
@@ -898,6 +971,110 @@ fastify.addSchema({
       description: 'Fecha de última actualización'
     }
   }
+});
+
+fastify.addSchema({
+  $id: 'InstitucionInput',
+  type: 'object',
+  properties: {
+    nombre:          { type: 'string', description: 'Nombre de la institución' },
+    direccion:       { type: 'string', description: 'Dirección física' },
+    telefono:        { type: 'string', description: 'Teléfono de contacto' },
+    email:           { type: 'string', format: 'email', description: 'Correo de la institución' },
+    nit:             { type: 'string', description: 'NIT de la institución' },
+    fecha_fundacion: { type: 'string', format: 'date', description: 'Fecha de fundación (YYYY-MM-DD)' }
+  },
+  required: ['nombre', 'email', 'nit']
+});
+
+fastify.addSchema({
+  $id: 'EncargadoInput',
+  type: 'object',
+  properties: {
+    nombres:   { type: 'string', description: 'Nombres del encargado' },
+    apellidos: { type: 'string', description: 'Apellidos del encargado' },
+    correo:    { type: 'string', format: 'email', description: 'Correo electrónico del encargado' },
+    telefono:  { type: 'string', description: 'Teléfono del encargado' }
+  },
+  required: ['nombres', 'apellidos', 'correo', 'telefono']
+});
+
+fastify.addSchema({
+  $id: 'UsuarioSecuridadInput',
+  type: 'object',
+  properties: {
+    primer_nombre:    { type: 'string', maxLength: 100, description: 'Primer nombre' },
+    segundo_nombre:   { type: 'string', maxLength: 100, description: 'Segundo nombre' },
+    primer_apellido:  { type: 'string', maxLength: 100, description: 'Primer apellido' },
+    segundo_apellido: { type: 'string', maxLength: 100, description: 'Segundo apellido' },
+    email:            { type: 'string', format: 'email', maxLength: 150, description: 'Correo del usuario' },
+    password:         { type: 'string', description: 'Contraseña del usuario' }
+  },
+  required: ['primer_nombre', 'primer_apellido', 'email', 'password']
+});
+
+fastify.addSchema({
+  $id: 'InstitucionesCompletaValidation',
+  type: 'object',
+  description: 'Payload para crear institución, encargado y usuario de acceso en un solo request',
+  properties: {
+    institucion: { $ref: 'InstitucionInput#' },
+    encargado:   { $ref: 'EncargadoInput#' },
+    usuario:     { $ref: 'UsuarioSecuridadInput#' }
+  },
+  required: ['institucion', 'encargado', 'usuario']
+});
+
+fastify.addSchema({
+  $id: 'InstitucionInput',
+  type: 'object',
+  properties: {
+    nombre:          { type: 'string', description: 'Nombre de la institución' },
+    direccion:       { type: 'string', description: 'Dirección física' },
+    telefono:        { type: 'string', description: 'Teléfono de contacto' },
+    email:           { type: 'string', format: 'email', description: 'Correo de la institución' },
+    nit:             { type: 'string', description: 'NIT de la institución' },
+    fecha_fundacion: { type: 'string', format: 'date', description: 'Fecha de fundación (YYYY-MM-DD)' }
+  },
+  required: ['nombre', 'email', 'nit']
+});
+
+fastify.addSchema({
+  $id: 'EncargadoInput',
+  type: 'object',
+  properties: {
+    nombres:   { type: 'string', description: 'Nombres del encargado' },
+    apellidos: { type: 'string', description: 'Apellidos del encargado' },
+    correo:    { type: 'string', format: 'email', description: 'Correo electrónico del encargado' },
+    telefono:  { type: 'string', description: 'Teléfono del encargado' }
+  },
+  required: ['nombres', 'apellidos', 'correo', 'telefono']
+});
+
+fastify.addSchema({
+  $id: 'UsuarioSecuridadInput',
+  type: 'object',
+  properties: {
+    primer_nombre:    { type: 'string', maxLength: 100, description: 'Primer nombre' },
+    segundo_nombre:   { type: 'string', maxLength: 100, description: 'Segundo nombre' },
+    primer_apellido:  { type: 'string', maxLength: 100, description: 'Primer apellido' },
+    segundo_apellido: { type: 'string', maxLength: 100, description: 'Segundo apellido' },
+    email:            { type: 'string', format: 'email', maxLength: 150, description: 'Correo del usuario' },
+    password:         { type: 'string', description: 'Contraseña del usuario' }
+  },
+  required: ['primer_nombre', 'primer_apellido', 'email', 'password']
+});
+
+fastify.addSchema({
+  $id: 'InstitucionesCompletaValidation',
+  type: 'object',
+  description: 'Payload para crear institución, encargado y usuario de acceso en un solo request',
+  properties: {
+    institucion: { $ref: 'InstitucionInput#' },
+    encargado:   { $ref: 'EncargadoInput#' },
+    usuario:     { $ref: 'UsuarioSecuridadInput#' }
+  },
+  required: ['institucion', 'encargado', 'usuario']
 });
 
 fastify.addSchema({
@@ -1038,6 +1215,9 @@ fastify.get('/', {
  */
 const start = async () => {
   try {
+    // Pre-cargar roles en caché desde la base de datos
+    await preloadRoles();
+    
     await fastify.listen({
       port: port,
       host: host

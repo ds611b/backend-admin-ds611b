@@ -23,6 +23,11 @@ const EncargadoInstitucion = sequelize.define('EncargadoInstitucion', {
     type: DataTypes.STRING(15),
     allowNull: true,
   },
+  usuario_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    unique: true,
+  },
 }, {
   tableName: 'EncargadoInstitucion',
   timestamps: true,

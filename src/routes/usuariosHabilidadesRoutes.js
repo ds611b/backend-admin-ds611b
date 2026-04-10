@@ -126,7 +126,7 @@ async function usuariosHabilidadesRoutes(fastify) {
       response: {
         201: {
           description: 'Asignación creada exitosamente',
-          $ref: 'UsuariosHabilidades'
+          $ref: 'UsuariosHabilidadesArray'
         },
         409: {
           description: 'Conflicto - Combinación duplicada',
@@ -178,23 +178,18 @@ async function usuariosHabilidadesRoutes(fastify) {
   }, updateUsuariosHabilidad);
 
   /**
-   * DELETE /usuarios-habilidades/:id
-   * Elimina una asignación por ID.
+   * DELETE /usuarios-habilidades
+   * Elimina asignaciones de habilidades de un usuario.
    */
-  fastify.delete('/usuarios-habilidades/:id', {
+  fastify.delete('/usuarios-habilidades', {
     schema: {
-      description: 'Elimina una asignación de habilidad a usuario por ID',
+      description: 'Elimina una o múltiples asignaciones de habilidades de un usuario',
       tags: ['Usuarios Habilidades'],
-      params: {
-        type: 'object',
-        properties: {
-          id: { type: 'number', description: 'ID de la asignación a eliminar' }
-        },
-        required: ['id']
-      },
+      body: { $ref: 'UsuariosHabilidadesValidation' },
       response: {
-        204: {
-          description: 'Asignación eliminada exitosamente'
+        200: {
+          description: 'Asignación(es) eliminada(s) exitosamente',
+          $ref: 'UsuariosHabilidadesDeleteResponse'
         },
         404: {
           description: 'Asignación no encontrada',

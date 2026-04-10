@@ -1,4 +1,4 @@
-import { getInstituciones, getInstitucionById, createInstitucion, getInstitucionesActivas, updateInstitucion, deleteInstitucion } from '../controllers/institucionController.js';
+import { getInstituciones, getInstitucionById, createInstitucionCompleta, getInstitucionesActivas, updateInstitucion, deleteInstitucion, getProyectosByInstitucionId } from '../controllers/institucionController.js';
 
 /**
  * Define las rutas para las instituciones.
@@ -76,15 +76,23 @@ async function institucionRoutes(fastify, options) {
   // POST /instituciones
   fastify.post('/instituciones', {
     schema: {
-      description: 'Crea una nueva institución',
+      description: 'Crea una institución nueva junto con su encargado y usuario de acceso en el servicio de seguridad',
       tags: ['Instituciones'],
       body: {
-        $ref: 'InstitucionesValidation',
+        $ref: 'InstitucionesCompletaValidation',
       },
       response: {
         201: {
           description: 'Institución creada exitosamente',
           $ref: 'Instituciones'
+        },
+        400: {
+          description: 'Datos inválidos',
+          $ref: 'ErrorResponse'
+        },
+        503: {
+          description: 'Error de conexión con el servicio de seguridad',
+          $ref: 'ErrorResponse'
         },
         500: {
           description: 'Error al crear la institución',
@@ -92,7 +100,7 @@ async function institucionRoutes(fastify, options) {
         }
       }
     }
-  }, createInstitucion);
+  }, createInstitucionCompleta);
 
   // PUT /instituciones/:id
   fastify.put('/instituciones/:id', {
@@ -154,6 +162,36 @@ async function institucionRoutes(fastify, options) {
       }
     }
   }, deleteInstitucion);
+
+  // GET /instituciones/:id/proyectos
+  fastify.get('/instituciones/:id/proyectos', {
+    schema: {
+      description: 'Obtiene el listado de proyectos de una institución específica',
+      tags: ['Instituciones'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'number', description: 'ID de la institución' }
+        },
+        required: ['id']
+      },
+      response: {
+        200: {
+          description: 'Lista de proyectos obtenida exitosamente',
+          type: 'array',
+          items: { $ref: 'ProyectosInstitucion' }
+        },
+        404: {
+          description: 'Institución no encontrada',
+          $ref: 'ErrorResponse'
+        },
+        500: {
+          description: 'Error al obtener los proyectos de la institución',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, getProyectosByInstitucionId);
 }
 
 export default institucionRoutes;

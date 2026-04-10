@@ -1,4 +1,4 @@
-import { Usuarios } from '../models/index.js';
+import { Usuarios, PerfilUsuario, AplicacionesEstudiantes, ProyectosInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 /* ---------------------------------------------------------------------------
@@ -213,6 +213,70 @@ export async function deleteUsuario(request, reply) {
     reply.status(500).send(createErrorResponse(
       'Error al eliminar el usuario',
       'DELETE_USUARIO_ERROR',
+      error
+    ));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * GET /api/usuarios/all/:id - Obtiene usuario con perfil y proyectos
+ * -------------------------------------------------------------------------*/
+export async function getUsuarioAllById(request, reply) {
+  const { id } = request.params;
+
+  try {
+    const usuario = await Usuarios.findByPk(id, {
+      where: { status: 1 },
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        {
+          model: PerfilUsuario,
+          required: false
+        },
+        {
+          model: AplicacionesEstudiantes,
+          required: false,
+          include: [
+            {
+              model: ProyectosInstitucion,
+              as: 'proyecto',
+              required: false
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!usuario) {
+      return reply.status(404).send(createErrorResponse(
+        'Usuario no encontrado',
+        'USUARIO_NOT_FOUND'
+      ));
+    }
+
+    // Transformar el resultado para incluir el array de proyectos
+    const usuarioData = usuario.toJSON();
+    const proyectos = usuarioData.AplicacionesEstudiantes
+      ? usuarioData.AplicacionesEstudiantes
+          .filter(app => app.proyecto)
+          .map(app => app.proyecto)
+      : [];
+
+    // Eliminar AplicacionesEstudiantes del objeto de respuesta
+    delete usuarioData.AplicacionesEstudiantes;
+
+    // Construir la respuesta final
+    const response = {
+      ...usuarioData,
+      proyectos
+    };
+
+    reply.send(response);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener el usuario',
+      'GET_USUARIO_ERROR',
       error
     ));
   }
