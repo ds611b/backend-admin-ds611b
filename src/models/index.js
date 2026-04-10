@@ -129,7 +129,7 @@ DocumentosHoras.belongsTo(RegistroHoras, { foreignKey: 'id_registro_horas' });
 // Grupos y HorasRequisito (1:N)
 Grupos.hasMany(HorasRequisito, {  foreignKey: 'id_grupo',  as: 'horas_requisitos',  onDelete: 'SET NULL'});
 
-HorasRequisito.belongsTo(Grupos, {  foreignKey: 'id_grupo',  as: 'grupos'});
+HorasRequisito.belongsTo(Grupos, {  foreignKey: 'id_grupo',  as: 'grupo'});
 
 
 // RegistroHoras y ProyectosInstitucion (N:1)
