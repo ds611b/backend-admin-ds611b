@@ -24,6 +24,13 @@ import coordinadoresCarreraRoutes from './routes/coordinadoresCarreraRoutes.js';
 import contactoEmergenciaRoutes from './routes/contactoEmergenciaRoutes.js';
 import encargadoInstitucionRoutes from './routes/encargadoInstitucionRoutes.js';
 import usuariosRoutes from './routes/usuariosRoutes.js';
+
+import horasRequisitoRoutes from './routes/horasRequisitoRoutes.js';
+import registroHorasRoutes from './routes/registroHorasRoutes.js';
+import documentosHorasRoutes from './routes/documentosHorasRoutes.js';
+import gruposRoutes from './routes/gruposRoutes.js';
+import grupoEstudiantesRoutes from './routes/grupoEstudiantesRoutes.js';
+
 import { preloadRoles } from './services/roleService.js';
 
 
@@ -380,6 +387,111 @@ fastify.addSchema({
     //usuario: { $ref: 'Estudiantes' } // Referencia al esquema Usuario
   }
 });
+
+
+
+fastify.addSchema({
+  $id: 'HorasRequisito',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    id_grupo: { type: 'integer', example: 10 },
+    id_perfil_usuario: { type: 'integer', example: 10 },
+    horas_requeridas: { type: 'integer', example: 500 },
+    horas_completadas: { type: 'integer', example: 120 },
+    fecha_inicio: { type: 'string', format: 'date', nullable: true },
+    fecha_limite: { type: 'string', format: 'date', nullable: true },
+    estado: {
+      type: 'string',
+      enum: ['Pendiente', 'En Progreso', 'Completado', 'Vencido'],
+      example: 'En Progreso'
+    },
+    institucion_asignada: { type: 'string', nullable: true },
+    observaciones: { type: 'string', nullable: true },
+    perfil_usuario: { $ref: 'PerfilUsuario' },
+    grupo: { $ref: 'Grupos' },
+    tipo_horas: { type: 'string', enum: ['Ambiental', 'Sociales'], example: 'Sociales' },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' }
+  }
+});
+
+
+fastify.addSchema({
+  $id: 'RegistroHoras',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    id_horas_requisito: { type: 'integer', example: 1 },
+    id_proyecto: { type: 'integer', nullable: true },
+    fecha: { type: 'string', format: 'date' },
+    horas_realizadas: { type: 'number', example: 4.5 },
+    descripcion_actividad: { type: 'string' },
+    evidencia_url: { type: 'string', nullable: true },
+    supervisor_nombre: { type: 'string', nullable: true },
+    supervisor_cargo: { type: 'string', nullable: true },
+    estado_validacion: {
+      type: 'string',
+      enum: ['Pendiente', 'Aprobado', 'Rechazado']
+    },
+    observaciones_validacion: { type: 'string', nullable: true },
+    validado_por: { type: 'integer', nullable: true },
+    fecha_validacion: { type: 'string', format: 'date-time', nullable: true },
+    horas_requisito: { $ref: 'HorasRequisito' },
+    proyecto: { $ref: 'ProyectosInstitucion' },
+    tipo_horas: { type: 'string', enum: ['Ambiental', 'Sociales'], example: 'Sociales' },
+    validador: { $ref: 'PerfilUsuario' },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'DocumentosHoras',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    id_registro_horas: { type: 'integer', example: 1 },
+    tipo_documento: {
+      type: 'string',
+      enum: ['Carta Asignación', 'Constancia', 'Informe', 'Fotografía', 'Otro']
+    },
+    nombre_archivo: { type: 'string' },
+    ruta_archivo: { type: 'string' },
+    descripcion: { type: 'string', nullable: true },
+    registro_horas: { $ref: 'RegistroHoras' },
+    fecha_subida: { type: 'string', format: 'date-time' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'Grupos',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    codigo: { type: 'string', example: 'GRP-001' },
+    nombre: { type: 'string', example: 'Grupo A' },
+    descripcion: { type: 'string', example: 'Grupo de estudiantes de informática' },
+    horas_ambientales: { type: 'integer', example: 100 },
+    horas_sociales: { type: 'integer', example: 200 },
+    fecha_creacion: { type: 'string', format: 'date-time' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'GrupoEstudiante',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    id_grupo: { type: 'integer', example: 1 },
+    id_perfil_usuario: { type: 'integer', example: 10 },
+    fecha_asignacion: { type: 'string', format: 'date' },
+    estado: { type: 'string', example: 'Activo' },
+    grupo: { $ref: 'Grupos' },
+    perfil_usuario: { $ref: 'PerfilUsuario' }
+  }
+});
+
 
 
 /**
@@ -913,6 +1025,121 @@ fastify.addSchema({
   required: ['institucion', 'encargado', 'usuario']
 });
 
+fastify.addSchema({
+  $id: 'InstitucionInput',
+  type: 'object',
+  properties: {
+    nombre:          { type: 'string', description: 'Nombre de la institución' },
+    direccion:       { type: 'string', description: 'Dirección física' },
+    telefono:        { type: 'string', description: 'Teléfono de contacto' },
+    email:           { type: 'string', format: 'email', description: 'Correo de la institución' },
+    nit:             { type: 'string', description: 'NIT de la institución' },
+    fecha_fundacion: { type: 'string', format: 'date', description: 'Fecha de fundación (YYYY-MM-DD)' }
+  },
+  required: ['nombre', 'email', 'nit']
+});
+
+fastify.addSchema({
+  $id: 'EncargadoInput',
+  type: 'object',
+  properties: {
+    nombres:   { type: 'string', description: 'Nombres del encargado' },
+    apellidos: { type: 'string', description: 'Apellidos del encargado' },
+    correo:    { type: 'string', format: 'email', description: 'Correo electrónico del encargado' },
+    telefono:  { type: 'string', description: 'Teléfono del encargado' }
+  },
+  required: ['nombres', 'apellidos', 'correo', 'telefono']
+});
+
+fastify.addSchema({
+  $id: 'UsuarioSecuridadInput',
+  type: 'object',
+  properties: {
+    primer_nombre:    { type: 'string', maxLength: 100, description: 'Primer nombre' },
+    segundo_nombre:   { type: 'string', maxLength: 100, description: 'Segundo nombre' },
+    primer_apellido:  { type: 'string', maxLength: 100, description: 'Primer apellido' },
+    segundo_apellido: { type: 'string', maxLength: 100, description: 'Segundo apellido' },
+    email:            { type: 'string', format: 'email', maxLength: 150, description: 'Correo del usuario' },
+    password:         { type: 'string', description: 'Contraseña del usuario' }
+  },
+  required: ['primer_nombre', 'primer_apellido', 'email', 'password']
+});
+
+fastify.addSchema({
+  $id: 'InstitucionesCompletaValidation',
+  type: 'object',
+  description: 'Payload para crear institución, encargado y usuario de acceso en un solo request',
+  properties: {
+    institucion: { $ref: 'InstitucionInput#' },
+    encargado:   { $ref: 'EncargadoInput#' },
+    usuario:     { $ref: 'UsuarioSecuridadInput#' }
+  },
+  required: ['institucion', 'encargado', 'usuario']
+});
+
+fastify.addSchema({
+  $id: 'HorasRequisitoValidation',
+  type: 'object',
+  properties: {
+    id_perfil_usuario: { type: 'integer' },
+    id_grupo: { type: 'integer' },
+    horas_requeridas: { type: 'integer' },
+    fecha_inicio: { type: 'string', format: 'date' },
+    fecha_limite: { type: 'string', format: 'date' },
+    institucion_asignada: { type: 'string' },
+    observaciones: { type: 'string' }
+  },
+  required: ['id_perfil_usuario', 'horas_requeridas']
+});
+
+fastify.addSchema({
+  $id: 'RegistroHorasValidation',
+  type: 'object',
+  properties: {
+    id_horas_requisito: { type: 'integer' },
+    id_proyecto: { type: 'integer' },
+    fecha: { type: 'string', format: 'date' },
+    horas_realizadas: { type: 'number' },
+    descripcion_actividad: { type: 'string' }
+  },
+  required: ['id_horas_requisito', 'fecha', 'horas_realizadas']
+});
+
+fastify.addSchema({
+  $id: 'DocumentosHorasValidation',
+  type: 'object',
+  properties: {
+    id_registro_horas: { type: 'integer' },
+    tipo_documento: { type: 'string' },
+    nombre_archivo: { type: 'string' },
+    ruta_archivo: { type: 'string' }
+  },
+  required: ['id_registro_horas', 'tipo_documento', 'nombre_archivo', 'ruta_archivo']
+});
+
+fastify.addSchema({
+  $id: 'GruposValidation',
+  type: 'object',
+  properties: {
+    codigo: { type: 'string' },
+    nombre: { type: 'string' },
+    descripcion: { type: 'string' },
+    horas_ambientales: { type: 'integer' },
+    horas_sociales: { type: 'integer' }
+  },
+  required: ['nombre']
+});
+
+fastify.addSchema({
+  $id: 'GrupoEstudianteValidation',
+  type: 'object',
+  properties: {
+    id_grupo: { type: 'integer' },
+    id_perfil_usuario: { type: 'integer' },
+    estado: { type: 'string' }
+  },
+  required: ['id_grupo', 'id_perfil_usuario']
+});
 
 
 /**
@@ -964,6 +1191,12 @@ fastify.register(coordinadoresCarreraRoutes, { prefix: '/api' });
 fastify.register(contactoEmergenciaRoutes, { prefix: '/api' });
 fastify.register(encargadoInstitucionRoutes, { prefix: '/api' });
 fastify.register(usuariosRoutes, { prefix: '/api' });
+
+fastify.register(horasRequisitoRoutes, { prefix: '/api' });
+fastify.register(registroHorasRoutes, { prefix: '/api' });
+fastify.register(documentosHorasRoutes, { prefix: '/api' });
+fastify.register(gruposRoutes, { prefix: '/api' });
+fastify.register(grupoEstudiantesRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
