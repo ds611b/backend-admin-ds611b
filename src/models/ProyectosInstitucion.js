@@ -60,12 +60,16 @@ const ProyectosInstitucion = sequelize.define('ProyectosInstitucion', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  tipo_proyecto: {
+    type: DataTypes.ENUM('A', 'S'),
+    allowNull: false,
+  },
   id_encargado: {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
   estado: {
-    type: DataTypes.ENUM('Pendiente', 'Aprobado', 'Rechazado'),
+    type: DataTypes.ENUM('Pendiente', 'Aprobado', 'Rechazado','No_disponible', 'Finalizado', 'Iniciado'),
     defaultValue: 'Pendiente',
     allowNull: false,
   }

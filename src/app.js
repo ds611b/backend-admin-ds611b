@@ -146,6 +146,7 @@ fastify.addSchema({
     disponibilidad: { type: 'boolean', example: true },
     horas_requeridas: { type: 'integer', example: 100 },
     personas_requeridas: { type: 'integer', example: 5 },
+    tipo_proyecto: { type: 'string', example: 'A', enum: ['A', 'S'] },
     id_encargado: { type: 'integer', example: 1 },
     encargado: {
       $ref: 'EncargadoInstitucion'
@@ -558,8 +559,9 @@ fastify.addSchema({
     disponibilidad: { type: 'boolean' },
     horas_requeridas: { type: 'integer' },
     personas_requeridas: { type: 'integer' },
+    tipo_proyecto: { type: 'string', enum: ['A', 'S'] },
     id_encargado: { type: 'integer' },
-    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado','No_disponible', 'Finalizado', 'Iniciado'] },
   }
 });
 
