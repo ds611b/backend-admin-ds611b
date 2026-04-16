@@ -52,6 +52,14 @@ const ProyectosInstitucion = sequelize.define('ProyectosInstitucion', {
     allowNull: true,
     defaultValue: true,
   },
+  horas_requeridas: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  personas_requeridas: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   id_encargado: {
     type: DataTypes.INTEGER,
     allowNull: true,

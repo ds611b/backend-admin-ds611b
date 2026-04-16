@@ -144,6 +144,8 @@ fastify.addSchema({
     actividad_principal: { type: 'string', example: 'Capacitación en nuevas tecnologías' },
     horario_requerido: { type: 'string', example: 'Lunes a Viernes, 9:00 AM - 5:00 PM' },
     disponibilidad: { type: 'boolean', example: true },
+    horas_requeridas: { type: 'integer', example: 100 },
+    personas_requeridas: { type: 'integer', example: 5 },
     id_encargado: { type: 'integer', example: 1 },
     encargado: {
       $ref: 'EncargadoInstitucion'
@@ -546,7 +548,7 @@ fastify.addSchema({
     institucion_id: { type: 'integer' },
     nombre: { type: 'string' },
     descripcion: { type: 'string' },
-    sitio_web: { type: 'string', format: 'uri' },
+    sitio_web: { type: ['string', 'null'], format: 'uri' },
     fecha_inicio: { type: 'string', format: 'date' },
     fecha_fin: { type: 'string', format: 'date' },
     modalidad: { type: 'string', enum: ['Presencial', 'Virtual', 'Híbrida'] },
@@ -554,6 +556,8 @@ fastify.addSchema({
     actividad_principal: { type: 'string' },
     horario_requerido: { type: 'string' },
     disponibilidad: { type: 'boolean' },
+    horas_requeridas: { type: 'integer' },
+    personas_requeridas: { type: 'integer' },
     id_encargado: { type: 'integer' },
     estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
   }
