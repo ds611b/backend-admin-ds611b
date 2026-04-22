@@ -19,6 +19,13 @@ import DetalleBitacoraPerfilUsuario from './BitacoraPerfilUsuario.js';
 import BitacoraItems from './BitacoraItems.js';
 import EncargadoInstitucion from './EncargadoInstitucion.js';
 
+import HorasRequisito from './HorasRequisito.js';
+import RegistroHoras from './RegistroHoras.js';
+import DocumentosHoras from './DocumentosHoras.js';
+import Grupos from './Grupos.js';
+import GrupoEstudiantes from './GrupoEstudiantes.js';
+
+
 
 // Definir relaciones
 
@@ -89,12 +96,53 @@ DetalleBitacoraPerfilUsuario.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_u
 DetalleBitacoraProyectoBitacoraItems.belongsTo(BitacoraProyecto, { foreignKey: 'id_bitacora', onDelete: 'CASCADE' });
 DetalleBitacoraProyectoBitacoraItems.belongsTo(BitacoraItems, { foreignKey: 'id_bitacora_item', as: 'bitacoraItem', onDelete: 'CASCADE' });
 
+// Grupos y GrupoEstudiantes (1:N)
+Grupos.hasMany(GrupoEstudiantes, { foreignKey: 'id_grupo',  onDelete: 'CASCADE'});
+
+GrupoEstudiantes.belongsTo(Grupos, {  foreignKey: 'id_grupo'});
+
+// PerfilUsuario y GrupoEstudiantes (1:N)
+PerfilUsuario.hasMany(GrupoEstudiantes, {  foreignKey: 'id_perfil_usuario',  onDelete: 'CASCADE'});
+
+GrupoEstudiantes.belongsTo(PerfilUsuario, {  foreignKey: 'id_perfil_usuario',  as: 'perfil_usuario'});
+
 // Instituciones y EncargadoInstitucion (1:N)
 Instituciones.belongsTo(EncargadoInstitucion, { foreignKey: 'id_encargado', as: 'encargado' });
 EncargadoInstitucion.hasMany(Instituciones, { foreignKey: 'id_encargado', as: 'instituciones' });
 
 // ProyectosInstitucion y EncargadoInstitucion (N:1)
 ProyectosInstitucion.belongsTo(EncargadoInstitucion, { foreignKey: 'id_encargado', as: 'encargado' });
+
+
+// PerfilUsuario y HorasRequisito (1:N)
+PerfilUsuario.hasMany(HorasRequisito, { foreignKey: 'id_perfil_usuario' });
+HorasRequisito.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', as: 'perfil_usuario' });
+
+// HorasRequisito y RegistroHoras (1:N)
+HorasRequisito.hasMany(RegistroHoras, { foreignKey: 'id_horas_requisito' });
+RegistroHoras.belongsTo(HorasRequisito, { foreignKey: 'id_horas_requisito' });
+
+// RegistroHoras y DocumentosHoras (1:N)
+RegistroHoras.hasMany(DocumentosHoras, { foreignKey: 'id_registro_horas' });
+DocumentosHoras.belongsTo(RegistroHoras, { foreignKey: 'id_registro_horas' });
+
+// Grupos y HorasRequisito (1:N)
+Grupos.hasMany(HorasRequisito, {  foreignKey: 'id_grupo',  as: 'horas_requisitos',  onDelete: 'SET NULL'});
+
+HorasRequisito.belongsTo(Grupos, {  foreignKey: 'id_grupo',  as: 'grupo'});
+
+
+// RegistroHoras y ProyectosInstitucion (N:1)
+RegistroHoras.belongsTo(ProyectosInstitucion, {
+  foreignKey: 'id_proyecto'
+});
+
+ProyectosInstitucion.hasMany(RegistroHoras, {
+  foreignKey: 'id_proyecto'
+});
+
+
+
 
 // Exportar todos los modelos
 export {
@@ -116,5 +164,10 @@ export {
   BitacoraProyecto,
   DetalleBitacoraPerfilUsuario,
   BitacoraItems,
-  EncargadoInstitucion
+  EncargadoInstitucion,
+  HorasRequisito,
+  RegistroHoras,
+  DocumentosHoras,
+  Grupos,
+  GrupoEstudiantes
 };
