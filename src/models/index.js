@@ -84,18 +84,6 @@ ContactoEmergencia.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', o
 // ActividadesProyecto y ProyectosInstitucion (N:1)
 ActividadesProyecto.belongsTo(ProyectosInstitucion, { foreignKey: 'id_proyecto', onDelete: 'CASCADE' });
 
-
-// BitacoraProyecto y ProyectosInstitucion (N:1)
-BitacoraProyecto.belongsTo(ProyectosInstitucion, { foreignKey: 'id_proyecto', as: 'proyecto', onDelete: 'CASCADE' });
-
-// BitacoraProyecto y ActividadesProyecto (N:1)
-DetalleBitacoraPerfilUsuario.belongsTo(BitacoraProyecto, { foreignKey: 'id_bitacora', as: 'bitacora', onDelete: 'CASCADE' });
-DetalleBitacoraPerfilUsuario.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', as: 'perfilUsuario', onDelete: 'CASCADE' });
-
-// BitacoraItems y BitacoraProyecto (N:1)
-DetalleBitacoraProyectoBitacoraItems.belongsTo(BitacoraProyecto, { foreignKey: 'id_bitacora', onDelete: 'CASCADE' });
-DetalleBitacoraProyectoBitacoraItems.belongsTo(BitacoraItems, { foreignKey: 'id_bitacora_item', as: 'bitacoraItem', onDelete: 'CASCADE' });
-
 // Grupos y GrupoEstudiantes (1:N)
 Grupos.hasMany(GrupoEstudiantes, { foreignKey: 'id_grupo',  onDelete: 'CASCADE'});
 
