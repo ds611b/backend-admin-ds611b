@@ -1,5 +1,49 @@
 import { ProyectosInstitucion, Instituciones, EncargadoInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
+import { literal, Op } from 'sequelize';
+
+
+function calcularDisponibilidadProyecto(p) {
+  const inscritos = p.getDataValue('inscritos') || 0;
+  const hoy = new Date();
+
+  console.log('-----------------------------');
+  console.log('Proyecto:', p.nombre);
+  console.log('ID:', p.id);
+  console.log('Personas requeridas:', p.personas_requeridas);
+  console.log('Inscritos:', inscritos);
+  console.log('Fecha inicio:', p.fecha_inicio);
+  console.log('Fecha actual:', hoy);
+
+  let disponible = true;
+
+  // 🔴 cupo lleno
+  if (p.personas_requeridas && inscritos >= p.personas_requeridas) {
+    console.log('❌ No disponible: cupo lleno');
+    disponible = false;
+  }
+
+  // 🔴 fecha alcanzada
+  if (p.fecha_inicio && new Date(p.fecha_inicio) <= hoy) {
+    console.log('❌ No disponible: fecha de inicio alcanzada');
+    disponible = false;
+  }
+
+  if (disponible) {
+    console.log('✅ Proyecto disponible');
+  }
+
+  console.log('Resultado final disponibilidad:', disponible);
+  console.log('-----------------------------');
+
+  return {
+    ...p.toJSON(),
+    inscritos,
+    disponibilidad_calculada: disponible
+  };
+}
+
+
 
 /**
  * Obtiene todos los proyectos de instituciones.
@@ -8,13 +52,48 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  */
 export async function getProyectosInstitucion(request, reply) {
   try {
+
+    const fechaActual = new Date();
+
     const proyectos = await ProyectosInstitucion.findAll({
       include: [
         { model: Instituciones, as: 'institucion' },
         { model: EncargadoInstitucion, as: 'encargado' }
-      ]
+      ],
+      where: {
+        // 🔴 FILTRO POR FECHA
+        [Op.or]: [
+          { fecha_inicio: null },
+          { fecha_inicio: { [Op.gt]: fechaActual } }
+        ],
+
+        // 🔴 FILTRO POR CUPO
+        [Op.and]: [
+          literal(`(
+            SELECT COUNT(*) 
+            FROM AplicacionesEstudiantes ae
+            WHERE ae.proyecto_id = ProyectosInstitucion.id
+            AND ae.estado = 'Aprobado'
+          ) < ProyectosInstitucion.personas_requeridas`)
+        ]
+      },
+      attributes: {
+        include: [
+          [
+            literal(`(
+              SELECT COUNT(*) 
+              FROM AplicacionesEstudiantes ae
+              WHERE ae.proyecto_id = ProyectosInstitucion.id
+              AND ae.estado = 'Aprobado'
+            )`),
+            'inscritos'
+          ]
+        ]
+      }
     });
+
     reply.send(proyectos);
+
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
