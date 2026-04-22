@@ -11,11 +11,11 @@ import ProyectosInstitucionesHabilidades from './ProyectosInstitucionesHabilidad
 import Carreras from './Carreras.js';
 import Escuelas from './Escuelas.js';
 import CoordinadoresCarrera from './CoordinadoresCarrera.js';
-import BitacoraProyectoBitacoraItems from './BitacoraProyectoBitacoraItems.js';
+import DetalleBitacoraProyectoBitacoraItems from './BitacoraProyectoBitacoraItems.js';
 import ContactoEmergencia from './ContactoEmergencia.js';
 import ActividadesProyecto from './ActividadesProyecto.js';
 import BitacoraProyecto from './BitacoraProyecto.js';
-import BitacoraPerfilUsuario from './BitacoraPerfilUsuario.js';
+import DetalleBitacoraPerfilUsuario from './BitacoraPerfilUsuario.js';
 import BitacoraItems from './BitacoraItems.js';
 import EncargadoInstitucion from './EncargadoInstitucion.js';
 
@@ -79,15 +79,15 @@ ActividadesProyecto.belongsTo(ProyectosInstitucion, { foreignKey: 'id_proyecto',
 
 
 // BitacoraProyecto y ProyectosInstitucion (N:1)
-BitacoraProyecto.belongsTo(ProyectosInstitucion, { foreignKey: 'id_proyecto', onDelete: 'CASCADE' });
+BitacoraProyecto.belongsTo(ProyectosInstitucion, { foreignKey: 'id_proyecto', as: 'proyecto', onDelete: 'CASCADE' });
 
 // BitacoraProyecto y ActividadesProyecto (N:1)
-BitacoraPerfilUsuario.belongsTo(BitacoraProyecto, { foreignKey: 'id_bitacora', onDelete: 'CASCADE' });
-BitacoraPerfilUsuario.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', onDelete: 'CASCADE' });
+DetalleBitacoraPerfilUsuario.belongsTo(BitacoraProyecto, { foreignKey: 'id_bitacora', as: 'bitacora', onDelete: 'CASCADE' });
+DetalleBitacoraPerfilUsuario.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', as: 'perfilUsuario', onDelete: 'CASCADE' });
 
 // BitacoraItems y BitacoraProyecto (N:1)
-BitacoraProyectoBitacoraItems.belongsTo(BitacoraProyecto, { foreignKey: 'id_bitacora', onDelete: 'CASCADE' });
-BitacoraProyectoBitacoraItems.belongsTo(BitacoraItems, { foreignKey: 'id_bitacora_item', onDelete: 'CASCADE' });
+DetalleBitacoraProyectoBitacoraItems.belongsTo(BitacoraProyecto, { foreignKey: 'id_bitacora', onDelete: 'CASCADE' });
+DetalleBitacoraProyectoBitacoraItems.belongsTo(BitacoraItems, { foreignKey: 'id_bitacora_item', as: 'bitacoraItem', onDelete: 'CASCADE' });
 
 // Instituciones y EncargadoInstitucion (1:N)
 Instituciones.belongsTo(EncargadoInstitucion, { foreignKey: 'id_encargado', as: 'encargado' });
@@ -110,11 +110,11 @@ export {
   Carreras,
   Escuelas,
   CoordinadoresCarrera,
-  BitacoraProyectoBitacoraItems,
+  DetalleBitacoraProyectoBitacoraItems,
   ContactoEmergencia,
   ActividadesProyecto,
   BitacoraProyecto,
-  BitacoraPerfilUsuario,
+  DetalleBitacoraPerfilUsuario,
   BitacoraItems,
   EncargadoInstitucion
 };

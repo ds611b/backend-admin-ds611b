@@ -24,6 +24,7 @@ import coordinadoresCarreraRoutes from './routes/coordinadoresCarreraRoutes.js';
 import contactoEmergenciaRoutes from './routes/contactoEmergenciaRoutes.js';
 import encargadoInstitucionRoutes from './routes/encargadoInstitucionRoutes.js';
 import usuariosRoutes from './routes/usuariosRoutes.js';
+import bitacoraRoutes from './routes/bitacoraRoutes.js';
 import { preloadRoles } from './services/roleService.js';
 
 
@@ -913,6 +914,35 @@ fastify.addSchema({
   required: ['institucion', 'encargado', 'usuario']
 });
 
+// ===== Schemas de Bitácoras =====
+
+fastify.addSchema({
+  $id: 'BitacoraItems',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    detalle_actividades: { type: 'string', example: 'Desarrollo de módulo de autenticación' },
+    total_horas: { type: 'integer', example: 8 },
+    punch_in: { type: 'string', format: 'date-time', example: '2024-04-21T08:00:00Z' },
+    punch_out: { type: 'string', format: 'date-time', example: '2024-04-21T16:00:00Z' }
+  }
+});
+
+fastify.addSchema({
+  $id: 'BitacoraProyecto',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    fecha_inicio: { type: 'string', format: 'date', example: '2024-01-15' },
+    fecha_fin: { type: 'string', format: 'date', example: '2024-06-30' },
+    estado: { type: 'string', enum: ['En Proceso', 'Aprobado', 'Rechazado'], example: 'En Proceso' },
+    observaciones: { type: 'string', example: 'Proyecto avanzando según lo planificado' },
+    id_proyecto: { type: 'integer', example: 1 },
+    created_at: { type: 'string', format: 'date-time', example: '2024-01-15T10:00:00Z' },
+    updated_at: { type: 'string', format: 'date-time', example: '2024-04-21T10:00:00Z' }
+  }
+});
+
 
 
 /**
@@ -964,6 +994,7 @@ fastify.register(coordinadoresCarreraRoutes, { prefix: '/api' });
 fastify.register(contactoEmergenciaRoutes, { prefix: '/api' });
 fastify.register(encargadoInstitucionRoutes, { prefix: '/api' });
 fastify.register(usuariosRoutes, { prefix: '/api' });
+fastify.register(bitacoraRoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
