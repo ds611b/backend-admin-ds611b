@@ -32,6 +32,7 @@ import gruposRoutes from './routes/gruposRoutes.js';
 import grupoEstudiantesRoutes from './routes/grupoEstudiantesRoutes.js';
 
 import { preloadRoles } from './services/roleService.js';
+import GrupoCarrera from './models/GrupoCarrera.js';
 
 
 /**
@@ -399,21 +400,18 @@ fastify.addSchema({
   properties: {
     id: { type: 'integer', example: 1 },
     id_grupo: { type: 'integer', example: 10 },
-    id_perfil_usuario: { type: 'integer', example: 10 },
+    id_estudiante: { type: 'integer', example: 10 },
     horas_requeridas: { type: 'integer', example: 500 },
     horas_completadas: { type: 'integer', example: 120 },
     fecha_inicio: { type: 'string', format: 'date', nullable: true },
-    fecha_limite: { type: 'string', format: 'date', nullable: true },
     estado: {
       type: 'string',
       enum: ['Pendiente', 'En Progreso', 'Completado', 'Vencido'],
       example: 'En Progreso'
     },
-    institucion_asignada: { type: 'string', nullable: true },
-    observaciones: { type: 'string', nullable: true },
-    perfil_usuario: { $ref: 'PerfilUsuario' },
+    perfil_estudiante: { $ref: 'PerfilUsuario' },
     grupo: { $ref: 'Grupos' },
-    tipo_horas: { type: 'string', enum: ['Ambiental', 'Sociales'], example: 'Sociales' },
+    tipo_horas: { type: 'string', enum: ['A', 'S'], example: 'S' },
     created_at: { type: 'string', format: 'date-time' },
     updated_at: { type: 'string', format: 'date-time' }
   }
@@ -425,7 +423,7 @@ fastify.addSchema({
   type: 'object',
   properties: {
     id: { type: 'integer', example: 1 },
-    id_horas_requisito: { type: 'integer', example: 1 },
+    id_grupo_estudiante: { type: 'integer', example: 1 },
     id_proyecto: { type: 'integer', nullable: true },
     fecha: { type: 'string', format: 'date' },
     horas_realizadas: { type: 'number', example: 4.5 },
@@ -442,7 +440,7 @@ fastify.addSchema({
     fecha_validacion: { type: 'string', format: 'date-time', nullable: true },
     horas_requisito: { $ref: 'HorasRequisito' },
     proyecto: { $ref: 'ProyectosInstitucion' },
-    tipo_horas: { type: 'string', enum: ['Ambiental', 'Sociales'], example: 'Sociales' },
+    tipo_horas: { type: 'string', enum: ['A', 'S'], example: 'S' },
     validador: { $ref: 'PerfilUsuario' },
     created_at: { type: 'string', format: 'date-time' },
     updated_at: { type: 'string', format: 'date-time' }
@@ -468,6 +466,19 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
+  $id: 'GruposCarrera',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    id_grupo: { type: 'integer', example: 1 },
+    id_carrera: { type: 'integer', example: 1 },
+    activo: { type: 'boolean', example: true },
+    grupo: { $ref: 'Grupos' },
+    carrera: { $ref: 'Carreras' }
+  }
+});
+
+fastify.addSchema({
   $id: 'Grupos',
   type: 'object',
   properties: {
@@ -487,11 +498,11 @@ fastify.addSchema({
   properties: {
     id: { type: 'integer', example: 1 },
     id_grupo: { type: 'integer', example: 1 },
-    id_perfil_usuario: { type: 'integer', example: 10 },
+    id_estudiante: { type: 'integer', example: 10 },
     fecha_asignacion: { type: 'string', format: 'date' },
     estado: { type: 'string', example: 'Activo' },
     grupo: { $ref: 'Grupos' },
-    perfil_usuario: { $ref: 'PerfilUsuario' }
+    perfil_estudiante: { $ref: 'PerfilUsuario' }
   }
 });
 
@@ -761,6 +772,7 @@ fastify.addSchema({
     id: { type: 'integer' },
     nombre: { type: 'string' },
     id_escuela: { type: 'integer' },
+    grupos_carrera: { type: 'array', items: { $ref: 'GruposCarrera' } },
     escuela: { $ref: 'Escuelas' },
     created_at: { type: 'string', format: 'date-time' },
     updated_at: { type: 'string', format: 'date-time' }
@@ -1035,28 +1047,25 @@ fastify.addSchema({
   $id: 'HorasRequisitoValidation',
   type: 'object',
   properties: {
-    id_perfil_usuario: { type: 'integer' },
+    id_estudiante: { type: 'integer' },
     id_grupo: { type: 'integer' },
     horas_requeridas: { type: 'integer' },
-    fecha_inicio: { type: 'string', format: 'date' },
-    fecha_limite: { type: 'string', format: 'date' },
-    institucion_asignada: { type: 'string' },
-    observaciones: { type: 'string' }
+    fecha_inicio: { type: 'string', format: 'date' }
   },
-  required: ['id_perfil_usuario', 'horas_requeridas']
+  required: ['id_estudiante', 'horas_requeridas']
 });
 
 fastify.addSchema({
   $id: 'RegistroHorasValidation',
   type: 'object',
   properties: {
-    id_horas_requisito: { type: 'integer' },
+    id_grupo_estudiante: { type: 'integer' },
     id_proyecto: { type: 'integer' },
     fecha: { type: 'string', format: 'date' },
     horas_realizadas: { type: 'number' },
     descripcion_actividad: { type: 'string' }
   },
-  required: ['id_horas_requisito', 'fecha', 'horas_realizadas']
+  required: ['id_grupo_estudiante', 'fecha', 'horas_realizadas']
 });
 
 fastify.addSchema({
@@ -1089,10 +1098,10 @@ fastify.addSchema({
   type: 'object',
   properties: {
     id_grupo: { type: 'integer' },
-    id_perfil_usuario: { type: 'integer' },
+    id_estudiante: { type: 'integer' },
     estado: { type: 'string' }
   },
-  required: ['id_grupo', 'id_perfil_usuario']
+  required: ['id_grupo', 'id_estudiante']
 });
 
 

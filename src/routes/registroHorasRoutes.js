@@ -110,7 +110,7 @@ async function registroHorasRoutes(fastify) {
         type: 'object',
         properties: {
           id_proyecto: { type: 'integer', description: 'Filtrar por proyecto específico (opcional)' },
-          tipo_horas: { type: 'string', enum: ['Ambientales', 'Sociales'], description: 'Filtrar por tipo de horas (opcional)' }
+          tipo_horas: { type: 'string', enum: ['A', 'S'], description: 'Filtrar por tipo de horas (opcional)' }
         }
       },
       response: {

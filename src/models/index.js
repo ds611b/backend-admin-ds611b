@@ -23,6 +23,7 @@ import HorasRequisito from './HorasRequisito.js';
 import RegistroHoras from './RegistroHoras.js';
 import DocumentosHoras from './DocumentosHoras.js';
 import Grupos from './Grupos.js';
+import GrupoCarrera from './GrupoCarrera.js';
 import GrupoEstudiantes from './GrupoEstudiantes.js';
 
 
@@ -78,7 +79,7 @@ Carreras.hasMany(PerfilUsuario, { foreignKey: 'id_carrera', as: 'perfiles' });
 
 
 // ContactoEmergencia y PerfilUsuario (1:N)
-ContactoEmergencia.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', onDelete: 'CASCADE' });
+ContactoEmergencia.belongsTo(PerfilUsuario, { foreignKey: 'id_estudiante', onDelete: 'CASCADE' });
 
 
 // ActividadesProyecto y ProyectosInstitucion (N:1)
@@ -90,9 +91,9 @@ Grupos.hasMany(GrupoEstudiantes, { foreignKey: 'id_grupo',  onDelete: 'CASCADE'}
 GrupoEstudiantes.belongsTo(Grupos, {  foreignKey: 'id_grupo'});
 
 // PerfilUsuario y GrupoEstudiantes (1:N)
-PerfilUsuario.hasMany(GrupoEstudiantes, {  foreignKey: 'id_perfil_usuario',  onDelete: 'CASCADE'});
+PerfilUsuario.hasMany(GrupoEstudiantes, {  foreignKey: 'id_estudiante',  onDelete: 'CASCADE'});
 
-GrupoEstudiantes.belongsTo(PerfilUsuario, {  foreignKey: 'id_perfil_usuario',  as: 'perfil_usuario'});
+GrupoEstudiantes.belongsTo(PerfilUsuario, {  foreignKey: 'id_estudiante',  as: 'perfil_estudiante'});
 
 // Instituciones y EncargadoInstitucion (1:N)
 Instituciones.belongsTo(EncargadoInstitucion, { foreignKey: 'id_encargado', as: 'encargado' });
@@ -103,26 +104,49 @@ ProyectosInstitucion.belongsTo(EncargadoInstitucion, { foreignKey: 'id_encargado
 
 
 // PerfilUsuario y HorasRequisito (1:N)
-PerfilUsuario.hasMany(HorasRequisito, { foreignKey: 'id_perfil_usuario' });
-HorasRequisito.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', as: 'perfil_usuario' });
+PerfilUsuario.hasMany(HorasRequisito, { foreignKey: 'id_estudiante' });
 
-// HorasRequisito y RegistroHoras (1:N)
-HorasRequisito.hasMany(RegistroHoras, { foreignKey: 'id_horas_requisito' });
-RegistroHoras.belongsTo(HorasRequisito, { foreignKey: 'id_horas_requisito' });
+HorasRequisito.belongsTo(PerfilUsuario, { foreignKey: 'id_estudiante', as: 'perfil_estudiante' });
+
+GrupoEstudiantes.hasOne(HorasRequisito, {   foreignKey: 'id_grupo_estudiante',  as: 'horas_requisito',  onDelete: 'CASCADE'});
+
+GrupoEstudiantes.hasMany(RegistroHoras, {  foreignKey: 'id_grupo_estudiante',  as: 'registros_horas',  onDelete: 'CASCADE'});
+
+RegistroHoras.belongsTo(GrupoEstudiantes, {  foreignKey: 'id_grupo_estudiante',  as: 'grupo_estudiante'});
+
+HorasRequisito.belongsTo(GrupoEstudiantes, {  foreignKey: 'id_grupo_estudiante',  as: 'grupo_estudiante'});
+
+Carreras.hasMany(GrupoCarrera, {
+  foreignKey: 'id_carrera',
+  as: 'grupos_carrera'
+});
+
+GrupoCarrera.belongsTo(Carreras, {
+  foreignKey: 'id_carrera',
+  as: 'carrera'
+});
+
+GrupoCarrera.belongsTo(Grupos, {
+  foreignKey: 'id_grupo',
+  as: 'grupo'
+});
+
+RegistroHoras.belongsTo(HorasRequisito, {
+  foreignKey: 'id_horas_requisito',
+  as: 'horas_requisito'
+});
+
 
 // RegistroHoras y DocumentosHoras (1:N)
 RegistroHoras.hasMany(DocumentosHoras, { foreignKey: 'id_registro_horas' });
 DocumentosHoras.belongsTo(RegistroHoras, { foreignKey: 'id_registro_horas' });
 
-// Grupos y HorasRequisito (1:N)
-Grupos.hasMany(HorasRequisito, {  foreignKey: 'id_grupo',  as: 'horas_requisitos',  onDelete: 'SET NULL'});
-
-HorasRequisito.belongsTo(Grupos, {  foreignKey: 'id_grupo',  as: 'grupo'});
 
 
 // RegistroHoras y ProyectosInstitucion (N:1)
 RegistroHoras.belongsTo(ProyectosInstitucion, {
-  foreignKey: 'id_proyecto'
+  foreignKey: 'id_proyecto',
+  as: 'proyecto'
 });
 
 ProyectosInstitucion.hasMany(RegistroHoras, {
@@ -157,5 +181,6 @@ export {
   RegistroHoras,
   DocumentosHoras,
   Grupos,
-  GrupoEstudiantes
+  GrupoEstudiantes,
+  GrupoCarrera
 };

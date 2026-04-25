@@ -6,7 +6,7 @@ export async function getGrupoEstudiantes(request, reply) {
     const registros = await GrupoEstudiantes.findAll({
       include: [
         { model: Grupos },
-        { model: PerfilUsuario, as: 'perfil_usuario' }
+        { model: PerfilUsuario, as: 'perfil_estudiante' }
       ],
       order: [['fecha_asignacion', 'DESC']]
     });
@@ -28,13 +28,13 @@ export async function createGrupoEstudiante(request, reply) {
   try {
     const {
       id_grupo,
-      id_perfil_usuario,
+      id_estudiante,
       estado
     } = request.body;
 
     // Validar duplicado
     const existe = await GrupoEstudiantes.findOne({
-      where: { id_grupo, id_perfil_usuario },
+      where: { id_grupo, id_estudiante },
       transaction
     });
 
@@ -48,7 +48,7 @@ export async function createGrupoEstudiante(request, reply) {
 
     const nuevoRegistro = await GrupoEstudiantes.create({
       id_grupo,
-      id_perfil_usuario,
+      id_estudiante,
       fecha_asignacion: new Date(),
       estado
     }, { transaction });
@@ -58,7 +58,7 @@ export async function createGrupoEstudiante(request, reply) {
     const registroCompleto = await GrupoEstudiantes.findByPk(nuevoRegistro.id, {
       include: [
         { model: Grupos },
-        { model: PerfilUsuario, as: 'perfil_usuario' }
+        { model: PerfilUsuario, as: 'perfil_estudiante' }
       ]
     });
 
