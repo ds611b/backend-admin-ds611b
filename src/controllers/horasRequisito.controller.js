@@ -1,6 +1,7 @@
 import { Json } from 'sequelize/lib/utils';
-import { Grupos, HorasRequisito, PerfilUsuario, Usuarios, RegistroHoras } from '../models/index.js';
+import { Grupos, HorasRequisito, PerfilUsuario, Usuarios, RegistroHoras, GrupoEstudiantes } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
+import { Console } from 'console';
 
 export async function getHorasRequisito(request, reply) {
   try {
@@ -15,9 +16,18 @@ export async function getHorasRequisito(request, reply) {
               attributes: ['id', 'primer_nombre', 'primer_apellido', 'email']
             }
           ],
-          as: 'perfil_usuario'
+          as: 'perfil_estudiante'
         },
-        { model: Grupos, as: 'grupo' },
+        {
+          model: GrupoEstudiantes,
+          as: 'grupo_estudiante',
+          include: [
+            {
+              model: Grupos,
+              as: 'Grupo'
+            }
+          ]
+        }
       ],
       order: [['created_at', 'DESC']]
     });
@@ -46,23 +56,10 @@ export async function getHorasByUsuario(request, reply) {
       });
     }
 
-    let tipoMap;
-
-    if (tipo_horas === 'A') {
-      tipoMap = 'Ambientales';
-    } else if (tipo_horas === 'S') {
-      tipoMap = 'Sociales';
-    } else {
-      return reply.status(400).send({
-        message: 'Tipo inválido. Use A o S'
-      });
-    }
-
-
     const requisito = await HorasRequisito.findOne({
       where: {
-        id_perfil_usuario: perfil.id,
-        tipo_horas: tipoMap
+        id_estudiante: perfil.id,
+        tipo_horas: tipo_horas
       }
     });
 
@@ -72,33 +69,58 @@ export async function getHorasByUsuario(request, reply) {
       });
     }
 
-    // 🔥 SOLO horas pendientes
+    const grupoId = requisito.id_grupo_estudiante;
+    
+    const grupoEstudiante = await GrupoEstudiantes.findOne({
+      where: { id_estudiante: requisito.id_estudiante}
+    });
+
+    const grupo = await Grupos.findOne({
+     where : { id: grupoEstudiante.id_grupo },
+    })
+
+    if (!grupo) {
+      return reply.status(404).send({
+        message: 'Grupo no encontrado'
+      });
+    }
+
+    var requeridas = 0;
+
+    if(tipo_horas === 'A') {
+      requeridas = grupo.horas_ambientales;
+    } else if (tipo_horas === 'S') {
+      requeridas = grupo.horas_sociales;
+    }
+
+
     const horasPendientes = await RegistroHoras.sum('horas_realizadas', {
       where: {
-        id_horas_requisito: requisito.id,
+        id_grupo_estudiante: grupoId,
         estado_validacion: 'Pendiente',
-        tipo_horas: tipoMap
+        tipo_horas
       }
     });
 
     const horasCompletadas = await RegistroHoras.sum('horas_realizadas', {
       where: {
-        id_horas_requisito: requisito.id,
+        id_grupo_estudiante: grupoId,
         estado_validacion: 'Aprobado',
-        tipo_horas: tipo_horas
+        tipo_horas
       }
     });
 
-
+    // 🔒 asegurar números válidos
+    const pendientes = Number(horasPendientes || 0);
+    const completadas = Number(horasCompletadas || 0);
 
     const resumen = {
       usuario_id: idUsuario,
-      tipo_horas: tipo_horas,
-      horas_requeridas: requisito.horas_requeridas,
-      horas_completadas: horasCompletadas || 0,
-      horas_pendientes_aprobacion: horasPendientes || 0,
-      horas_restantes:
-        requisito.horas_requeridas - (horasCompletadas || 0)
+      tipo_horas,
+      horas_requeridas: requeridas,
+      horas_completadas: completadas,
+      horas_pendientes_aprobacion: pendientes,
+      horas_restantes: requeridas - completadas
     };
 
     reply.send(resumen);
@@ -147,16 +169,13 @@ export async function getHorasRequisitoById(request, reply) {
 
 export async function createHorasRequisito(request, reply) {
   const {
-    id_perfil_usuario,
+    id_estudiante,
     id_grupo,
     horas_requeridas,
     horas_completadas = 0,
     fecha_inicio,
-    fecha_limite,
     estado = 'Pendiente',
-    institucion_asignada,
-    tipo_horas,
-    observaciones
+    tipo_horas
   } = request.body;
 
 
@@ -171,16 +190,13 @@ export async function createHorasRequisito(request, reply) {
 
   try {
     const nuevoRequisito = await HorasRequisito.create({
-      id_perfil_usuario,
+      id_estudiante,
       id_grupo,
       horas_requeridas,
       horas_completadas,
       fecha_inicio,
-      fecha_limite,
       estado,
-      institucion_asignada,
-      tipo_horas,
-      observaciones
+      tipo_horas
     });
 
     const requisitoCompleto = await HorasRequisito.findByPk(nuevoRequisito.id, {
@@ -213,15 +229,12 @@ export async function createHorasRequisito(request, reply) {
 export async function updateHorasRequisito(request, reply) {
   const { id } = request.params;
   const {
-    id_perfil_usuario,
+    id_estudiante,
     id_grupo,
     horas_requeridas,
     horas_completadas,
     fecha_inicio,
-    fecha_limite,
-    estado,
-    institucion_asignada,
-    observaciones
+    estado
   } = request.body;
 
   try {
@@ -234,15 +247,12 @@ export async function updateHorasRequisito(request, reply) {
     }
 
     await requisito.update({
-      id_perfil_usuario,
+      id_estudiante,
       id_grupo,
       horas_requeridas,
       horas_completadas,
       fecha_inicio,
-      fecha_limite,
-      estado,
-      institucion_asignada,
-      observaciones
+      estado
     });
 
     const requisitoActualizado = await HorasRequisito.findByPk(id, {

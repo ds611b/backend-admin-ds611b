@@ -1,7 +1,8 @@
-import { Carreras, Escuelas, Usuarios, PerfilUsuario } from '../models/index.js';
+import { Carreras, Escuelas, Usuarios, PerfilUsuario, GrupoCarrera, Grupos } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 import config from '../config/config.js';
 import { getRolIdByName } from '../services/roleService.js';
+import { group } from 'console';
 
 /**
  * Obtiene todas las carreras con información de su escuela asociada
@@ -13,7 +14,17 @@ export async function getCarreras(request, reply) {
         model: Escuelas,
         as: 'escuela',
         //attributes: ['id', 'nombre']
-      }],
+      },{
+      model: GrupoCarrera,
+      as: 'grupos_carrera',
+      where: { activo: true },
+      attributes : ['id'],
+      required: false,
+      include : [{
+        model: Grupos,
+        as: 'grupo'
+      }]
+    }],
       order: [['nombre', 'ASC']]
     });
     reply.send(carreras);

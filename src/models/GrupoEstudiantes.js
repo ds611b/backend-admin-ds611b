@@ -17,7 +17,7 @@ const GrupoEstudiantes = sequelize.define('GrupoEstudiantes', {
       key: 'id',
     },
   },
-  id_perfil_usuario: {
+  id_estudiante: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {

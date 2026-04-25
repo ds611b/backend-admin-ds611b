@@ -6,7 +6,7 @@ export async function getGrupos(request, reply) {
     const grupos = await Grupos.findAll({
       include: {
         model: GrupoEstudiantes,
-        include: [{ model: PerfilUsuario, as: 'perfil_usuario' }]
+        include: [{ model: PerfilUsuario, as: 'perfil_estudiante' }]
       },
       order: [['fecha_creacion', 'DESC']]
     });
@@ -29,7 +29,7 @@ export async function getGrupoById(request, reply) {
     const grupo = await Grupos.findByPk(id, {
       include: {
         model: GrupoEstudiantes,
-        include: [{ model: PerfilUsuario, as: 'perfil_usuario' }]
+        include: [{ model: PerfilUsuario, as: 'perfil_estudiante' }]
       }
     });
 

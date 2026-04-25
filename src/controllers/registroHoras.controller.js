@@ -1,10 +1,12 @@
-import { 
-  RegistroHoras, 
-  HorasRequisito, 
-  ProyectosInstitucion, 
-  PerfilUsuario, 
-  Usuarios, 
-  Instituciones 
+import {
+  RegistroHoras,
+  HorasRequisito,
+  ProyectosInstitucion,
+  PerfilUsuario,
+  Usuarios,
+  Instituciones,
+  GrupoEstudiantes,
+  Grupos
 } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
@@ -12,10 +14,12 @@ export async function getRegistroHoras(request, reply) {
   try {
     const registros = await RegistroHoras.findAll({
       include: [
-        { model: HorasRequisito },
+        {
+          model: GrupoEstudiantes,
+          as: 'grupo_estudiante'
+        },
         { model: ProyectosInstitucion }
-      ],
-      order: [['fecha', 'DESC']]
+      ]
     });
     reply.send(registros);
   } catch (error) {
@@ -33,7 +37,16 @@ export async function getRegistroHorasById(request, reply) {
   try {
     const registro = await RegistroHoras.findByPk(id, {
       include: [
-        { model: HorasRequisito },
+        {
+          model: GrupoEstudiantes,
+          as: 'grupo_estudiante',
+          include: [
+            {
+              model: HorasRequisito,
+              as: 'horas_requisito'
+            }
+          ]
+        },
         { model: ProyectosInstitucion }
       ]
     });
@@ -56,13 +69,12 @@ export async function getRegistroHorasById(request, reply) {
 
 export async function createRegistroHoras(request, reply) {
   const transaction = await RegistroHoras.sequelize.transaction();
-  
+
   try {
     const {
-      id_horas_requisito,
+      id_grupo_estudiante,
       id_proyecto,
       fecha,
-      tipo_horas,
       horas_realizadas,
       descripcion_actividad,
       evidencia_url,
@@ -70,19 +82,17 @@ export async function createRegistroHoras(request, reply) {
       supervisor_cargo
     } = request.body;
 
-    
-      tipo_horas = tipo_horas === 'A' ? 'Ambientales' : tipo_horas === 'S' ? 'Sociales' : null;
-    
-      if (!tipo_horas) {
-        return reply.status(400).send(createErrorResponse(
-          'Tipo de horas inválido. Use A para Ambientales o S para Sociales',
-          'INVALID_TIPO_HORAS'
-        ));
-      } 
-    
+    const proyecto = await ProyectosInstitucion.findOne({
+      where: { id: id_proyecto },
+      attributes: ['tipo_proyecto']
+    });
+
+    const tipo_horas = proyecto?.tipo_proyecto;
+
+    console.log('Tipo de horas del proyecto:', tipo_horas ? tipo_horas.tipo_proyecto : 'No encontrado');
 
     const nuevoRegistro = await RegistroHoras.create({
-      id_horas_requisito,
+      id_grupo_estudiante,
       id_proyecto,
       fecha,
       tipo_horas,
@@ -98,7 +108,16 @@ export async function createRegistroHoras(request, reply) {
 
     const registroCompleto = await RegistroHoras.findByPk(nuevoRegistro.id, {
       include: [
-        { model: HorasRequisito },
+        {
+          model: GrupoEstudiantes,
+          as: 'grupo_estudiante',
+          include: [
+            {
+              model: HorasRequisito,
+              as: 'horas_requisito'
+            }
+          ]
+        },
         { model: ProyectosInstitucion }
       ]
     });
@@ -118,7 +137,7 @@ export async function createRegistroHoras(request, reply) {
 export async function updateRegistroHoras(request, reply) {
   const { id } = request.params;
   const transaction = await RegistroHoras.sequelize.transaction();
-  
+
   try {
     const {
       id_horas_requisito,
@@ -202,7 +221,7 @@ export async function updateRegistroHoras(request, reply) {
 export async function deleteRegistroHoras(request, reply) {
   const { id } = request.params;
   const transaction = await RegistroHoras.sequelize.transaction();
-  
+
   try {
     const registro = await RegistroHoras.findByPk(id, { transaction });
     if (!registro) {
@@ -225,7 +244,7 @@ export async function deleteRegistroHoras(request, reply) {
 
     await registro.destroy({ transaction });
     await transaction.commit();
-    
+
     reply.status(204).send();
   } catch (error) {
     await transaction.rollback();
@@ -242,18 +261,24 @@ export async function deleteRegistroHoras(request, reply) {
  * Obtiene el listado de horas realizadas por un estudiante específico.
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
- */
-export async function getHorasPorEstudiante(request, reply) {
+ */export async function getHorasPorEstudiante(request, reply) {
   const { id_perfil_usuario } = request.params;
   const { id_proyecto, tipo_horas } = request.query;
 
   try {
-    // Verificar que el perfil de usuario existe
+    // 🔹 Obtener perfil del estudiante
     const perfilUsuario = await PerfilUsuario.findByPk(id_perfil_usuario, {
       include: [{
         model: Usuarios,
         as: 'usuario',
-        attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+        attributes: [
+          'id',
+          'primer_nombre',
+          'segundo_nombre',
+          'primer_apellido',
+          'segundo_apellido',
+          'email'
+        ]
       }]
     });
 
@@ -264,8 +289,11 @@ export async function getHorasPorEstudiante(request, reply) {
       ));
     }
 
-    // Obtener todos los requisitos de horas del estudiante
-    const whereRequisito = { id_perfil_usuario };
+    // 🔹 Obtener requisitos (IMPORTANTE: usar id_estudiante)
+    const whereRequisito = {
+      id_estudiante: id_perfil_usuario
+    };
+
     if (tipo_horas) {
       whereRequisito.tipo_horas = tipo_horas;
     }
@@ -274,13 +302,11 @@ export async function getHorasPorEstudiante(request, reply) {
       where: whereRequisito
     });
 
-    if (requisitosHoras.length === 0) {
+    if (!requisitosHoras.length) {
       return reply.send({
         estudiante: {
           id: perfilUsuario.id,
-          nombre_completo: perfilUsuario.usuario ? 
-            `${perfilUsuario.usuario.primer_nombre} ${perfilUsuario.usuario.segundo_nombre || ''} ${perfilUsuario.usuario.primer_apellido} ${perfilUsuario.usuario.segundo_apellido || ''}`.trim() 
-            : null,
+          nombre_completo: `${perfilUsuario.usuario.primer_nombre} ${perfilUsuario.usuario.segundo_nombre || ''} ${perfilUsuario.usuario.primer_apellido} ${perfilUsuario.usuario.segundo_apellido || ''}`.trim(),
           carnet: perfilUsuario.carnet,
           email: perfilUsuario.usuario?.email
         },
@@ -290,42 +316,50 @@ export async function getHorasPorEstudiante(request, reply) {
       });
     }
 
-    // Obtener los IDs de los requisitos
-    const idsRequisitos = requisitosHoras.map(r => r.id);
+    // 🔹 IDs de requisitos
+    const id_grupo_estudiante = requisitosHoras.map(r => r.id);
 
-    // Construir el where para los registros
-    const whereRegistros = { id_horas_requisito: idsRequisitos };
+    // 🔹 Filtro de registros
+    const whereRegistros = {
+      id_grupo_estudiante: id_grupo_estudiante
+    };
+
     if (id_proyecto) {
       whereRegistros.id_proyecto = id_proyecto;
     }
 
-    // Obtener todos los registros de horas del estudiante
+    // 🔹 Obtener registros (SIN errores de asociación)
     const registros = await RegistroHoras.findAll({
       where: whereRegistros,
       include: [
-        { 
+        {
           model: HorasRequisito,
+          as: 'horas_requisito', // ⚠️ Debe existir en associations
           attributes: ['id', 'tipo_horas', 'horas_requeridas', 'horas_completadas']
-        },
-        { 
-          model: ProyectosInstitucion,
-          include: [{
-            model: Instituciones,
-            as: 'institucion',
-            attributes: ['id', 'nombre']
-          }]
         }
       ],
       order: [['fecha', 'DESC']]
     });
 
-    // Calcular totales
+    // 🔹 Evitar duplicados manualmente (extra seguro)
+    const registrosUnicos = [];
+    const ids = new Set();
+
+    for (const r of registros) {
+      if (!ids.has(r.id)) {
+        ids.add(r.id);
+        registrosUnicos.push(r);
+      }
+    }
+
     let totalHorasRegistradas = 0;
     let totalHorasAprobadas = 0;
 
-    const registrosDetallados = registros.map(registro => {
+    const registrosDetallados = registrosUnicos.map(registro => {
       const horas = parseFloat(registro.horas_realizadas) || 0;
+
       totalHorasRegistradas += horas;
+
       if (registro.estado_validacion === 'Aprobado') {
         totalHorasAprobadas += horas;
       }
@@ -333,15 +367,15 @@ export async function getHorasPorEstudiante(request, reply) {
       return {
         id: registro.id,
         fecha: registro.fecha,
-        horas_realizadas: registro.horas_realizadas,
+        horas_realizadas: horas,
         descripcion_actividad: registro.descripcion_actividad,
-        tipo_horas: registro.HorasRequisito?.tipo_horas,
+        tipo_horas: registro.horas_requisito?.tipo_horas,
         estado_validacion: registro.estado_validacion,
         observaciones_validacion: registro.observaciones_validacion,
-        proyecto: registro.ProyectosInstitucion ? {
-          id: registro.ProyectosInstitucion.id,
-          nombre: registro.ProyectosInstitucion.nombre,
-          institucion: registro.ProyectosInstitucion.institucion?.nombre
+        proyecto: registro.proyecto ? {
+          id: registro.proyecto.id,
+          nombre: registro.proyecto.nombre,
+          institucion: registro.proyecto.institucion?.nombre
         } : null,
         supervisor: {
           nombre: registro.supervisor_nombre,
@@ -351,12 +385,11 @@ export async function getHorasPorEstudiante(request, reply) {
       };
     });
 
+    // 🔹 Respuesta final
     reply.send({
       estudiante: {
         id: perfilUsuario.id,
-        nombre_completo: perfilUsuario.usuario ? 
-          `${perfilUsuario.usuario.primer_nombre} ${perfilUsuario.usuario.segundo_nombre || ''} ${perfilUsuario.usuario.primer_apellido} ${perfilUsuario.usuario.segundo_apellido || ''}`.trim() 
-          : null,
+        nombre_completo: `${perfilUsuario.usuario.primer_nombre} ${perfilUsuario.usuario.segundo_nombre || ''} ${perfilUsuario.usuario.primer_apellido} ${perfilUsuario.usuario.segundo_apellido || ''}`.trim(),
         carnet: perfilUsuario.carnet,
         email: perfilUsuario.usuario?.email
       },
@@ -364,6 +397,7 @@ export async function getHorasPorEstudiante(request, reply) {
       total_horas_aprobadas: totalHorasAprobadas,
       registros: registrosDetallados
     });
+
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
@@ -402,21 +436,34 @@ export async function getResumenProyecto(request, reply) {
     const registrosProyecto = await RegistroHoras.findAll({
       where: { id_proyecto },
       include: [
-        { 
-          model: HorasRequisito,
-          include: [{
-            model: PerfilUsuario,
-            as: 'perfil_usuario',
-            include: [{
-              model: Usuarios,
-              as: 'usuario',
-              attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
-            }]
-          }]
+        {
+          model: GrupoEstudiantes,
+          as: 'grupo_estudiante', // 🔥 AQUÍ ESTÁ LA CLAVE
+          include: [
+            {
+              model: HorasRequisito,
+              as: 'horas_requisito',
+              include: [
+                {
+                  model: PerfilUsuario,
+                  as: 'perfil_estudiante',
+                  include: [
+                    {
+                      model: Usuarios,
+                      as: 'usuario',
+                      attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ],
       order: [['fecha', 'DESC']]
     });
+
+    console.log (`🔍 Registros encontrados para proyecto ${id_proyecto}:`, registrosProyecto.length);
 
     // Agrupar por estudiante
     const estudiantesMap = new Map();
@@ -430,7 +477,7 @@ export async function getResumenProyecto(request, reply) {
       const idPerfil = perfil.id;
       const horas = parseFloat(registro.horas_realizadas) || 0;
       totalHorasProyecto += horas;
-      
+
       if (registro.estado_validacion === 'Aprobado') {
         totalHorasAprobadas += horas;
       }
@@ -439,8 +486,8 @@ export async function getResumenProyecto(request, reply) {
         estudiantesMap.set(idPerfil, {
           id_perfil_usuario: perfil.id,
           carnet: perfil.carnet,
-          nombre_completo: perfil.usuario ? 
-            `${perfil.usuario.primer_nombre} ${perfil.usuario.segundo_nombre || ''} ${perfil.usuario.primer_apellido} ${perfil.usuario.segundo_apellido || ''}`.trim() 
+          nombre_completo: perfil.usuario ?
+            `${perfil.usuario.primer_nombre} ${perfil.usuario.segundo_nombre || ''} ${perfil.usuario.primer_apellido} ${perfil.usuario.segundo_apellido || ''}`.trim()
             : null,
           email: perfil.usuario?.email,
           total_horas_registradas: 0,

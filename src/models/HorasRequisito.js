@@ -2,6 +2,7 @@ import { DataTypes } from 'sequelize';
 import sequelize from './db.js';
 import PerfilUsuario from './PerfilUsuario.js';
 import Grupos from './Grupos.js';
+import GrupoEstudiantes from './GrupoEstudiantes.js';
 
 const HorasRequisito = sequelize.define('HorasRequisito', {
   id: {
@@ -9,25 +10,21 @@ const HorasRequisito = sequelize.define('HorasRequisito', {
     autoIncrement: true,
     primaryKey: true,
   },
-  id_grupo: {
+  id_grupo_estudiante: {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: Grupos,
+      model: GrupoEstudiantes,
       key: 'id',
     },
   },
-  id_perfil_usuario: {
+  id_estudiante: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
       model: PerfilUsuario,
       key: 'id',
     },
-  },
-  horas_requeridas: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
   },
   horas_completadas: {
     type: DataTypes.INTEGER,
@@ -37,12 +34,8 @@ const HorasRequisito = sequelize.define('HorasRequisito', {
     type: DataTypes.DATEONLY,
     allowNull: true,
   },
-  fecha_limite: {
-    type: DataTypes.DATEONLY,
-    allowNull: true,
-  },
   tipo_horas: {
-    type: DataTypes.ENUM('Ambientales', 'Sociales'),
+    type: DataTypes.ENUM('A', 'S'),
     allowNull: false
   },
   estado: {
@@ -53,14 +46,6 @@ const HorasRequisito = sequelize.define('HorasRequisito', {
       'Vencido'
     ),
     defaultValue: 'Pendiente',
-  },
-  institucion_asignada: {
-    type: DataTypes.STRING(200),
-    allowNull: true,
-  },
-  observaciones: {
-    type: DataTypes.TEXT,
-    allowNull: true,
   },
   created_at: {
     type: DataTypes.DATE,
