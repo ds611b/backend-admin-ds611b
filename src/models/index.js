@@ -79,7 +79,8 @@ Carreras.hasMany(PerfilUsuario, { foreignKey: 'id_carrera', as: 'perfiles' });
 
 
 // ContactoEmergencia y PerfilUsuario (1:N)
-ContactoEmergencia.belongsTo(PerfilUsuario, { foreignKey: 'id_estudiante', onDelete: 'CASCADE' });
+ContactoEmergencia.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', as: 'PerfilUsuario', onDelete: 'CASCADE' });
+PerfilUsuario.hasOne(ContactoEmergencia, { foreignKey: 'id_perfil_usuario', onDelete: 'CASCADE' });
 
 
 // ActividadesProyecto y ProyectosInstitucion (N:1)
