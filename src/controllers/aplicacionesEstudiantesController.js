@@ -416,3 +416,77 @@ export async function deleteAplicacionEstudiante(request, reply) {
     ));
   }
 }
+
+/**
+ * Obtiene lista simplificada de estudiantes aplicados a un proyecto con paginación y filtros
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
+export async function getEstudiantesAplicadosByProyecto(request, reply) {
+  const { proyectoId } = request.params;
+  const { page = 1, limit = 10, estado } = request.query;
+
+  try {
+    // Construir condiciones de filtro
+    const whereConditions = { proyecto_id: proyectoId };
+    
+    // Agregar filtro de estado si se proporciona
+    if (estado) {
+      whereConditions.estado = estado;
+    }
+
+    // Calcular offset para paginación
+    const offset = (page - 1) * limit;
+
+    // Obtener aplicaciones con paginación
+    const { count, rows: aplicaciones } = await AplicacionesEstudiantes.findAndCountAll({
+      where: whereConditions,
+      include: [
+        {
+          model: Usuarios,
+          as: 'estudiante',
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+        }
+      ],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['created_at', 'DESC']],
+      distinct: true
+    });
+
+    // Mapear solo la información de estudiantes
+    const estudiantes = aplicaciones.map(app => ({
+      id: app.estudiante.id,
+      primer_nombre: app.estudiante.primer_nombre,
+      segundo_nombre: app.estudiante.segundo_nombre,
+      primer_apellido: app.estudiante.primer_apellido,
+      segundo_apellido: app.estudiante.segundo_apellido,
+      email: app.estudiante.email,
+      aplicacion_id: app.id,
+      estado: app.estado,
+      fecha_aplicacion: app.created_at
+    }));
+
+    // Calcular información de paginación
+    const totalPages = Math.ceil(count / limit);
+
+    const response = {
+      estudiantes,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages
+      }
+    };
+
+    reply.send(response);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener los estudiantes aplicados al proyecto',
+      'GET_ESTUDIANTES_APLICADOS_ERROR',
+      error
+    ));
+  }
+}
