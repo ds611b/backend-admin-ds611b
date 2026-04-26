@@ -52,31 +52,52 @@ function calcularDisponibilidadProyecto(p) {
  */
 export async function getProyectosInstitucion(request, reply) {
   try {
+    const {
+      page = 0,
+      size = 20,
+      sort = 'id,desc',
+      query = ''
+    } = request.query;
+
+    const limit = parseInt(size);
+    const offset = parseInt(page) * limit;
+
+    const [field, direction] = sort.split(',');
 
     const fechaActual = new Date();
 
-    const proyectos = await ProyectosInstitucion.findAll({
+    const whereClause = {
+      // 🔎 búsqueda por nombre
+      nombre: {
+        [Op.like]: `%${query}%`
+      },
+
+      // 🔴 disponibilidad por fecha
+      [Op.or]: [
+        { fecha_inicio: null },
+        { fecha_inicio: { [Op.gt]: fechaActual } }
+      ],
+
+      // 🔴 cupo disponible
+      [Op.and]: [
+        literal(`(
+          SELECT COUNT(*) 
+          FROM AplicacionesEstudiantes ae
+          WHERE ae.proyecto_id = ProyectosInstitucion.id
+          AND ae.estado = 'Aprobado'
+        ) < ProyectosInstitucion.personas_requeridas`)
+      ]
+    };
+
+    const { count, rows } = await ProyectosInstitucion.findAndCountAll({
+      where: whereClause,
+      limit,
+      offset,
+      order: [[field, direction.toUpperCase()]],
       include: [
         { model: Instituciones, as: 'institucion' },
         { model: EncargadoInstitucion, as: 'encargado' }
       ],
-      where: {
-        // 🔴 FILTRO POR FECHA
-        [Op.or]: [
-          { fecha_inicio: null },
-          { fecha_inicio: { [Op.gt]: fechaActual } }
-        ],
-
-        // 🔴 FILTRO POR CUPO
-        [Op.and]: [
-          literal(`(
-            SELECT COUNT(*) 
-            FROM AplicacionesEstudiantes ae
-            WHERE ae.proyecto_id = ProyectosInstitucion.id
-            AND ae.estado = 'Aprobado'
-          ) < ProyectosInstitucion.personas_requeridas`)
-        ]
-      },
       attributes: {
         include: [
           [
@@ -92,18 +113,32 @@ export async function getProyectosInstitucion(request, reply) {
       }
     });
 
-    reply.send(proyectos);
+    // 📦 formato tipo Spring Boot
+    const response = {
+      content: rows,
+      pageable: {
+        pageNumber: parseInt(page),
+        pageSize: limit
+      },
+      totalElements: count,
+      totalPages: Math.ceil(count / limit),
+      first: page == 0,
+      last: (page + 1) * limit >= count,
+      numberOfElements: rows.length,
+      empty: rows.length === 0
+    };
+
+    reply.send(response);
 
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
-      'Error al obtener los proyectos de instituciones',
+      'Error al obtener los proyectos',
       'GET_PROYECTOS_INSTITUCION_ERROR',
       error
     ));
   }
 }
-
 /**
  * Obtiene un proyecto de institución por ID.
  * @param {import('fastify').FastifyRequest} request
