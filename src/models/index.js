@@ -133,11 +133,6 @@ GrupoCarrera.belongsTo(Grupos, {
   as: 'grupo'
 });
 
-RegistroHoras.belongsTo(HorasRequisito, {
-  foreignKey: 'id_horas_requisito',
-  as: 'horas_requisito'
-});
-
 
 // RegistroHoras y DocumentosHoras (1:N)
 RegistroHoras.hasMany(DocumentosHoras, { foreignKey: 'id_registro_horas' });

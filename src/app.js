@@ -1059,13 +1059,13 @@ fastify.addSchema({
   $id: 'RegistroHorasValidation',
   type: 'object',
   properties: {
-    id_grupo_estudiante: { type: 'integer' },
+    id_perfil_usuario: { type: 'integer' },
     id_proyecto: { type: 'integer' },
     fecha: { type: 'string', format: 'date' },
     horas_realizadas: { type: 'number' },
     descripcion_actividad: { type: 'string' }
   },
-  required: ['id_grupo_estudiante', 'fecha', 'horas_realizadas']
+  required: ['id_perfil_usuario', 'fecha', 'horas_realizadas']
 });
 
 fastify.addSchema({
