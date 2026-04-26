@@ -20,9 +20,27 @@ async function proyectoInstitucionRoutes(fastify, options) {
       tags: ['Proyectos de Instituciones'],
       response: {
         200: {
-          description: 'Lista de proyectos de instituciones obtenida exitosamente.',
-          type: 'array',
-          items: { $ref: 'ProyectosInstitucion' },
+          description: 'Lista paginada de proyectos de instituciones.',
+          type: 'object',
+          properties: {
+            content: {
+              type: 'array',
+              items: { $ref: 'ProyectosInstitucion' }
+            },
+            pageable: {
+              type: 'object',
+              properties: {
+                pageNumber: { type: 'integer' },
+                pageSize: { type: 'integer' }
+              }
+            },
+            totalElements: { type: 'integer' },
+            totalPages: { type: 'integer' },
+            first: { type: 'boolean' },
+            last: { type: 'boolean' },
+            numberOfElements: { type: 'integer' },
+            empty: { type: 'boolean' }
+          }
         },
         500: {
           description: 'Error al obtener los proyectos de instituciones.',
@@ -31,6 +49,8 @@ async function proyectoInstitucionRoutes(fastify, options) {
       },
     },
   }, getProyectosInstitucion);
+
+
 
   // Obtener un proyecto de institución por ID
   fastify.get('/proyectos-institucion/:id', {
@@ -142,7 +162,7 @@ async function proyectoInstitucionRoutes(fastify, options) {
       },
     },
   }, deleteProyectoInstitucion);
-  
+
   fastify.get('/proyectos-institucion/estado/:estado/:disponibilidad', {
     schema: {
       description: 'Obtiene proyectos de institución filtrados por estado y disponibilidad',
