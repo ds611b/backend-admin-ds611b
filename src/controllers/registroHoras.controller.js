@@ -17,8 +17,7 @@ export async function getRegistroHoras(request, reply) {
         {
           model: GrupoEstudiantes,
           as: 'grupo_estudiante'
-        },
-        { model: ProyectosInstitucion }
+        }
       ]
     });
     reply.send(registros);
@@ -46,8 +45,7 @@ export async function getRegistroHorasById(request, reply) {
               as: 'horas_requisito'
             }
           ]
-        },
-        { model: ProyectosInstitucion }
+        }
       ]
     });
     if (!registro) {
@@ -72,7 +70,7 @@ export async function createRegistroHoras(request, reply) {
 
   try {
     const {
-      id_grupo_estudiante,
+      id_perfil_usuario,
       id_proyecto,
       fecha,
       horas_realizadas,
@@ -87,9 +85,18 @@ export async function createRegistroHoras(request, reply) {
       attributes: ['tipo_proyecto']
     });
 
+    const grupo_estudiante = await GrupoEstudiantes.findOne({
+      where: { id_estudiante: id_perfil_usuario },
+      attributes: ['id']
+    });
+
+    const id_grupo_estudiante = grupo_estudiante ? grupo_estudiante.id : null;
+
     const tipo_horas = proyecto?.tipo_proyecto;
 
-    console.log('Tipo de horas del proyecto:', tipo_horas ? tipo_horas.tipo_proyecto : 'No encontrado');
+    console.log('proyecto encontrado:', proyecto);
+
+    console.log('Tipo de horas del proyecto:', tipo_horas);
 
     const nuevoRegistro = await RegistroHoras.create({
       id_grupo_estudiante,
@@ -104,25 +111,30 @@ export async function createRegistroHoras(request, reply) {
       estado_validacion: 'Pendiente'
     }, { transaction });
 
-    await transaction.commit();
+    console.log('Nuevo registro creado:', nuevoRegistro);
+
+    
 
     const registroCompleto = await RegistroHoras.findByPk(nuevoRegistro.id, {
-      include: [
-        {
-          model: GrupoEstudiantes,
-          as: 'grupo_estudiante',
-          include: [
-            {
-              model: HorasRequisito,
-              as: 'horas_requisito'
-            }
-          ]
-        },
-        { model: ProyectosInstitucion }
-      ]
-    });
+        include: [
+          {
+            model: GrupoEstudiantes,
+            as: 'grupo_estudiante',
+            include: [
+              {
+                model: HorasRequisito,
+                as: 'horas_requisito'
+              }
+            ]
+          }
+        ],
+        transaction
+      });
+
+    await transaction.commit();
 
     reply.status(201).send(registroCompleto);
+    
   } catch (error) {
     await transaction.rollback();
     request.log.error(error);
