@@ -53,47 +53,21 @@ function calcularDisponibilidadProyecto(p) {
 export async function getProyectosInstitucion(request, reply) {
   try {
     const {
+      pageable = 'false',
       page = 0,
       size = 20,
       sort = 'id,desc',
-      query = ''
+      query = '',
+      estado,
+      disponibilidad
     } = request.query;
 
+    const isPageable = pageable === 'true';
     const limit = parseInt(size);
     const offset = parseInt(page) * limit;
-
     const [field, direction] = sort.split(',');
 
-    const fechaActual = new Date();
-
-    const whereClause = {
-      // 🔎 búsqueda por nombre
-      nombre: {
-        [Op.like]: `%${query}%`
-      },
-
-      // 🔴 disponibilidad por fecha
-      [Op.or]: [
-        { fecha_inicio: null },
-        { fecha_inicio: { [Op.gt]: fechaActual } }
-      ],
-
-      // 🔴 cupo disponible
-      [Op.and]: [
-        literal(`(
-          SELECT COUNT(*) 
-          FROM AplicacionesEstudiantes ae
-          WHERE ae.proyecto_id = ProyectosInstitucion.id
-          AND ae.estado = 'Aprobado'
-        ) < ProyectosInstitucion.personas_requeridas`)
-      ]
-    };
-
-    const { count, rows } = await ProyectosInstitucion.findAndCountAll({
-      where: whereClause,
-      limit,
-      offset,
-      order: [[field, direction.toUpperCase()]],
+    const baseOptions = {
       include: [
         { model: Instituciones, as: 'institucion' },
         { model: EncargadoInstitucion, as: 'encargado' }
@@ -105,30 +79,72 @@ export async function getProyectosInstitucion(request, reply) {
               SELECT COUNT(*) 
               FROM AplicacionesEstudiantes ae
               WHERE ae.proyecto_id = ProyectosInstitucion.id
-              AND ae.estado = 'Aprobado'
             )`),
             'inscritos'
           ]
         ]
-      }
-    });
-
-    // 📦 formato tipo Spring Boot
-    const response = {
-      content: rows,
-      pageable: {
-        pageNumber: parseInt(page),
-        pageSize: limit
       },
-      totalElements: count,
-      totalPages: Math.ceil(count / limit),
-      first: page == 0,
-      last: (page + 1) * limit >= count,
-      numberOfElements: rows.length,
-      empty: rows.length === 0
+      order: [[field, direction.toUpperCase()]]
     };
 
-    reply.send(response);
+    // 🟢 WHERE solo si pageable = true
+    let whereClause = {};
+
+    if (isPageable) {
+
+      // 🔎 búsqueda por nombre
+      if (query) {
+        whereClause.nombre = {
+          [Op.like]: `%${query}%`
+        };
+      }
+
+      // 🔎 filtro por estado (campo)
+      if (estado !== undefined) {
+        whereClause.estado = estado;
+      }
+
+      // 🔎 filtro por disponibilidad (campo)
+      if (disponibilidad !== undefined) {
+        whereClause.disponibilidad = disponibilidad === 'true';
+      }
+    }
+
+    // 🚀 EJECUCIÓN
+    let rows = [];
+    let count = 0;
+
+    if (isPageable) {
+      const result = await ProyectosInstitucion.findAndCountAll({
+        ...baseOptions,
+        where: whereClause,
+        limit,
+        offset
+      });
+
+      rows = result.rows;
+      count = result.count;
+
+    } else {
+      // 🔴 SIN PAGINACIÓN → TODO (sin filtros)
+      rows = await ProyectosInstitucion.findAll(baseOptions);
+      count = rows.length;
+    }
+
+    // 📦 RESPUESTA UNIFICADA
+    return reply.send({
+      content: rows,
+      pageable: {
+        pageNumber: isPageable ? parseInt(page) : 0,
+        pageSize: isPageable ? limit : count
+      },
+      totalElements: count,
+      totalPages: isPageable ? Math.ceil(count / limit) : 1,
+      first: isPageable ? page == 0 : true,
+      last: isPageable ? (page + 1) * limit >= count : true,
+      numberOfElements: rows.length,
+      empty: rows.length === 0
+    });
 
   } catch (error) {
     request.log.error(error);
