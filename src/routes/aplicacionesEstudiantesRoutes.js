@@ -5,7 +5,8 @@ import {
   updateAplicacionEstudiante,
   deleteAplicacionEstudiante,
   getAplicacionesByEstudiante,
-  getAplicacionesByProyecto
+  getAplicacionesByProyecto,
+  getEstudiantesAplicadosByProyecto
 } from '../controllers/aplicacionesEstudiantesController.js';
 
 async function aplicacionesEstudiantesRoutes(fastify) {
@@ -115,6 +116,71 @@ fastify.get('/aplicaciones-estudiantes/proyecto/:proyectoId', {
     }
   }
 }, getAplicacionesByProyecto);
+
+  // GET: Obtener lista simplificada de estudiantes aplicados a un proyecto (con paginación y filtros)
+  fastify.get('/aplicaciones-estudiantes/proyecto/:proyectoId/estudiantes', {
+    schema: {
+      description: 'Obtiene lista simplificada de estudiantes que han aplicado a un proyecto con paginación y filtros',
+      tags: ['Aplicaciones Estudiantes'],
+      params: {
+        type: 'object',
+        properties: {
+          proyectoId: { type: 'number', description: 'ID del proyecto' }
+        },
+        required: ['proyectoId']
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página (default: 1)', default: 1 },
+          limit: { type: 'number', description: 'Límite de registros por página (default: 10)', default: 10 },
+          estado: { 
+            type: 'string', 
+            enum: ['Pendiente', 'Aprobado', 'Rechazado'],
+            description: 'Filtrar por estado de la aplicación' 
+          }
+        }
+      },
+      response: {
+        200: {
+          description: 'Lista de estudiantes aplicados obtenida exitosamente',
+          type: 'object',
+          properties: {
+            estudiantes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'number' },
+                  primer_nombre: { type: 'string' },
+                  segundo_nombre: { type: ['string', 'null'] },
+                  primer_apellido: { type: 'string' },
+                  segundo_apellido: { type: ['string', 'null'] },
+                  email: { type: 'string' },
+                  aplicacion_id: { type: 'number' },
+                  estado: { type: 'string' },
+                  fecha_aplicacion: { type: 'string' }
+                }
+              }
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                total: { type: 'number' },
+                page: { type: 'number' },
+                limit: { type: 'number' },
+                totalPages: { type: 'number' }
+              }
+            }
+          }
+        },
+        500: {
+          description: 'Error al obtener los estudiantes aplicados',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, getEstudiantesAplicadosByProyecto);
 
   // POST: Crear una nueva aplicación
   fastify.post('/aplicaciones-estudiantes', {

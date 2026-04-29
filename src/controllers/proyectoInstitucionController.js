@@ -1,5 +1,49 @@
 import { ProyectosInstitucion, Instituciones, EncargadoInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
+import { literal, Op } from 'sequelize';
+
+
+function calcularDisponibilidadProyecto(p) {
+  const inscritos = p.getDataValue('inscritos') || 0;
+  const hoy = new Date();
+
+  console.log('-----------------------------');
+  console.log('Proyecto:', p.nombre);
+  console.log('ID:', p.id);
+  console.log('Personas requeridas:', p.personas_requeridas);
+  console.log('Inscritos:', inscritos);
+  console.log('Fecha inicio:', p.fecha_inicio);
+  console.log('Fecha actual:', hoy);
+
+  let disponible = true;
+
+  // 🔴 cupo lleno
+  if (p.personas_requeridas && inscritos >= p.personas_requeridas) {
+    console.log('❌ No disponible: cupo lleno');
+    disponible = false;
+  }
+
+  // 🔴 fecha alcanzada
+  if (p.fecha_inicio && new Date(p.fecha_inicio) <= hoy) {
+    console.log('❌ No disponible: fecha de inicio alcanzada');
+    disponible = false;
+  }
+
+  if (disponible) {
+    console.log('✅ Proyecto disponible');
+  }
+
+  console.log('Resultado final disponibilidad:', disponible);
+  console.log('-----------------------------');
+
+  return {
+    ...p.toJSON(),
+    inscritos,
+    disponibilidad_calculada: disponible
+  };
+}
+
+
 
 /**
  * Obtiene todos los proyectos de instituciones.
@@ -8,23 +52,109 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  */
 export async function getProyectosInstitucion(request, reply) {
   try {
-    const proyectos = await ProyectosInstitucion.findAll({
+    const {
+      pageable = 'false',
+      page = 0,
+      size = 20,
+      sort = 'id,desc',
+      query = '',
+      estado,
+      disponibilidad
+    } = request.query;
+
+    const isPageable = pageable === 'true';
+    const limit = parseInt(size);
+    const offset = parseInt(page) * limit;
+    const [field, direction] = sort.split(',');
+
+    const baseOptions = {
       include: [
         { model: Instituciones, as: 'institucion' },
         { model: EncargadoInstitucion, as: 'encargado' }
-      ]
+      ],
+      attributes: {
+        include: [
+          [
+            literal(`(
+              SELECT COUNT(*) 
+              FROM AplicacionesEstudiantes ae
+              WHERE ae.proyecto_id = ProyectosInstitucion.id
+            )`),
+            'inscritos'
+          ]
+        ]
+      },
+      order: [[field, direction.toUpperCase()]]
+    };
+
+    // 🟢 WHERE solo si pageable = true
+    let whereClause = {};
+
+    if (isPageable) {
+
+      // 🔎 búsqueda por nombre
+      if (query) {
+        whereClause.nombre = {
+          [Op.like]: `%${query}%`
+        };
+      }
+
+      // 🔎 filtro por estado (campo)
+      if (estado !== undefined) {
+        whereClause.estado = estado;
+      }
+
+      // 🔎 filtro por disponibilidad (campo)
+      if (disponibilidad !== undefined) {
+        whereClause.disponibilidad = disponibilidad === 'true';
+      }
+    }
+
+    // 🚀 EJECUCIÓN
+    let rows = [];
+    let count = 0;
+
+    if (isPageable) {
+      const result = await ProyectosInstitucion.findAndCountAll({
+        ...baseOptions,
+        where: whereClause,
+        limit,
+        offset
+      });
+
+      rows = result.rows;
+      count = result.count;
+
+    } else {
+      // 🔴 SIN PAGINACIÓN → TODO (sin filtros)
+      rows = await ProyectosInstitucion.findAll(baseOptions);
+      count = rows.length;
+    }
+
+    // 📦 RESPUESTA UNIFICADA
+    return reply.send({
+      content: rows,
+      pageable: {
+        pageNumber: isPageable ? parseInt(page) : 0,
+        pageSize: isPageable ? limit : count
+      },
+      totalElements: count,
+      totalPages: isPageable ? Math.ceil(count / limit) : 1,
+      first: isPageable ? page == 0 : true,
+      last: isPageable ? (page + 1) * limit >= count : true,
+      numberOfElements: rows.length,
+      empty: rows.length === 0
     });
-    reply.send(proyectos);
+
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
-      'Error al obtener los proyectos de instituciones',
+      'Error al obtener los proyectos',
       'GET_PROYECTOS_INSTITUCION_ERROR',
       error
     ));
   }
 }
-
 /**
  * Obtiene un proyecto de institución por ID.
  * @param {import('fastify').FastifyRequest} request

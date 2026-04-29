@@ -3,6 +3,7 @@ import sequelize from './db.js';
 import HorasRequisito from './HorasRequisito.js';
 import ProyectosInstitucion from './ProyectosInstitucion.js';
 import PerfilUsuario from './PerfilUsuario.js';
+import GrupoEstudiantes from './GrupoEstudiantes.js';
 
 const RegistroHoras = sequelize.define('RegistroHoras', {
   id: {
@@ -10,11 +11,11 @@ const RegistroHoras = sequelize.define('RegistroHoras', {
     autoIncrement: true,
     primaryKey: true,
   },
-  id_horas_requisito: {
+  id_grupo_estudiante: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: HorasRequisito,
+      model: GrupoEstudiantes,
       key: 'id',
     },
   },
@@ -55,7 +56,7 @@ const RegistroHoras = sequelize.define('RegistroHoras', {
     defaultValue: 'Pendiente',
   },
   tipo_horas: {
-    type: DataTypes.ENUM('Ambientales', 'Sociales'),
+    type: DataTypes.ENUM('A', 'S'),
     allowNull: false
   },
   observaciones_validacion: {

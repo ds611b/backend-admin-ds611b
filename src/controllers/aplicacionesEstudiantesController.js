@@ -1,5 +1,6 @@
-import { AplicacionesEstudiantes, ProyectosInstitucion, Usuarios, Instituciones } from '../models/index.js';
+import { AplicacionesEstudiantes, ProyectosInstitucion, Usuarios, Instituciones, PerfilUsuario, HorasRequisito, GrupoEstudiantes, GrupoCarrera } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
+import sequelize from '../models/db.js';
 
 /**
  * Obtiene todas las aplicaciones de estudiantes.
@@ -92,7 +93,7 @@ export async function getAplicacionesByEstudiante(request, reply) {
         {
           model: ProyectosInstitucion,
           as: 'proyecto',
-          include: [  
+          include: [
             {
               model: Instituciones,
               as: 'institucion'
@@ -130,7 +131,7 @@ export async function getAplicacionesByEstudiante(request, reply) {
       updated_at: app.updated_at
     }));
 
-    
+
     reply.send(response);
   } catch (error) {
     request.log.error(error);
@@ -157,7 +158,7 @@ export async function getAplicacionesByProyecto(request, reply) {
         {
           model: ProyectosInstitucion,
           as: 'proyecto',
-          include: [  
+          include: [
             {
               model: Instituciones,
               as: 'institucion'
@@ -189,8 +190,8 @@ export async function getAplicacionesByProyecto(request, reply) {
 
     const response = {
       proyecto: {
-        ...aplicaciones[0].proyecto.get({ plain: true }), 
-        institucion: aplicaciones[0].proyecto.institucion?.get({ plain: true }) || null 
+        ...aplicaciones[0].proyecto.get({ plain: true }),
+        institucion: aplicaciones[0].proyecto.institucion?.get({ plain: true }) || null
       },
       estudiantes: estudiantes,
       created_at: aplicaciones[0].created_at,
@@ -263,46 +264,129 @@ export async function createAplicacionEstudiante(request, reply) {
  */
 export async function updateAplicacionEstudiante(request, reply) {
   const { id } = request.params;
+
+  const transaction = await sequelize.transaction();
+
   try {
     const [updated] = await AplicacionesEstudiantes.update(request.body, {
       where: { id },
-      validate: true
+      validate: true,
+      transaction
     });
-    if (updated) {
-      const aplicacion = await AplicacionesEstudiantes.findByPk(id, {
-        include: [
-          {
-            model: ProyectosInstitucion,
-            as: 'proyecto'
-          },
-          {
-            model: Usuarios,
-            as: 'estudiante'
-          }
-        ],
+
+    if (!updated) {
+      await transaction.rollback();
+      return reply.status(404).send({
+        message: 'Aplicación no encontrada'
       });
-      reply.send(aplicacion);
-    } else {
-      reply.status(404).send(createErrorResponse(
-        'Aplicación no encontrada',
-        'APLICACION_NOT_FOUND'
-      ));
     }
+
+    const aplicacion = await AplicacionesEstudiantes.findByPk(id, {
+      include: [
+        { model: ProyectosInstitucion, as: 'proyecto' },
+        { model: Usuarios, as: 'estudiante' }
+      ],
+      transaction
+    });
+
+    // 🔥 SOLO SI PASA A APROBADO
+    if (aplicacion.estado === 'Aprobado') {
+
+      console.log('✅ Aplicación aprobada, iniciando flujo...');
+
+      // 1. Obtener perfil (para carrera)
+      const perfil = await PerfilUsuario.findOne({
+        where: { usuario_id: aplicacion.estudiante_id },
+        transaction
+      });
+
+      console.log('📋 Perfil encontrado:', perfil ? perfil.get({ plain: true }) : 'No encontrado');
+
+      if (!perfil) throw new Error('Perfil no encontrado');
+
+      // 2. Obtener grupo por carrera
+      const grupoCarrera = await GrupoCarrera.findOne({
+        where: {
+          id_carrera: perfil.id_carrera,
+          activo: true
+        },
+        transaction
+      });
+
+      console.log('📋 GrupoCarrera encontrado:', grupoCarrera ? grupoCarrera.get({ plain: true }) : 'No encontrado');
+
+      if (!grupoCarrera) throw new Error('No hay grupo activo para la carrera');
+
+      // 3. Verificar si ya está en grupo
+      let grupoEstudiante = await GrupoEstudiantes.findOne({
+        where: {
+          id_estudiante: perfil.id,
+          id_grupo: grupoCarrera.id_grupo
+        },
+        transaction
+      });
+
+      // 4. Crear grupo si no existe
+      if (!grupoEstudiante) {
+        console.log('🆕 Creando GrupoEstudiante');
+
+        grupoEstudiante = await GrupoEstudiantes.create({
+          id_grupo: grupoCarrera.id_grupo,
+          id_estudiante: perfil.id,
+          fecha_asignacion: new Date(),
+          estado: 'Activo'
+        }, { transaction });
+
+        console.log('🆕 GrupoEstudiante creado:', grupoEstudiante.get({ plain: true }));
+      }
+
+        console.log('🆕 Creando HorasRequisito');
+      // 5. Verificar si ya existe HorasRequisito
+      const existe = await HorasRequisito.findOne({
+        where: {
+          id_grupo_estudiante: grupoEstudiante.id,
+          tipo_horas : aplicacion.proyecto.tipo_proyecto
+        },
+        transaction
+      });
+
+        console.log('🆕 Creando HorasRequisito');
+      if (!existe) {
+        console.log('🆕 Creando HorasRequisito');
+
+        // obtengo el tipo de horas según el tipo de proyecto
+        const proyecto = await ProyectosInstitucion.findOne({
+          where: { id: aplicacion.proyecto_id },
+          transaction
+        });
+
+        await HorasRequisito.create({
+          id_grupo_estudiante: grupoEstudiante.id,
+          id_estudiante: perfil.id,
+          horas_completadas: 0,
+          fecha_inicio: new Date(),
+          tipo_horas: proyecto.tipo_proyecto,
+          estado: 'En Progreso'
+        }, { transaction });
+
+      } else {
+        console.log('⚠️ Ya existe HorasRequisito');
+      }
+    }
+
+    await transaction.commit();
+
+    reply.send(aplicacion);
+
   } catch (error) {
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      reply.status(409).send(createErrorResponse(
-        'No se puede actualizar: La nueva combinación de estudiante y proyecto ya existe',
-        'DUPLICATE_APLICACION_ESTUDIANTE',
-        error
-      ));
-    } else {
-      request.log.error(error);
-      reply.status(500).send(createErrorResponse(
-        'Error al actualizar la aplicación de estudiante',
-        'UPDATE_APLICACION_ERROR',
-        error
-      ));
-    }
+    await transaction.rollback();
+
+    request.log.error(error);
+
+    reply.status(500).send({
+      message: 'Error al actualizar la aplicación',
+      error: error.message
+    });
   }
 }
 
@@ -328,6 +412,80 @@ export async function deleteAplicacionEstudiante(request, reply) {
     reply.status(500).send(createErrorResponse(
       'Error al eliminar la aplicación de estudiante',
       'DELETE_APLICACION_ERROR',
+      error
+    ));
+  }
+}
+
+/**
+ * Obtiene lista simplificada de estudiantes aplicados a un proyecto con paginación y filtros
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
+export async function getEstudiantesAplicadosByProyecto(request, reply) {
+  const { proyectoId } = request.params;
+  const { page = 1, limit = 10, estado } = request.query;
+
+  try {
+    // Construir condiciones de filtro
+    const whereConditions = { proyecto_id: proyectoId };
+    
+    // Agregar filtro de estado si se proporciona
+    if (estado) {
+      whereConditions.estado = estado;
+    }
+
+    // Calcular offset para paginación
+    const offset = (page - 1) * limit;
+
+    // Obtener aplicaciones con paginación
+    const { count, rows: aplicaciones } = await AplicacionesEstudiantes.findAndCountAll({
+      where: whereConditions,
+      include: [
+        {
+          model: Usuarios,
+          as: 'estudiante',
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+        }
+      ],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['created_at', 'DESC']],
+      distinct: true
+    });
+
+    // Mapear solo la información de estudiantes
+    const estudiantes = aplicaciones.map(app => ({
+      id: app.estudiante.id,
+      primer_nombre: app.estudiante.primer_nombre,
+      segundo_nombre: app.estudiante.segundo_nombre,
+      primer_apellido: app.estudiante.primer_apellido,
+      segundo_apellido: app.estudiante.segundo_apellido,
+      email: app.estudiante.email,
+      aplicacion_id: app.id,
+      estado: app.estado,
+      fecha_aplicacion: app.created_at
+    }));
+
+    // Calcular información de paginación
+    const totalPages = Math.ceil(count / limit);
+
+    const response = {
+      estudiantes,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages
+      }
+    };
+
+    reply.send(response);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener los estudiantes aplicados al proyecto',
+      'GET_ESTUDIANTES_APLICADOS_ERROR',
       error
     ));
   }
