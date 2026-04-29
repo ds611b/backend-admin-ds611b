@@ -2,6 +2,7 @@ import {
   getPerfilesUsuario,
   getPerfilUsuarioById,
   getPerfilUsuarioByUsuarioId,
+  getResumenAcademicoByUsuarioId,
   getPerfilesUsuarioByGenero,
   createPerfilUsuario,
   updatePerfilUsuario,
@@ -91,6 +92,35 @@ async function perfilUsuarioRoutes(fastify, options) {
       },
     },
   }, getPerfilUsuarioByUsuarioId);
+
+  // Obtener resumen académico por ID de usuario (carrera, escuela y rol)
+  fastify.get('/perfiles-usuario/usuario/:usuario_id/resumen-academico', {
+    schema: {
+      description: 'Obtiene únicamente carrera, escuela y rol del usuario basado en el ID de usuario.',
+      tags: ['Perfiles de Usuario'],
+      params: {
+        type: 'object',
+        properties: {
+          usuario_id: { type: 'integer', description: 'ID único del usuario asociado al perfil.' },
+        },
+        required: ['usuario_id'],
+      },
+      response: {
+        200: {
+          description: 'Resumen académico del usuario obtenido exitosamente.',
+          $ref: 'PerfilUsuarioResumenAcademico',
+        },
+        404: {
+          description: 'Perfil de usuario no encontrado.',
+          $ref: 'ErrorResponse',
+        },
+        500: {
+          description: 'Error al obtener el resumen académico del usuario.',
+          $ref: 'ErrorResponse',
+        },
+      },
+    },
+  }, getResumenAcademicoByUsuarioId);
 
   // Crear un nuevo perfil de usuario
   fastify.post('/perfiles-usuario', {

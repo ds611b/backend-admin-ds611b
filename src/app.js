@@ -182,6 +182,7 @@ fastify.addSchema({
     segundo_apellido: { type: 'string', maxLength: 100, example: 'Santos' },
     email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
     rol_id: { type: 'integer', example: 2 },
+    rol: { $ref: 'Roles' },
     status: { type: 'integer', enum: [0, 1], example: 1, description: '0 = Inactivo, 1 = Activo' },
     created_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' },
     updated_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' }
@@ -376,7 +377,19 @@ fastify.addSchema({
     },
     carnet: { type: 'string', example: '1234567', maxLength: 7 },
     carrera: { $ref: 'Carreras' },
-    usuario: { $ref: 'Usuarios' },
+    usuario: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 101 },
+        primer_nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+        segundo_nombre: { type: 'string', maxLength: 100, nullable: true, example: 'Jose' },
+        primer_apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+        segundo_apellido: { type: 'string', maxLength: 100, nullable: true, example: 'Santos' },
+        email: { type: 'string', format: 'email', maxLength: 150, example: 'juan.perez@example.com' },
+        rol_id: { type: 'integer', example: 2 },
+        rol: { $ref: 'Roles' }
+      }
+    },
     created_at: {
       type: 'string',
       format: 'date-time',
@@ -388,6 +401,37 @@ fastify.addSchema({
       example: '2023-01-01T00:00:00Z'
     },
     //usuario: { $ref: 'Estudiantes' } // Referencia al esquema Usuario
+  }
+});
+
+fastify.addSchema({
+  $id: 'PerfilUsuarioResumenAcademico',
+  type: 'object',
+  properties: {
+    carrera: {
+      type: 'object',
+      nullable: true,
+      properties: {
+        id: { type: 'integer', example: 3 },
+        nombre: { type: 'string', example: 'Ingeniería en Sistemas' },
+        escuela: {
+          type: 'object',
+          nullable: true,
+          properties: {
+            id: { type: 'integer', example: 2 },
+            nombre: { type: 'string', example: 'Escuela de Ingeniería' }
+          }
+        }
+      }
+    },
+    rol: {
+      type: 'object',
+      nullable: true,
+      properties: {
+        id: { type: 'integer', example: 1 },
+        nombre: { type: 'string', example: 'Estudiante' }
+      }
+    }
   }
 });
 

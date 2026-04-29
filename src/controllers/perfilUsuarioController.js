@@ -1,5 +1,16 @@
-import { PerfilUsuario, Carreras, Usuarios, Escuelas, AplicacionesEstudiantes } from '../models/index.js';
+import { PerfilUsuario, Carreras, Usuarios, Escuelas, AplicacionesEstudiantes, Roles } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
+
+const usuarioIncludeConRol = {
+  model: Usuarios,
+  as: 'usuario',
+  attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email', 'rol_id'],
+  include: [{
+    model: Roles,
+    as: 'rol',
+    attributes: ['id', 'nombre']
+  }]
+};
 
 /**
  * Obtiene todos los perfiles de usuario con información de carrera.
@@ -18,9 +29,7 @@ export async function getPerfilesUsuario(request, reply) {
         }]
       },
       {
-        model: Usuarios,
-        as: 'usuario',
-        attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+        ...usuarioIncludeConRol
       }
       ]
     });
@@ -58,9 +67,7 @@ export async function getPerfilUsuarioById(request, reply) {
         }]
       },
       {
-        model: Usuarios,
-        as: 'usuario',
-        attributes: ['id',  'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+        ...usuarioIncludeConRol
       }
       ]
     });
@@ -103,9 +110,7 @@ export async function getPerfilUsuarioByUsuarioId(request, reply) {
 
       },
       {
-        model: Usuarios,
-        as: 'usuario',
-        attributes: ['id',  'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+        ...usuarioIncludeConRol
       }
       ]
     });
@@ -140,15 +145,84 @@ export async function getPerfilUsuarioByUsuarioId(request, reply) {
   }
 }
 
+/**
+ * Obtiene un resumen académico del usuario por ID de usuario.
+ * Retorna únicamente carrera (con escuela) y rol.
+ */
+export async function getResumenAcademicoByUsuarioId(request, reply) {
+  const { usuario_id } = request.params;
+
+  try {
+    const perfil = await PerfilUsuario.findOne({
+      where: { usuario_id },
+      attributes: ['id'],
+      include: [{
+        model: Carreras,
+        as: 'carrera',
+        attributes: ['id', 'nombre'],
+        include: [{
+          model: Escuelas,
+          as: 'escuela',
+          attributes: ['id', 'nombre']
+        }]
+      },
+      {
+        model: Usuarios,
+        as: 'usuario',
+        attributes: ['id'],
+        include: [{
+          model: Roles,
+          as: 'rol',
+          attributes: ['id', 'nombre']
+        }]
+      }]
+    });
+
+    if (!perfil) {
+      return reply.status(404).send(createErrorResponse(
+        'Perfil de usuario no encontrado',
+        'PERFIL_USUARIO_NOT_FOUND'
+      ));
+    }
+
+    const resumen = {
+      carrera: perfil.carrera
+        ? {
+          id: perfil.carrera.id,
+          nombre: perfil.carrera.nombre,
+          escuela: perfil.carrera.escuela
+            ? {
+              id: perfil.carrera.escuela.id,
+              nombre: perfil.carrera.escuela.nombre
+            }
+            : null
+        }
+        : null,
+      rol: perfil.usuario?.rol
+        ? {
+          id: perfil.usuario.rol.id,
+          nombre: perfil.usuario.rol.nombre
+        }
+        : null
+    };
+
+    reply.send(resumen);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener resumen académico del usuario',
+      'GET_RESUMEN_ACADEMICO_USUARIO_ERROR',
+      error
+    ));
+  }
+}
+
 export async function getPerfilesUsuarioByGenero(request, reply) {
   const { genero } = request.params;
   try {
     const perfiles = await PerfilUsuario.findAll({
       where: { genero },
-      include: {
-        model: Usuarios,
-        as: 'usuario'
-      }
+      include: [usuarioIncludeConRol]
     });
 
     if (!perfiles || perfiles.length === 0) {
@@ -207,9 +281,7 @@ export async function createPerfilUsuario(request, reply) {
         attributes: ['id', 'nombre']
       },
       {
-        model: Usuarios,
-        as: 'usuario',
-        attributes: ['id',  'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido',  'email']
+        ...usuarioIncludeConRol
       }
       ]
     });
@@ -269,7 +341,11 @@ export async function updatePerfilUsuario(request, reply) {
         model: Carreras,
         as: 'carrera',
         attributes: ['id', 'nombre']
-      }]
+      },
+      {
+        ...usuarioIncludeConRol
+      }
+      ]
     });
 
     reply.send(perfilActualizado);
@@ -452,9 +528,7 @@ export async function updateUsuarioConPerfil(request, reply) {
         }]
       },
       {
-        model: Usuarios,
-        as: 'usuario',
-        attributes: ['id', 'primer_nombre', 'primer_apellido', 'email']
+        ...usuarioIncludeConRol
       }
       ]
     });
