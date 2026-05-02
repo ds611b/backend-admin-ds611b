@@ -1,4 +1,4 @@
-import { PerfilUsuario, Carreras, Usuarios, Escuelas, AplicacionesEstudiantes, Roles } from '../models/index.js';
+import { PerfilUsuario, Carreras, Usuarios, Escuelas, AplicacionesEstudiantes, Roles, Instituciones, EncargadoInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 const usuarioIncludeConRol = {
@@ -147,12 +147,72 @@ export async function getPerfilUsuarioByUsuarioId(request, reply) {
 
 /**
  * Obtiene un resumen académico del usuario por ID de usuario.
- * Retorna únicamente carrera (con escuela) y rol.
+ * Retorna carrera (con escuela) y rol si no es rol institución.
+ * Si es rol institución (rol_id = 4), retorna institución (id y nombre) en lugar de carrera.
  */
 export async function getResumenAcademicoByUsuarioId(request, reply) {
   const { usuario_id } = request.params;
 
   try {
+    // Primero obtenemos el usuario con su rol
+    const usuario = await Usuarios.findByPk(usuario_id, {
+      attributes: ['id', 'rol_id'],
+      include: [{
+        model: Roles,
+        as: 'rol',
+        attributes: ['id', 'nombre']
+      }]
+    });
+
+    if (!usuario) {
+      return reply.status(404).send(createErrorResponse(
+        'Usuario no encontrado',
+        'USUARIO_NOT_FOUND'
+      ));
+    }
+
+    const rolId = usuario.rol?.id;
+    
+    // Si el rol es 4 (Institución), buscar institución a través de EncargadoInstitucion
+    if (rolId === 4) {
+      // Buscar el encargado de institución asociado a este usuario
+      const encargado = await EncargadoInstitucion.findOne({
+        where: { usuario_id: usuario_id },
+        attributes: ['id']
+      });
+
+      if (!encargado) {
+        return reply.status(404).send(createErrorResponse(
+          'No se encontró información de encargado de institución para este usuario',
+          'ENCARGADO_INSTITUCION_NOT_FOUND'
+        ));
+      }
+
+      // Buscar la institución donde este usuario es el encargado
+      const institucion = await Instituciones.findOne({
+        where: { id_encargado: encargado.id },
+        attributes: ['id', 'nombre']
+      });
+
+      const resumen = {
+        institucion: institucion
+          ? {
+            id: institucion.id,
+            nombre: institucion.nombre
+          }
+          : null,
+        rol: usuario.rol
+          ? {
+            id: usuario.rol.id,
+            nombre: usuario.rol.nombre
+          }
+          : null
+      };
+
+      return reply.send(resumen);
+    }
+
+    // Para otros roles (coordinador, estudiante, etc.), buscar carrera desde PerfilUsuario
     const perfil = await PerfilUsuario.findOne({
       where: { usuario_id },
       attributes: ['id'],
@@ -160,19 +220,10 @@ export async function getResumenAcademicoByUsuarioId(request, reply) {
         model: Carreras,
         as: 'carrera',
         attributes: ['id', 'nombre'],
+        required: false,
         include: [{
           model: Escuelas,
           as: 'escuela',
-          attributes: ['id', 'nombre']
-        }]
-      },
-      {
-        model: Usuarios,
-        as: 'usuario',
-        attributes: ['id'],
-        include: [{
-          model: Roles,
-          as: 'rol',
           attributes: ['id', 'nombre']
         }]
       }]
@@ -198,10 +249,10 @@ export async function getResumenAcademicoByUsuarioId(request, reply) {
             : null
         }
         : null,
-      rol: perfil.usuario?.rol
+      rol: usuario.rol
         ? {
-          id: perfil.usuario.rol.id,
-          nombre: perfil.usuario.rol.nombre
+          id: usuario.rol.id,
+          nombre: usuario.rol.nombre
         }
         : null
     };
@@ -244,10 +295,10 @@ export async function getPerfilesUsuarioByGenero(request, reply) {
 }
 
 /**
- * Crea un nuevo perfil de usuario con opción de carrera.
+ * Crea un nuevo perfil de usuario con opción de carrera e institución.
  */
 export async function createPerfilUsuario(request, reply) {
-  const { usuario_id, direccion, telefono, fecha_nacimiento, genero, foto_perfil, carnet, anio_academico, id_carrera } = request.body;
+  const { usuario_id, direccion, telefono, fecha_nacimiento, genero, foto_perfil, carnet, anio_academico, id_carrera, id_institucion } = request.body;
 
   try {
     // Verificar si la carrera existe si se proporciona
@@ -261,6 +312,17 @@ export async function createPerfilUsuario(request, reply) {
       }
     }
 
+    // Verificar si la institución existe si se proporciona
+    if (id_institucion) {
+      const institucion = await Instituciones.findByPk(id_institucion);
+      if (!institucion) {
+        return reply.status(400).send(createErrorResponse(
+          'La institución especificada no existe',
+          'INSTITUCION_NOT_FOUND'
+        ));
+      }
+    }
+
     const nuevoPerfil = await PerfilUsuario.create({
       usuario_id,
       direccion,
@@ -270,7 +332,8 @@ export async function createPerfilUsuario(request, reply) {
       foto_perfil,
       carnet,
       anio_academico,
-      id_carrera
+      id_carrera,
+      id_institucion
     });
 
     // Obtener el perfil recién creado con la relación de carrera
@@ -298,11 +361,11 @@ export async function createPerfilUsuario(request, reply) {
 }
 
 /**
- * Actualiza un perfil de usuario existente incluyendo la carrera.
+ * Actualiza un perfil de usuario existente incluyendo la carrera e institución.
  */
 export async function updatePerfilUsuario(request, reply) {
   const { id } = request.params;
-  const { direccion, telefono, fecha_nacimiento, genero, foto_perfil, carnet, anio_academico, id_carrera } = request.body;
+  const { direccion, telefono, fecha_nacimiento, genero, foto_perfil, carnet, anio_academico, id_carrera, id_institucion } = request.body;
 
   try {
     const perfil = await PerfilUsuario.findByPk(id);
@@ -324,6 +387,17 @@ export async function updatePerfilUsuario(request, reply) {
       }
     }
 
+    // Verificar si la nueva institución existe
+    if (id_institucion) {
+      const institucion = await Instituciones.findByPk(id_institucion);
+      if (!institucion) {
+        return reply.status(400).send(createErrorResponse(
+          'La institución especificada no existe',
+          'INSTITUCION_NOT_FOUND'
+        ));
+      }
+    }
+
     await perfil.update({
       direccion,
       telefono,
@@ -332,7 +406,8 @@ export async function updatePerfilUsuario(request, reply) {
       foto_perfil,
       carnet,
       anio_academico,
-      id_carrera
+      id_carrera,
+      id_institucion
     });
 
     // Obtener el perfil actualizado con la relación de carrera
@@ -411,7 +486,8 @@ export async function updateUsuarioConPerfil(request, reply) {
     genero,
     carnet,
     anio_academico,
-    id_carrera
+    id_carrera,
+    id_institucion
   } = request.body;
 
   try {
@@ -468,6 +544,17 @@ export async function updateUsuarioConPerfil(request, reply) {
       }
     }
 
+    // 5.1. Verificar si la institución existe (si se proporciona)
+    if (id_institucion) {
+      const institucion = await Instituciones.findByPk(id_institucion);
+      if (!institucion) {
+        return reply.status(400).send(createErrorResponse(
+          'La institución especificada no existe',
+          'INSTITUCION_NOT_FOUND'
+        ));
+      }
+    }
+
     // 6. Actualizar datos del Usuario
     await Usuarios.update(
       {
@@ -491,7 +578,8 @@ export async function updateUsuarioConPerfil(request, reply) {
         genero,
         carnet,
         anio_academico,
-        id_carrera
+        id_carrera,
+        id_institucion
       });
       perfilId = perfil.id;
     } else {
@@ -510,7 +598,8 @@ export async function updateUsuarioConPerfil(request, reply) {
         genero,
         carnet,
         anio_academico,
-        id_carrera
+        id_carrera,
+        id_institucion
       });
       perfilId = nuevoPerfil.id;
     }

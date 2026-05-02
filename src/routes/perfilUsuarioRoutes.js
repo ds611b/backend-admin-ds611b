@@ -96,7 +96,7 @@ async function perfilUsuarioRoutes(fastify, options) {
   // Obtener resumen académico por ID de usuario (carrera, escuela y rol)
   fastify.get('/perfiles-usuario/usuario/:usuario_id/resumen-academico', {
     schema: {
-      description: 'Obtiene únicamente carrera, escuela y rol del usuario basado en el ID de usuario.',
+      description: 'Obtiene carrera, escuela y rol del usuario. Si el usuario tiene rol institución (rol_id = 4), devuelve institución (buscada a través de EncargadoInstitucion) en lugar de carrera.',
       tags: ['Perfiles de Usuario'],
       params: {
         type: 'object',
@@ -111,7 +111,7 @@ async function perfilUsuarioRoutes(fastify, options) {
           $ref: 'PerfilUsuarioResumenAcademico',
         },
         404: {
-          description: 'Perfil de usuario no encontrado.',
+          description: 'Perfil de usuario, encargado de institución o usuario no encontrado.',
           $ref: 'ErrorResponse',
         },
         500: {
@@ -270,12 +270,13 @@ async function perfilUsuarioRoutes(fastify, options) {
           genero: { type: 'string', enum: ['Masculino', 'Femenino', 'Otro'] },
           carnet: { type: 'string', maxLength: 7 },
           anio_academico: { type: 'string', maxLength: 25 },
-          id_carrera: { type: 'integer' }
+          id_carrera: { type: 'integer' },
+          id_institucion: { type: 'integer' }
         }
       },
       response: {
         200: { description: 'Usuario y perfil actualizados exitosamente', $ref: 'PerfilUsuario' },
-        400: { description: 'Carnet requerido o carrera no encontrada', $ref: 'ErrorResponse' },
+        400: { description: 'Carnet requerido, carrera o institución no encontrada', $ref: 'ErrorResponse' },
         404: { description: 'Usuario no encontrado', $ref: 'ErrorResponse' },
         409: { description: 'Email o carnet duplicado', $ref: 'ErrorResponse' },
         500: { description: 'Error al actualizar', $ref: 'ErrorResponse' }

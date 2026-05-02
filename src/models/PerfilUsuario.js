@@ -47,6 +47,14 @@ const PerfilUsuario = sequelize.define('PerfilUsuario', {
       key: 'id'
     }
   },
+  id_institucion: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'Instituciones',
+      key: 'id'
+    }
+  },
 }, {
   tableName: 'PerfilUsuario',
   timestamps: true,

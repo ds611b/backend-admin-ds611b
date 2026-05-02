@@ -425,6 +425,14 @@ fastify.addSchema({
         }
       }
     },
+    institucion: {
+      type: 'object',
+      nullable: true,
+      properties: {
+        id: { type: 'integer', example: 30 },
+        nombre: { type: 'string', example: 'Asociacion para personas ciegas' }
+      }
+    },
     rol: {
       type: 'object',
       nullable: true,
@@ -765,7 +773,8 @@ fastify.addSchema({
     foto_perfil: { type: 'string', nullable: true },
     carnet: { type: 'string', maxLength: 7, nullable: true },
     anio_academico: { type: 'string', nullable: true },
-    id_carrera: { type: 'integer', nullable: true }
+    id_carrera: { type: 'integer', nullable: true },
+    id_institucion: { type: 'integer', nullable: true }
   },
   required: ['usuario_id']
 });
