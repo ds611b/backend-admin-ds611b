@@ -1,36 +1,75 @@
-import { Grupos, GrupoEstudiantes, PerfilUsuario } from '../models/index.js';
+import { Grupos, GrupoEstudiantes, Carreras, PerfilUsuario, GrupoCarrera } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
+// GET ALL
 export async function getGrupos(request, reply) {
   try {
     const grupos = await Grupos.findAll({
-      include: {
-        model: GrupoEstudiantes,
-        include: [{ model: PerfilUsuario, as: 'perfil_estudiante' }]
-      },
-      order: [['fecha_creacion', 'DESC']]
+      include: [
+        {
+          model: GrupoCarrera,
+          as: 'grupos_carrera',
+          where: {
+            activo: true   // 🔥 esto filtra SOLO las carreras
+          },
+          required: false, // 🔥 esto evita filtrar grupos
+          include: [
+            {
+              model: Carreras,
+              as: 'carrera'
+            }
+          ]
+        },
+        {
+          model: GrupoEstudiantes,
+          include: [
+            {
+              model: PerfilUsuario,
+              as: 'perfil_estudiante'
+            }
+          ]
+        }
+      ]
     });
 
     reply.send(grupos);
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
-      'Error al obtener los grupos',
+      'Error al obtener grupos',
       'GET_GRUPOS_ERROR',
       error
     ));
   }
 }
 
+// GET BY ID
 export async function getGrupoById(request, reply) {
   const { id } = request.params;
 
   try {
     const grupo = await Grupos.findByPk(id, {
-      include: {
-        model: GrupoEstudiantes,
-        include: [{ model: PerfilUsuario, as: 'perfil_estudiante' }]
-      }
+      include: [
+        {
+          model: GrupoCarrera,
+          as: 'grupos_carrera',
+          include: [
+            {
+              model: Carreras,
+              as: 'carrera'
+            }
+          ]
+        },
+        {
+          model: GrupoEstudiantes,
+          include: [
+            {
+              model: PerfilUsuario,
+              as: 'perfil_estudiante'
+            }
+          ]
+        }
+      ]
     });
 
     if (!grupo) {
@@ -51,43 +90,60 @@ export async function getGrupoById(request, reply) {
   }
 }
 
+// CREATE
 export async function createGrupo(request, reply) {
   const transaction = await Grupos.sequelize.transaction();
 
   try {
-    const {
-      codigo,
-      nombre,
-      descripcion,
-      horas_ambientales,
-      horas_sociales
-    } = request.body;
+    const { nombre, codigo, descripcion, horas_ambientales, horas_sociales, carreras = [] } = request.body;
 
-    const nuevoGrupo = await Grupos.create({
-      codigo,
-      nombre,
-      descripcion,
-      horas_ambientales,
-      horas_sociales
-    }, { transaction });
+    const grupo = await Grupos.create({ nombre, codigo, descripcion, horas_ambientales, horas_sociales }, { transaction });
+
+    if (carreras.length > 0) {
+      const registros = carreras.map(id => ({
+        id_grupo: grupo.id,
+        id_carrera : id
+      }));
+
+      await GrupoCarrera.bulkCreate(registros, { transaction });
+    }
 
     await transaction.commit();
 
-    reply.status(201).send(nuevoGrupo);
+    const grupoCompleto = await Grupos.findByPk(grupo.id, {
+      include: [
+        {
+          model: GrupoCarrera,
+          as: 'grupos_carrera',
+          include: [
+            {
+              model: Carreras,
+              as: 'carrera'
+            }
+          ]
+        }
+      ]
+    });
+
+    reply.status(201).send(grupoCompleto);
+
   } catch (error) {
     await transaction.rollback();
     request.log.error(error);
 
     reply.status(500).send(createErrorResponse(
-      'Error al crear el grupo',
+      'Error al crear grupo',
       'CREATE_GRUPO_ERROR',
       error
     ));
   }
 }
 
+// UPDATE
 export async function updateGrupo(request, reply) {
   const { id } = request.params;
+  const { nombre, carreras } = request.body;
+
   const transaction = await Grupos.sequelize.transaction();
 
   try {
@@ -101,23 +157,78 @@ export async function updateGrupo(request, reply) {
       ));
     }
 
-    await grupo.update(request.body, { transaction });
+    await grupo.update({ nombre }, { transaction });
+
+    if (carreras !== undefined) {
+
+      // 🔹 1. Desactivar todas las relaciones actuales
+      await GrupoCarrera.update(
+        { activo: false },
+        {
+          where: { id_grupo: id },
+          transaction
+        }
+      );
+
+      // 🔹 2. Procesar nuevas carreras
+      for (const id_carrera of carreras) {
+
+        const existente = await GrupoCarrera.findOne({
+          where: {
+            id_grupo: id,
+            id_carrera
+          },
+          transaction
+        });
+
+        if (existente) {
+          // 🔥 Reactivar
+          await existente.update({ activo: true }, { transaction });
+        } else {
+          // 🔥 Crear nuevo
+          await GrupoCarrera.create({
+            id_grupo: id,
+            id_carrera,
+            activo: true
+          }, { transaction });
+        }
+      }
+    }
 
     await transaction.commit();
 
-    reply.send(grupo);
+    const grupoActualizado = await Grupos.findByPk(id, {
+      include: [
+        {
+          model: GrupoCarrera,
+          as: 'grupos_carrera',
+          where: { activo: true }, // 🔥 solo activos
+          required: false,
+          include: [
+            {
+              model: Carreras,
+              as: 'carrera'
+            }
+          ]
+        }
+      ]
+    });
+
+    reply.send(grupoActualizado);
+
   } catch (error) {
     await transaction.rollback();
     request.log.error(error);
 
     reply.status(500).send(createErrorResponse(
-      'Error al actualizar el grupo',
+      'Error al actualizar grupo',
       'UPDATE_GRUPO_ERROR',
       error
     ));
   }
 }
 
+// DELETE
 export async function deleteGrupo(request, reply) {
   const { id } = request.params;
   const transaction = await Grupos.sequelize.transaction();
