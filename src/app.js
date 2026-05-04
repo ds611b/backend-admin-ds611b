@@ -500,6 +500,36 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
+  $id: 'GruposWithCarreras',
+  type: 'object',
+  properties: {
+    id: { type: 'integer', example: 1 },
+    codigo: { type: 'string', example: 'GRP-001' },
+    nombre: { type: 'string', example: 'Grupo A' },
+    descripcion: { type: 'string', example: 'Grupo de estudiantes de informática' },
+    horas_ambientales: { type: 'integer', example: 100 },
+    horas_sociales: { type: 'integer', example: 200 },
+    fecha_creacion: { type: 'string', format: 'date-time' },
+    grupos_carrera: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' },
+          carrera: {
+            type: 'object',
+            properties: {
+              id: { type: 'number' },
+              nombre: { type: 'string' }
+            }
+          }
+        }
+      }
+    }
+  }
+});
+
+fastify.addSchema({
   $id: 'DocumentosHoras',
   type: 'object',
   properties: {
@@ -1141,7 +1171,13 @@ fastify.addSchema({
     nombre: { type: 'string' },
     descripcion: { type: 'string' },
     horas_ambientales: { type: 'integer' },
-    horas_sociales: { type: 'integer' }
+    horas_sociales: { type: 'integer' },
+    carreras: {
+      type: 'array',
+      items: {
+        type: 'number' 
+      }
+    }
   },
   required: ['nombre']
 });

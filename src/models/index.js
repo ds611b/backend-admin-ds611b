@@ -126,6 +126,11 @@ Carreras.hasMany(GrupoCarrera, {
   as: 'grupos_carrera'
 });
 
+Grupos.hasMany(GrupoCarrera, {
+  foreignKey: 'id_grupo',
+  as: 'grupos_carrera'
+});
+
 GrupoCarrera.belongsTo(Carreras, {
   foreignKey: 'id_carrera',
   as: 'carrera'

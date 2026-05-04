@@ -11,12 +11,12 @@ async function gruposRoutes(fastify) {
   // GET ALL
   fastify.get('/grupos', {
     schema: {
-      description: 'Obtiene todos los grupos',
+      description: 'Obtiene todos los grupos con sus carreras',
       tags: ['Grupos'],
       response: {
         200: {
           type: 'array',
-          items: { $ref: 'Grupos' }
+          items: { $ref: 'GruposWithCarreras' } // 👈 cambiado
         },
         500: { $ref: 'ErrorResponse' }
       }
@@ -26,7 +26,7 @@ async function gruposRoutes(fastify) {
   // GET BY ID
   fastify.get('/grupos/:id', {
     schema: {
-      description: 'Obtiene un grupo por ID',
+      description: 'Obtiene un grupo por ID con sus carreras',
       tags: ['Grupos'],
       params: {
         type: 'object',
@@ -36,7 +36,7 @@ async function gruposRoutes(fastify) {
         required: ['id']
       },
       response: {
-        200: { $ref: 'Grupos' },
+        200: { $ref: 'GruposWithCarreras' }, // 👈 cambiado
         404: { $ref: 'ErrorResponse' },
         500: { $ref: 'ErrorResponse' }
       }
@@ -46,11 +46,11 @@ async function gruposRoutes(fastify) {
   // POST
   fastify.post('/grupos', {
     schema: {
-      description: 'Crea un nuevo grupo',
+      description: 'Crea un nuevo grupo con carreras',
       tags: ['Grupos'],
-      body: { $ref: 'GruposValidation' },
+      body: { $ref: 'GruposValidation' }, // 👇 este lo modificamos abajo
       response: {
-        201: { $ref: 'Grupos' },
+        201: { $ref: 'GruposWithCarreras' }, // 👈 devuelve con carreras
         500: { $ref: 'ErrorResponse' }
       }
     }
@@ -59,7 +59,7 @@ async function gruposRoutes(fastify) {
   // PUT
   fastify.put('/grupos/:id', {
     schema: {
-      description: 'Actualiza un grupo',
+      description: 'Actualiza un grupo y sus carreras',
       tags: ['Grupos'],
       params: {
         type: 'object',
@@ -70,7 +70,7 @@ async function gruposRoutes(fastify) {
       },
       body: { $ref: 'GruposValidation' },
       response: {
-        200: { $ref: 'Grupos' },
+        200: { $ref: 'GruposWithCarreras' },
         404: { $ref: 'ErrorResponse' },
         500: { $ref: 'ErrorResponse' }
       }
