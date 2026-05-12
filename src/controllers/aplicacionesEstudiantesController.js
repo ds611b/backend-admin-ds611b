@@ -1,6 +1,7 @@
 import { AplicacionesEstudiantes, ProyectosInstitucion, Usuarios, Instituciones, PerfilUsuario, HorasRequisito, GrupoEstudiantes, GrupoCarrera } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 import sequelize from '../models/db.js';
+import { crearNotificacion } from '../services/notificacionesService.js';
 
 /**
  * Obtiene todas las aplicaciones de estudiantes.
@@ -371,6 +372,24 @@ export async function updateAplicacionEstudiante(request, reply) {
 
       } else {
         console.log('⚠️ Ya existe HorasRequisito');
+      }
+
+      // 🔔 NOTIFICACIÓN EN TIEMPO REAL
+      // Enviar notificación al estudiante cuando su aplicación sea aceptada
+      try {
+        console.log('📤 Intentando crear notificación para usuario:', aplicacion.estudiante_id);
+        console.log('📤 Proyecto nombre:', aplicacion.proyecto.nombre_proyecto);
+        
+        const notificacionCreada = await crearNotificacion(aplicacion.estudiante_id, {
+          titulo: '¡Aplicación Aprobada!',
+          mensaje: `Tu aplicación al proyecto "${aplicacion.proyecto.nombre_proyecto}" ha sido aprobada exitosamente.`
+        });
+        
+        console.log('✅ Notificación creada exitosamente:', notificacionCreada.id);
+      } catch (notifError) {
+        // Log error pero no interrumpir el flujo principal
+        console.error('❌ Error completo al crear notificación:', notifError);
+        console.error('❌ Stack trace:', notifError.stack);
       }
     }
 

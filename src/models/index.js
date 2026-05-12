@@ -25,6 +25,7 @@ import DocumentosHoras from './DocumentosHoras.js';
 import Grupos from './Grupos.js';
 import GrupoCarrera from './GrupoCarrera.js';
 import GrupoEstudiantes from './GrupoEstudiantes.js';
+import Notificaciones from './Notificaciones.js';
 
 
 
@@ -158,6 +159,10 @@ ProyectosInstitucion.hasMany(RegistroHoras, {
   foreignKey: 'id_proyecto'
 });
 
+// Notificaciones y Usuarios (N:1)
+Notificaciones.belongsTo(Usuarios, { foreignKey: 'usuario_id', as: 'usuario', onDelete: 'CASCADE' });
+Usuarios.hasMany(Notificaciones, { foreignKey: 'usuario_id', as: 'notificaciones', onDelete: 'CASCADE' });
+
 
 
 
@@ -184,6 +189,7 @@ export {
   EncargadoInstitucion,
   HorasRequisito,
   RegistroHoras,
+  Notificaciones,
   DocumentosHoras,
   Grupos,
   GrupoEstudiantes,

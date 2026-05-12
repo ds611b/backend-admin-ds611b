@@ -30,6 +30,7 @@ import registroHorasRoutes from './routes/registroHorasRoutes.js';
 import documentosHorasRoutes from './routes/documentosHorasRoutes.js';
 import gruposRoutes from './routes/gruposRoutes.js';
 import grupoEstudiantesRoutes from './routes/grupoEstudiantesRoutes.js';
+import notificacionesRoutes from './routes/notificacionesRoutes.js';
 
 import { preloadRoles } from './services/roleService.js';
 import GrupoCarrera from './models/GrupoCarrera.js';
@@ -1249,6 +1250,7 @@ fastify.register(registroHorasRoutes, { prefix: '/api' });
 fastify.register(documentosHorasRoutes, { prefix: '/api' });
 fastify.register(gruposRoutes, { prefix: '/api' });
 fastify.register(grupoEstudiantesRoutes, { prefix: '/api' });
+fastify.register(notificacionesRoutes, { prefix: '/api/notificaciones' });
 
 /**
  * Registra la landing page de la API
