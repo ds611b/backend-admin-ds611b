@@ -643,7 +643,13 @@ fastify.addSchema({
     institucion_id: { type: 'integer' },
     nombre: { type: 'string' },
     descripcion: { type: 'string' },
-    sitio_web: { type: ['string', 'null'], format: 'uri' },
+    sitio_web: {
+      anyOf: [
+        { type: 'string', format: 'uri' },
+        { type: 'string', maxLength: 0 },
+        { type: 'null' }
+      ]
+    },
     fecha_inicio: { type: 'string', format: 'date' },
     fecha_fin: { type: 'string', format: 'date' },
     modalidad: { type: 'string', enum: ['Presencial', 'Virtual', 'Híbrida'] },
