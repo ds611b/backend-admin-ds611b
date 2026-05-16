@@ -1,4 +1,6 @@
-import { Instituciones, EncargadoInstitucion } from '../models/index.js';
+import { Instituciones, EncargadoInstitucion, Usuarios, PerfilUsuario } from '../models/index.js';
+import { getRolIdByName } from './roleService.js';
+import config from '../config/config.js';
 
 const SECURITY_SERVICE_URL = process.env.SECURITY_SERVICE_URL;
 
@@ -104,6 +106,76 @@ export async function createInstitucionCompleta({ institucion, encargado, usuari
 
   // Retornar la institución completa con el encargado incluido
   return Instituciones.findByPk(nuevaInstitucion.id, {
+    include: [{ model: EncargadoInstitucion, as: 'encargado' }],
+  });
+}
+
+/**
+ * Asigna un encargado a una institución a partir de un usuario_id.
+ *
+ * - Verifica que la institución y el usuario existan.
+ * - Si ya existe un EncargadoInstitucion para ese usuario_id lo reutiliza;
+ *   de lo contrario crea uno nuevo con los datos del usuario.
+ * - Actualiza Instituciones.id_encargado sin generar duplicados.
+ *
+ * @param {object} params
+ * @param {number} params.institucionId - ID de la institución.
+ * @param {number} params.usuarioId    - ID del usuario en la tabla Usuarios.
+ * @returns {Promise<object>} La institución actualizada con su encargado incluido.
+ */
+export async function assignEncargadoToInstitucion({ institucionId, usuarioId }) {
+  // 1. Verificar institución
+  const institucion = await Instituciones.findByPk(institucionId);
+  if (!institucion) {
+    const err = new Error('Institución no encontrada');
+    err.statusCode = 404;
+    err.code = 'INSTITUCION_NOT_FOUND';
+    throw err;
+  }
+
+  // 2. Verificar usuario
+  const usuario = await Usuarios.findByPk(usuarioId);
+  if (!usuario) {
+    const err = new Error('Usuario no encontrado');
+    err.statusCode = 404;
+    err.code = 'USUARIO_NOT_FOUND';
+    throw err;
+  }
+
+  // 3. Verificar que el usuario tenga rol Institución
+  const rolInstitucionId = await getRolIdByName(config.roleNames.INSTITUCION);
+  if (rolInstitucionId === null) {
+    const err = new Error('Error de configuración: rol "Institución" no encontrado en la base de datos');
+    err.statusCode = 500;
+    err.code = 'ROLE_CONFIG_ERROR';
+    throw err;
+  }
+  if (usuario.rol_id !== rolInstitucionId) {
+    const err = new Error('El usuario no tiene el rol de Institución y no puede ser asignado como encargado');
+    err.statusCode = 422;
+    err.code = 'INVALID_USER_ROLE';
+    throw err;
+  }
+
+  // 4. Buscar o crear EncargadoInstitucion para ese usuario_id
+  let encargado = await EncargadoInstitucion.findOne({ where: { usuario_id: usuarioId } });
+  if (!encargado) {
+    const perfil = await PerfilUsuario.findOne({ where: { usuario_id: usuarioId } });
+    const nombres = [usuario.primer_nombre, usuario.segundo_nombre].filter(Boolean).join(' ');
+    const apellidos = [usuario.primer_apellido, usuario.segundo_apellido].filter(Boolean).join(' ');
+    encargado = await EncargadoInstitucion.create({
+      nombres,
+      apellidos,
+      correo: usuario.email,
+      telefono: perfil?.telefono ?? null,
+      usuario_id: usuarioId,
+    });
+  }
+
+  // 4. Actualizar la institución con el encargado encontrado/creado
+  await institucion.update({ id_encargado: encargado.id });
+
+  return Instituciones.findByPk(institucionId, {
     include: [{ model: EncargadoInstitucion, as: 'encargado' }],
   });
 }

@@ -3,7 +3,7 @@ import {
   getEncargadoInstitucionById,
   createEncargadoInstitucion,
   updateEncargadoInstitucion,
-  deleteEncargadoInstitucion
+  deleteEncargadoInstitucion,
 } from '../controllers/encargadoInstitucionController.js';
 
 async function encargadoInstitucionRoutes(fastify) {

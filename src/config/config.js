@@ -15,6 +15,7 @@ export default {
     ESTUDIANTE: 'Estudiante',
     COORDINADOR: 'Coordinador',
     ADMIN: 'Admin',
+    INSTITUCION: 'Institucion',
     // Agregar más roles según sea necesario
   }
 };

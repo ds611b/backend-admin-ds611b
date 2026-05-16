@@ -1116,6 +1116,16 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
+  $id: 'AssignEncargadoValidation',
+  type: 'object',
+  description: 'Payload para cambiar el encargado de una institución a partir de un usuario existente',
+  properties: {
+    usuario_id: { type: 'integer', description: 'ID del usuario en la tabla Usuarios' }
+  },
+  required: ['usuario_id']
+});
+
+fastify.addSchema({
   $id: 'InstitucionesCompletaValidation',
   type: 'object',
   description: 'Payload para crear institución, encargado y usuario de acceso en un solo request',

@@ -1,6 +1,9 @@
 import { Instituciones, EncargadoInstitucion, ProyectosInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
-import { createInstitucionCompleta as createInstitucionCompletaService } from '../services/institucionService.js';
+import {
+  createInstitucionCompleta as createInstitucionCompletaService,
+  assignEncargadoToInstitucion as assignEncargadoToInstitucionService,
+} from '../services/institucionService.js';
 
 /**
  * Obtiene todas las instituciones.
@@ -197,6 +200,21 @@ export async function createInstitucionCompleta(request, reply) {
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
  */
+export async function assignEncargadoToInstitucion(request, reply) {
+  const { id } = request.params;
+  const { usuario_id } = request.body;
+
+  try {
+    const result = await assignEncargadoToInstitucionService({ institucionId: id, usuarioId: usuario_id });
+    reply.send(result);
+  } catch (error) {
+    request.log.error(error);
+    const statusCode = error.statusCode || 500;
+    const code = error.code || 'ASSIGN_ENCARGADO_ERROR';
+    reply.status(statusCode).send(createErrorResponse(error.message, code, error));
+  }
+}
+
 export async function getProyectosByInstitucionId(request, reply) {
   const { id } = request.params;
   

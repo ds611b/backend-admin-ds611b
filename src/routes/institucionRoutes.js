@@ -1,4 +1,13 @@
-import { getInstituciones, getInstitucionById, createInstitucionCompleta, getInstitucionesActivas, updateInstitucion, deleteInstitucion, getProyectosByInstitucionId } from '../controllers/institucionController.js';
+import {
+  getInstituciones,
+  getInstitucionById,
+  createInstitucionCompleta,
+  getInstitucionesActivas,
+  updateInstitucion,
+  deleteInstitucion,
+  getProyectosByInstitucionId,
+  assignEncargadoToInstitucion,
+} from '../controllers/institucionController.js';
 
 /**
  * Define las rutas para las instituciones.
@@ -162,6 +171,40 @@ async function institucionRoutes(fastify, options) {
       }
     }
   }, deleteInstitucion);
+
+  // PATCH /instituciones/:id/encargado
+  fastify.patch('/instituciones/:id/encargado', {
+    schema: {
+      description: 'Cambia el encargado asignado a una institución',
+      tags: ['Instituciones'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'number', description: 'ID de la institución' }
+        },
+        required: ['id']
+      },
+      body: { $ref: 'AssignEncargadoValidation' },
+      response: {
+        200: {
+          description: 'Encargado actualizado exitosamente',
+          $ref: 'Instituciones'
+        },
+        404: {
+          description: 'Institución o usuario no encontrado',
+          $ref: 'ErrorResponse'
+        },
+        422: {
+          description: 'El usuario no tiene rol de Institución',
+          $ref: 'ErrorResponse'
+        },
+        500: {
+          description: 'Error al asignar el encargado',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, assignEncargadoToInstitucion);
 
   // GET /instituciones/:id/proyectos
   fastify.get('/instituciones/:id/proyectos', {
