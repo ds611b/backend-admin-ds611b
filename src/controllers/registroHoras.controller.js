@@ -268,12 +268,12 @@ export async function deleteRegistroHoras(request, reply) {
     ));
   }
 }
-
 /**
  * Obtiene el listado de horas realizadas por un estudiante específico.
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
- */export async function getHorasPorEstudiante(request, reply) {
+ */
+export async function getHorasPorEstudiante(request, reply) {
   const { id_perfil_usuario } = request.params;
   const { id_proyecto, tipo_horas } = request.query;
 
@@ -283,14 +283,7 @@ export async function deleteRegistroHoras(request, reply) {
       include: [{
         model: Usuarios,
         as: 'usuario',
-        attributes: [
-          'id',
-          'primer_nombre',
-          'segundo_nombre',
-          'primer_apellido',
-          'segundo_apellido',
-          'email'
-        ]
+        attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
       }]
     });
 
@@ -301,10 +294,19 @@ export async function deleteRegistroHoras(request, reply) {
       ));
     }
 
-    // 🔹 Obtener requisitos (IMPORTANTE: usar id_estudiante)
+    // 🔹 Buscar requisitos del estudiante — SIN filtrar por id_proyecto
+    //    porque HorasRequisito no tiene columna id_proyecto
     const whereRequisito = {
       id_estudiante: id_perfil_usuario
     };
+
+    // ✅ Si viene id_proyecto, obtener tipo_horas y filtrar requisitos por tipo
+    if (id_proyecto && !tipo_horas) {
+      const proyecto = await ProyectosInstitucion.findByPk(id_proyecto, {
+        attributes: ['tipo_proyecto']
+      });
+      tipo_horas = proyecto?.tipo_proyecto || null;
+    }
 
     if (tipo_horas) {
       whereRequisito.tipo_horas = tipo_horas;
@@ -313,6 +315,11 @@ export async function deleteRegistroHoras(request, reply) {
     const requisitosHoras = await HorasRequisito.findAll({
       where: whereRequisito
     });
+
+    console.log(`Requisitos encontrados para estudiante ${id_perfil_usuario} con tipo_horas ${tipo_horas}:`, requisitosHoras.length);
+
+    // ver que tiene requisitosHoras
+    console.log('RequisitosHoras:', JSON.stringify(requisitosHoras, null, 2));
 
     if (!requisitosHoras.length) {
       return reply.send({
@@ -328,35 +335,53 @@ export async function deleteRegistroHoras(request, reply) {
       });
     }
 
-    // 🔹 IDs de requisitos
-    const id_grupo_estudiante = requisitosHoras.map(r => r.id);
+    // 🔹 obtener los IDs de grupos del estudiante de la tabla grupoEstudiante
+    const idGrupoEstudiante = await GrupoEstudiantes.findAll({
+      where: {
+        id_estudiante: id_perfil_usuario
+      },
+      attributes: ['id']
+    });
 
-    // 🔹 Filtro de registros
+    const idsGrupoEstudiante = idGrupoEstudiante.map(g => g.id);
+
+    // 🔹 Filtro sobre RegistroHoras
     const whereRegistros = {
-      id_grupo_estudiante: id_grupo_estudiante
+      id_grupo_estudiante: idsGrupoEstudiante
     };
 
+    // ✅ id_proyecto se filtra aquí, en RegistroHoras, donde SÍ existe la columna
     if (id_proyecto) {
       whereRegistros.id_proyecto = id_proyecto;
     }
 
-    // 🔹 Obtener registros (SIN errores de asociación)
+    // 🔹 Obtener registros incluyendo datos del proyecto
     const registros = await RegistroHoras.findAll({
       where: whereRegistros,
       include: [
         {
-          model: HorasRequisito,
-          as: 'horas_requisito', // ⚠️ Debe existir en associations
-          attributes: ['id', 'tipo_horas', 'horas_requeridas', 'horas_completadas']
+          model: ProyectosInstitucion,
+          as: 'proyecto',
+          attributes: ['id', 'nombre'],
+          include: [
+            {
+              model: Instituciones,
+              as: 'institucion',
+              attributes: ['id', 'nombre']
+            }
+          ]
         }
       ],
       order: [['fecha', 'DESC']]
     });
 
-    // 🔹 Evitar duplicados manualmente (extra seguro)
+    console.log(whereRegistros);
+
+        console.log('registros:', JSON.stringify(registros, null, 2));
+
+    // 🔹 Evitar duplicados
     const registrosUnicos = [];
     const ids = new Set();
-
     for (const r of registros) {
       if (!ids.has(r.id)) {
         ids.add(r.id);
@@ -369,7 +394,6 @@ export async function deleteRegistroHoras(request, reply) {
 
     const registrosDetallados = registrosUnicos.map(registro => {
       const horas = parseFloat(registro.horas_realizadas) || 0;
-
       totalHorasRegistradas += horas;
 
       if (registro.estado_validacion === 'Aprobado') {
@@ -384,10 +408,11 @@ export async function deleteRegistroHoras(request, reply) {
         tipo_horas: registro.horas_requisito?.tipo_horas,
         estado_validacion: registro.estado_validacion,
         observaciones_validacion: registro.observaciones_validacion,
+        // ✅ Ahora sí viene del include correctamente
         proyecto: registro.proyecto ? {
           id: registro.proyecto.id,
           nombre: registro.proyecto.nombre,
-          institucion: registro.proyecto.institucion?.nombre
+          institucion: registro.proyecto.institucion?.nombre ?? null
         } : null,
         supervisor: {
           nombre: registro.supervisor_nombre,
@@ -397,7 +422,6 @@ export async function deleteRegistroHoras(request, reply) {
       };
     });
 
-    // 🔹 Respuesta final
     reply.send({
       estudiante: {
         id: perfilUsuario.id,
