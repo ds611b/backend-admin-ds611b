@@ -6,6 +6,7 @@ import {
   updateUsuario,
   deleteUsuario,
   getUsuarioAllById,
+  getUsuarioDetalleById,
   getCoordinadores,
   getEstudiantes,
   searchUsuarios
@@ -279,6 +280,34 @@ async function usuariosRoutes (fastify) {
     /* -----------------------------------------------------------------------
    * GET /usuarios/all/:usuario_id – un usuario por ID con paginación de proyectos
    * ---------------------------------------------------------------------*/
+  /* -----------------------------------------------------------------------
+   * GET /usuarios/detalle/:usuario_id – perfil + proyecto activo o aplicaciones
+   * ---------------------------------------------------------------------*/
+  fastify.get('/usuarios/detalle-aplicaciones/:usuario_id', {
+    schema: {
+      description: 'Retorna el usuario con perfil (carrera e institución), proyecto activo si existe, o listado paginado de aplicaciones realizadas',
+      tags: ['Usuarios'],
+      params: {
+        type: 'object',
+        properties: {
+          usuario_id: { type: 'number', description: 'ID del usuario' }
+        },
+        required: ['usuario_id']
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página (aplicaciones)', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
+        }
+      },
+      response: {
+        404: { description: 'Usuario no encontrado', $ref: 'ErrorResponse' },
+        500: { description: 'Error al obtener el detalle', $ref: 'ErrorResponse' }
+      }
+    }
+  }, getUsuarioDetalleById);
+
   fastify.get('/usuarios/all/:usuario_id', {
     schema: {
       description: 'Obtiene toda la informacion de un usuario Perfil, Usuario, Proyectos con paginación',

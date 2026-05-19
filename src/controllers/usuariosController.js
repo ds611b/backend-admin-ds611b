@@ -1,4 +1,4 @@
-import { Usuarios, PerfilUsuario, AplicacionesEstudiantes, ProyectosInstitucion, Roles } from '../models/index.js';
+import { Usuarios, PerfilUsuario, AplicacionesEstudiantes, ProyectosInstitucion, Roles, Carreras, Instituciones } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 import { Op } from 'sequelize';
 
@@ -489,6 +489,117 @@ export async function searchUsuarios(request, reply) {
     reply.status(500).send(createErrorResponse(
       'Error al buscar usuarios',
       'SEARCH_USUARIOS_ERROR',
+      error
+    ));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * GET /api/usuarios/detalle/:usuario_id
+ * Retorna usuario + perfil (con carrera e institución) + proyecto activo o
+ * listado de aplicaciones realizadas. Nunca retorna null: usa {} y [] cuando
+ * no hay datos.
+ * -------------------------------------------------------------------------*/
+export async function getUsuarioDetalleById(request, reply) {
+  const { usuario_id } = request.params;
+  const { page = 1, limit = 10 } = request.query;
+
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const offset = (pageNum - 1) * limitNum;
+
+  try {
+    // 1. Usuario con perfil, carrera e institución del perfil
+    const usuario = await Usuarios.findByPk(usuario_id, {
+      where: { status: 1 },
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        {
+          model: PerfilUsuario,
+          required: false,
+          include: [
+            {
+              model: Carreras,
+              as: 'carrera',
+              required: false
+            },
+            {
+              model: Instituciones,
+              as: 'institucion',
+              required: false
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!usuario) {
+      return reply.status(404).send(createErrorResponse(
+        'Usuario no encontrado',
+        'USUARIO_NOT_FOUND'
+      ));
+    }
+
+    // 2. Todas las aplicaciones del estudiante con detalle del proyecto e institución
+    const aplicaciones = await AplicacionesEstudiantes.findAll({
+      where: { estudiante_id: usuario_id },
+      include: [
+        {
+          model: ProyectosInstitucion,
+          as: 'proyecto',
+          required: false,
+          include: [
+            {
+              model: Instituciones,
+              as: 'institucion',
+              required: false
+            }
+          ]
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    // 3. Determinar si existe un proyecto activo (aplicación Aprobada)
+    const aplicacionActiva = aplicaciones.find(app => app.estado === 'Aprobado');
+
+    const usuarioData = usuario.toJSON();
+    let response;
+
+    if (aplicacionActiva) {
+      // Tiene proyecto activo: devolver sus detalles; aplicaciones vacía
+      response = {
+        ...usuarioData,
+        proyecto_activo: aplicacionActiva.toJSON().proyecto ?? {},
+        aplicaciones: [],
+        pagination: null
+      };
+    } else {
+      // Sin proyecto activo: devolver aplicaciones paginadas; proyecto_activo vacío
+      const aplicacionesData = aplicaciones.map(app => app.toJSON());
+      const totalAplicaciones = aplicacionesData.length;
+      const aplicacionesPaginadas = aplicacionesData.slice(offset, offset + limitNum);
+      const totalPages = Math.ceil(totalAplicaciones / limitNum);
+
+      response = {
+        ...usuarioData,
+        proyecto_activo: {},
+        aplicaciones: aplicacionesPaginadas,
+        pagination: {
+          totalItems: totalAplicaciones,
+          totalPages: totalPages,
+          currentPage: pageNum,
+          itemsPerPage: limitNum
+        }
+      };
+    }
+
+    reply.send(response);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener el detalle del usuario',
+      'GET_USUARIO_DETALLE_ERROR',
       error
     ));
   }
