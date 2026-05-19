@@ -366,6 +366,54 @@ export async function getCoordinadores(request, reply) {
 }
 
 /* ---------------------------------------------------------------------------
+ * GET /api/usuarios/estudiantes - Obtiene solo usuarios estudiantes
+ * -------------------------------------------------------------------------*/
+export async function getEstudiantes(request, reply) {
+  const { page = 1, limit = 10 } = request.query;
+  
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const offset = (pageNum - 1) * limitNum;
+
+  try {
+    const { count, rows: estudiantes } = await Usuarios.findAndCountAll({
+      where: { status: 1 },
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        {
+          model: Roles,
+          as: 'rol',
+          attributes: ['nombre', 'descripcion'],
+          where: { nombre: 'Estudiante' }
+        }
+      ],
+      limit: limitNum,
+      offset: offset,
+      order: [['id', 'ASC']]
+    });
+
+    const totalPages = Math.ceil(count / limitNum);
+
+    reply.send({
+      data: estudiantes,
+      pagination: {
+        totalItems: count,
+        totalPages: totalPages,
+        currentPage: pageNum,
+        itemsPerPage: limitNum
+      }
+    });
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener los estudiantes',
+      'GET_ESTUDIANTES_ERROR',
+      error
+    ));
+  }
+}
+
+/* ---------------------------------------------------------------------------
  * GET /api/usuarios/search - Busca usuarios por nombres o email
  * -------------------------------------------------------------------------*/
 export async function searchUsuarios(request, reply) {

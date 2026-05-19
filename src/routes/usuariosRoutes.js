@@ -7,6 +7,7 @@ import {
   deleteUsuario,
   getUsuarioAllById,
   getCoordinadores,
+  getEstudiantes,
   searchUsuarios
 } from '../controllers/usuariosController.js';
 
@@ -115,6 +116,47 @@ async function usuariosRoutes (fastify) {
       }
     }
   }, getCoordinadores);
+
+  /* -----------------------------------------------------------------------   * GET /usuarios/estudiantes – lista de usuarios estudiantes
+   * ---------------------------------------------------------------------*/
+  fastify.get('/usuarios/estudiantes', {
+    schema: {
+      description: 'Obtiene todos los usuarios con rol de estudiante con paginación',
+      tags: ['Usuarios'],
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
+        }
+      },
+      response: {
+        200: {
+          description: 'Lista de estudiantes obtenida exitosamente',
+          type: 'object',
+          properties: {
+            data: {
+              type: 'array',
+              items: { $ref: 'Usuarios' }
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                totalItems: { type: 'number' },
+                totalPages: { type: 'number' },
+                currentPage: { type: 'number' },
+                itemsPerPage: { type: 'number' }
+              }
+            }
+          }
+        },
+        500: {
+          description: 'Error al obtener los estudiantes',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, getEstudiantes);
   /* -----------------------------------------------------------------------
    * GET /usuarios/search – buscar usuarios por nombres o email
    * ---------------------------------------------------------------------*/
@@ -232,6 +274,7 @@ async function usuariosRoutes (fastify) {
       }
     }
   }, deleteUsuario);
+
 
     /* -----------------------------------------------------------------------
    * GET /usuarios/:id – un usuario por ID
