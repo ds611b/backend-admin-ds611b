@@ -5,7 +5,9 @@ import {
   getUsuarioById,
   updateUsuario,
   deleteUsuario,
-  getUsuarioAllById
+  getUsuarioAllById,
+  getCoordinadores,
+  searchUsuarios
 } from '../controllers/usuariosController.js';
 
 /**
@@ -52,8 +54,61 @@ async function usuariosRoutes (fastify) {
     }
   }, getUsuarios);
 
+  /* -----------------------------------------------------------------------   * GET /usuarios/coordinadores – lista de usuarios coordinadores
+   * ---------------------------------------------------------------------*/
+  fastify.get('/usuarios/coordinadores', {
+    schema: {
+      description: 'Obtiene todos los usuarios con rol de coordinador',
+      tags: ['Usuarios'],
+      response: {
+        200: {
+          description: 'Lista de coordinadores obtenida exitosamente',
+          type: 'array',
+          items: { $ref: 'Usuarios' }
+        },
+        500: {
+          description: 'Error al obtener los coordinadores',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, getCoordinadores);
   /* -----------------------------------------------------------------------
-   * GET /usuarios/:id – un usuario por ID
+   * GET /usuarios/search – buscar usuarios por nombres o email
+   * ---------------------------------------------------------------------*/
+  fastify.get('/usuarios/search', {
+    schema: {
+      description: 'Busca usuarios por coincidencias en nombres o email',
+      tags: ['Usuarios'],
+      querystring: {
+        type: 'object',
+        properties: {
+          q: { 
+            type: 'string', 
+            description: 'Término de búsqueda para nombres o email',
+            minLength: 1
+          }
+        },
+        required: ['q']
+      },
+      response: {
+        200: {
+          description: 'Lista de usuarios que coinciden con la búsqueda',
+          type: 'array',
+          items: { $ref: 'Usuarios' }
+        },
+        400: {
+          description: 'Parámetro de búsqueda requerido',
+          $ref: 'ErrorResponse'
+        },
+        500: {
+          description: 'Error al buscar usuarios',
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  }, searchUsuarios);
+  /* -----------------------------------------------------------------------   * GET /usuarios/:id – un usuario por ID
    * ---------------------------------------------------------------------*/
   fastify.get('/usuarios/:id', {
     schema: {

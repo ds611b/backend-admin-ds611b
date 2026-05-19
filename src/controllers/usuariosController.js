@@ -1,5 +1,6 @@
-import { Usuarios, PerfilUsuario, AplicacionesEstudiantes, ProyectosInstitucion } from '../models/index.js';
+import { Usuarios, PerfilUsuario, AplicacionesEstudiantes, ProyectosInstitucion, Roles } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
+import { Op } from 'sequelize';
 
 /* ---------------------------------------------------------------------------
  * POST /api/usuarios
@@ -62,7 +63,14 @@ export async function getUsuarios(request, reply) {
   try {
     const usuarios = await Usuarios.findAll({
       where: { status: 1 },
-      attributes: { exclude: ['password_hash'] }
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        {
+          model: Roles,
+          as: 'rol',
+          attributes: ['nombre', 'descripcion']
+        }
+      ]
     });
     reply.send(usuarios);
   } catch (error) {
@@ -84,7 +92,14 @@ export async function getUsuarioById(request, reply) {
   try {
     const usuario = await Usuarios.findByPk(id, {
       where: { status: 1 },
-      attributes: { exclude: ['password_hash'] }
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        {
+          model: Roles,
+          as: 'rol',
+          attributes: ['nombre', 'descripcion']
+        }
+      ]
     });
 
     if (usuario) {
@@ -277,6 +292,83 @@ export async function getUsuarioAllById(request, reply) {
     reply.status(500).send(createErrorResponse(
       'Error al obtener el usuario',
       'GET_USUARIO_ERROR',
+      error
+    ));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * GET /api/usuarios/coordinadores - Obtiene solo usuarios coordinadores
+ * -------------------------------------------------------------------------*/
+export async function getCoordinadores(request, reply) {
+  try {
+    const coordinadores = await Usuarios.findAll({
+      where: { status: 1 },
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        {
+          model: Roles,
+          as: 'rol',
+          attributes: ['nombre', 'descripcion'],
+          where: { nombre: 'Coordinador' }
+        }
+      ]
+    });
+    reply.send(coordinadores);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener los coordinadores',
+      'GET_COORDINADORES_ERROR',
+      error
+    ));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * GET /api/usuarios/search - Busca usuarios por nombres o email
+ * -------------------------------------------------------------------------*/
+export async function searchUsuarios(request, reply) {
+  const { q } = request.query;
+
+  // Validar que se proporcione el parámetro de búsqueda
+  if (!q || q.trim() === '') {
+    return reply.status(400).send(createErrorResponse(
+      'Se requiere el parámetro de búsqueda "q"',
+      'SEARCH_QUERY_REQUIRED'
+    ));
+  }
+
+  try {
+    const searchTerm = `%${q.trim()}%`;
+
+    const usuarios = await Usuarios.findAll({
+      where: {
+        status: 1,
+        [Op.or]: [
+          { primer_nombre: { [Op.like]: searchTerm } },
+          { segundo_nombre: { [Op.like]: searchTerm } },
+          { primer_apellido: { [Op.like]: searchTerm } },
+          { segundo_apellido: { [Op.like]: searchTerm } },
+          { email: { [Op.like]: searchTerm } }
+        ]
+      },
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        {
+          model: Roles,
+          as: 'rol',
+          attributes: ['nombre', 'descripcion']
+        }
+      ]
+    });
+
+    reply.send(usuarios);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al buscar usuarios',
+      'SEARCH_USUARIOS_ERROR',
       error
     ));
   }
