@@ -277,21 +277,28 @@ async function usuariosRoutes (fastify) {
 
 
     /* -----------------------------------------------------------------------
-   * GET /usuarios/:id – un usuario por ID
+   * GET /usuarios/all/:usuario_id – un usuario por ID con paginación de proyectos
    * ---------------------------------------------------------------------*/
-  fastify.get('/usuarios/all/:id', {
+  fastify.get('/usuarios/all/:usuario_id', {
     schema: {
-      description: 'Obtiene toda la informacion de un usuario Perfil, Usuario, Proyectos',
+      description: 'Obtiene toda la informacion de un usuario Perfil, Usuario, Proyectos con paginación',
       tags: ['Usuarios'],
       params: {
         type: 'object',
         properties: {
-          id: { type: 'number', description: 'ID del usuario' }
+          usuario_id: { type: 'number', description: 'ID del usuario' }
         },
-        required: ['id']
+        required: ['usuario_id']
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Proyectos por página', default: 10, minimum: 1, maximum: 100 }
+        }
       },
       response: {
-        200: { description: 'Usuario obtenido con perfil y proyectos', $ref: 'UsuarioCompleto' },
+        200: { description: 'Usuario obtenido con perfil y proyectos paginados', $ref: 'UsuarioCompleto' },
         404: { description: 'Usuario no encontrado', $ref: 'ErrorResponse' },
         500: { description: 'Error al obtener el usuario', $ref: 'ErrorResponse' }
       }

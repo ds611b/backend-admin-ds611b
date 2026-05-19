@@ -254,13 +254,18 @@ export async function deleteUsuario(request, reply) {
 }
 
 /* ---------------------------------------------------------------------------
- * GET /api/usuarios/all/:id - Obtiene usuario con perfil y proyectos
+ * GET /api/usuarios/all/:usuario_id - Obtiene usuario con perfil y proyectos
  * -------------------------------------------------------------------------*/
 export async function getUsuarioAllById(request, reply) {
-  const { id } = request.params;
+  const { usuario_id } = request.params;
+  const { page = 1, limit = 10 } = request.query;
+
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const offset = (pageNum - 1) * limitNum;
 
   try {
-    const usuario = await Usuarios.findByPk(id, {
+    const usuario = await Usuarios.findByPk(usuario_id, {
       where: { status: 1 },
       attributes: { exclude: ['password_hash'] },
       include: [
@@ -289,21 +294,31 @@ export async function getUsuarioAllById(request, reply) {
       ));
     }
 
-    // Transformar el resultado para incluir el array de proyectos
+    // Transformar el resultado para incluir el array de proyectos con paginación
     const usuarioData = usuario.toJSON();
-    const proyectos = usuarioData.AplicacionesEstudiantes
-      ? usuarioData.AplicacionesEstudiantes
-          .filter(app => app.proyecto)
-          .map(app => app.proyecto)
-      : [];
+    const todasLasAplicaciones = usuarioData.AplicacionesEstudiantes || [];
+    const proyectosFiltrados = todasLasAplicaciones
+      .filter(app => app.proyecto)
+      .map(app => app.proyecto);
+
+    // Aplicar paginación a los proyectos
+    const totalProyectos = proyectosFiltrados.length;
+    const proyectosPaginados = proyectosFiltrados.slice(offset, offset + limitNum);
+    const totalPages = Math.ceil(totalProyectos / limitNum);
 
     // Eliminar AplicacionesEstudiantes del objeto de respuesta
     delete usuarioData.AplicacionesEstudiantes;
 
-    // Construir la respuesta final
+    // Construir la respuesta final con paginación
     const response = {
       ...usuarioData,
-      proyectos
+      proyectos: proyectosPaginados,
+      pagination: {
+        totalItems: totalProyectos,
+        totalPages: totalPages,
+        currentPage: pageNum,
+        itemsPerPage: limitNum
+      }
     };
 
     reply.send(response);
