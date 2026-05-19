@@ -4,7 +4,9 @@ import {
   createCarrera, 
   updateCarrera, 
   deleteCarrera,
-  getEstudiantesByCarreraId
+  getEstudiantesByCarreraId,
+  getDetalleAplicacionesEstudiante,
+  getEstudiantesDetalleByCarrera
 } from '../controllers/carrerasController.js';
 
 async function carrerasRoutes(fastify, options) {
@@ -158,23 +160,41 @@ async function carrerasRoutes(fastify, options) {
     }
   }, deleteCarrera);
 
-  // GET /carreras/:id/estudiantes
-  fastify.get('/carreras/:id/estudiantes', {
+  // GET /carreras/:id_carrera/estudiantes
+  fastify.get('/carreras/:id_carrera/estudiantes', {
     schema: {
       description: 'Obtiene la lista de estudiantes (Usuario & Perfil) por ID de carrera',
       tags: ['Carreras'],
       params: {
         type: 'object',
         properties: {
-          id: { type: 'number', description: 'ID de la carrera' }
+          id_carrera: { type: 'number', description: 'ID de la carrera' }
         },
-        required: ['id']
+        required: ['id_carrera']
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
+        }
       },
       response: {
         200: {
           description: 'Lista de estudiantes obtenida exitosamente',
-          type: 'array',
-          items: { $ref: 'EstudianteConPerfil' }
+          type: 'object',
+          properties: {
+            data: { type: 'array', items: { $ref: 'EstudianteConPerfil' } },
+            pagination: {
+              type: 'object',
+              properties: {
+                totalItems: { type: 'number' },
+                totalPages: { type: 'number' },
+                currentPage: { type: 'number' },
+                itemsPerPage: { type: 'number' }
+              }
+            }
+          }
         },
         404: {
           description: 'Carrera no encontrada',
@@ -187,6 +207,59 @@ async function carrerasRoutes(fastify, options) {
       }
     }
   }, getEstudiantesByCarreraId);
+
+  // GET /carreras/:id_carrera/detalle-aplicaciones/:usuario_id
+  fastify.get('/carreras/:id_carrera/detalle-aplicaciones/:usuario_id', {
+    schema: {
+      description: 'Retorna el detalle de un estudiante de la carrera: perfil, proyecto activo o listado paginado de aplicaciones',
+      tags: ['Carreras'],
+      params: {
+        type: 'object',
+        properties: {
+          id_carrera: { type: 'number', description: 'ID de la carrera' },
+          usuario_id: { type: 'number', description: 'ID del estudiante' }
+        },
+        required: ['id_carrera', 'usuario_id']
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página (aplicaciones)', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
+        }
+      },
+      response: {
+        404: { description: 'Carrera o estudiante no encontrado', $ref: 'ErrorResponse' },
+        500: { description: 'Error al obtener el detalle', $ref: 'ErrorResponse' }
+      }
+    }
+  }, getDetalleAplicacionesEstudiante);
+
+  // GET /carreras/:id_carrera/estudiantes/detalle-aplicaciones
+  fastify.get('/carreras/:id_carrera/estudiantes/detalle-aplicaciones', {
+    schema: {
+      description: 'Lista paginada de estudiantes de la carrera con perfil, proyecto activo o aplicaciones realizadas',
+      tags: ['Carreras'],
+      params: {
+        type: 'object',
+        properties: {
+          id_carrera: { type: 'number', description: 'ID de la carrera' }
+        },
+        required: ['id_carrera']
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
+        }
+      },
+      response: {
+        404: { description: 'Carrera no encontrada', $ref: 'ErrorResponse' },
+        500: { description: 'Error al obtener el detalle', $ref: 'ErrorResponse' }
+      }
+    }
+  }, getEstudiantesDetalleByCarrera);
 }
 
 export default carrerasRoutes;
