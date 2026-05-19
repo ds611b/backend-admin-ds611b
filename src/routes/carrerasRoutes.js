@@ -5,7 +5,6 @@ import {
   updateCarrera, 
   deleteCarrera,
   getEstudiantesByCarreraId,
-  getDetalleAplicacionesEstudiante,
   getEstudiantesDetalleByCarrera
 } from '../controllers/carrerasController.js';
 
@@ -207,33 +206,6 @@ async function carrerasRoutes(fastify, options) {
       }
     }
   }, getEstudiantesByCarreraId);
-
-  // GET /carreras/:id_carrera/detalle-aplicaciones/:usuario_id
-  fastify.get('/carreras/:id_carrera/detalle-aplicaciones/:usuario_id', {
-    schema: {
-      description: 'Retorna el detalle de un estudiante de la carrera: perfil, proyecto activo o listado paginado de aplicaciones',
-      tags: ['Carreras'],
-      params: {
-        type: 'object',
-        properties: {
-          id_carrera: { type: 'number', description: 'ID de la carrera' },
-          usuario_id: { type: 'number', description: 'ID del estudiante' }
-        },
-        required: ['id_carrera', 'usuario_id']
-      },
-      querystring: {
-        type: 'object',
-        properties: {
-          page: { type: 'number', description: 'Número de página (aplicaciones)', default: 1, minimum: 1 },
-          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
-        }
-      },
-      response: {
-        404: { description: 'Carrera o estudiante no encontrado', $ref: 'ErrorResponse' },
-        500: { description: 'Error al obtener el detalle', $ref: 'ErrorResponse' }
-      }
-    }
-  }, getDetalleAplicacionesEstudiante);
 
   // GET /carreras/:id_carrera/estudiantes/detalle-aplicaciones
   fastify.get('/carreras/:id_carrera/estudiantes/detalle-aplicaciones', {
