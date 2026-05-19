@@ -60,8 +60,14 @@ export async function createUsuario(request, reply) {
  * GET /api/usuarios
  * -------------------------------------------------------------------------*/
 export async function getUsuarios(request, reply) {
+  const { page = 1, limit = 10 } = request.query;
+  
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const offset = (pageNum - 1) * limitNum;
+
   try {
-    const usuarios = await Usuarios.findAll({
+    const { count, rows: usuarios } = await Usuarios.findAndCountAll({
       where: { status: 1 },
       attributes: { exclude: ['password_hash'] },
       include: [
@@ -70,9 +76,23 @@ export async function getUsuarios(request, reply) {
           as: 'rol',
           attributes: ['nombre', 'descripcion']
         }
-      ]
+      ],
+      limit: limitNum,
+      offset: offset,
+      order: [['id', 'ASC']]
     });
-    reply.send(usuarios);
+
+    const totalPages = Math.ceil(count / limitNum);
+
+    reply.send({
+      data: usuarios,
+      pagination: {
+        totalItems: count,
+        totalPages: totalPages,
+        currentPage: pageNum,
+        itemsPerPage: limitNum
+      }
+    });
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
@@ -301,8 +321,14 @@ export async function getUsuarioAllById(request, reply) {
  * GET /api/usuarios/coordinadores - Obtiene solo usuarios coordinadores
  * -------------------------------------------------------------------------*/
 export async function getCoordinadores(request, reply) {
+  const { page = 1, limit = 10 } = request.query;
+  
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const offset = (pageNum - 1) * limitNum;
+
   try {
-    const coordinadores = await Usuarios.findAll({
+    const { count, rows: coordinadores } = await Usuarios.findAndCountAll({
       where: { status: 1 },
       attributes: { exclude: ['password_hash'] },
       include: [
@@ -312,9 +338,23 @@ export async function getCoordinadores(request, reply) {
           attributes: ['nombre', 'descripcion'],
           where: { nombre: 'Coordinador' }
         }
-      ]
+      ],
+      limit: limitNum,
+      offset: offset,
+      order: [['id', 'ASC']]
     });
-    reply.send(coordinadores);
+
+    const totalPages = Math.ceil(count / limitNum);
+
+    reply.send({
+      data: coordinadores,
+      pagination: {
+        totalItems: count,
+        totalPages: totalPages,
+        currentPage: pageNum,
+        itemsPerPage: limitNum
+      }
+    });
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
@@ -329,7 +369,7 @@ export async function getCoordinadores(request, reply) {
  * GET /api/usuarios/search - Busca usuarios por nombres o email
  * -------------------------------------------------------------------------*/
 export async function searchUsuarios(request, reply) {
-  const { q } = request.query;
+  const { q, page = 1, limit = 10 } = request.query;
 
   // Validar que se proporcione el parámetro de búsqueda
   if (!q || q.trim() === '') {
@@ -339,10 +379,14 @@ export async function searchUsuarios(request, reply) {
     ));
   }
 
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const offset = (pageNum - 1) * limitNum;
+
   try {
     const searchTerm = `%${q.trim()}%`;
 
-    const usuarios = await Usuarios.findAll({
+    const { count, rows: usuarios } = await Usuarios.findAndCountAll({
       where: {
         status: 1,
         [Op.or]: [
@@ -360,10 +404,23 @@ export async function searchUsuarios(request, reply) {
           as: 'rol',
           attributes: ['nombre', 'descripcion']
         }
-      ]
+      ],
+      limit: limitNum,
+      offset: offset,
+      order: [['id', 'ASC']]
     });
 
-    reply.send(usuarios);
+    const totalPages = Math.ceil(count / limitNum);
+
+    reply.send({
+      data: usuarios,
+      pagination: {
+        totalItems: count,
+        totalPages: totalPages,
+        currentPage: pageNum,
+        itemsPerPage: limitNum
+      }
+    });
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(

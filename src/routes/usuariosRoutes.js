@@ -38,13 +38,34 @@ async function usuariosRoutes (fastify) {
    * ---------------------------------------------------------------------*/
   fastify.get('/usuarios', {
     schema: {
-      description: 'Obtiene todos los usuarios (sin exponer password_hash)',
+      description: 'Obtiene todos los usuarios (sin exponer password_hash) con paginación',
       tags: ['Usuarios'],
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
+        }
+      },
       response: {
         200: {
           description: 'Lista de usuarios obtenida exitosamente',
-          type: 'array',
-          items: { $ref: 'Usuarios' }
+          type: 'object',
+          properties: {
+            data: {
+              type: 'array',
+              items: { $ref: 'Usuarios' }
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                totalItems: { type: 'number' },
+                totalPages: { type: 'number' },
+                currentPage: { type: 'number' },
+                itemsPerPage: { type: 'number' }
+              }
+            }
+          }
         },
         500: {
           description: 'Error al obtener los usuarios',
@@ -58,13 +79,34 @@ async function usuariosRoutes (fastify) {
    * ---------------------------------------------------------------------*/
   fastify.get('/usuarios/coordinadores', {
     schema: {
-      description: 'Obtiene todos los usuarios con rol de coordinador',
+      description: 'Obtiene todos los usuarios con rol de coordinador con paginación',
       tags: ['Usuarios'],
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
+        }
+      },
       response: {
         200: {
           description: 'Lista de coordinadores obtenida exitosamente',
-          type: 'array',
-          items: { $ref: 'Usuarios' }
+          type: 'object',
+          properties: {
+            data: {
+              type: 'array',
+              items: { $ref: 'Usuarios' }
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                totalItems: { type: 'number' },
+                totalPages: { type: 'number' },
+                currentPage: { type: 'number' },
+                itemsPerPage: { type: 'number' }
+              }
+            }
+          }
         },
         500: {
           description: 'Error al obtener los coordinadores',
@@ -78,7 +120,7 @@ async function usuariosRoutes (fastify) {
    * ---------------------------------------------------------------------*/
   fastify.get('/usuarios/search', {
     schema: {
-      description: 'Busca usuarios por coincidencias en nombres o email',
+      description: 'Busca usuarios por coincidencias en nombres o email con paginación',
       tags: ['Usuarios'],
       querystring: {
         type: 'object',
@@ -87,15 +129,31 @@ async function usuariosRoutes (fastify) {
             type: 'string', 
             description: 'Término de búsqueda para nombres o email',
             minLength: 1
-          }
+          },
+          page: { type: 'number', description: 'Número de página', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
         },
         required: ['q']
       },
       response: {
         200: {
           description: 'Lista de usuarios que coinciden con la búsqueda',
-          type: 'array',
-          items: { $ref: 'Usuarios' }
+          type: 'object',
+          properties: {
+            data: {
+              type: 'array',
+              items: { $ref: 'Usuarios' }
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                totalItems: { type: 'number' },
+                totalPages: { type: 'number' },
+                currentPage: { type: 'number' },
+                itemsPerPage: { type: 'number' }
+              }
+            }
+          }
         },
         400: {
           description: 'Parámetro de búsqueda requerido',
