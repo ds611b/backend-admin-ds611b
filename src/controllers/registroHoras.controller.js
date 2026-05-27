@@ -507,8 +507,11 @@ export async function getResumenProyecto(request, reply) {
     let totalHorasAprobadas = 0;
 
     for (const registro of registrosProyecto) {
-      const perfil = registro.HorasRequisito?.perfil_usuario;
+      const perfil = registro.grupo_estudiante?.horas_requisito?.perfil_estudiante;
+      console.log('Perfil del estudiante en el registro:', JSON.stringify(perfil, null, 2));
       if (!perfil) continue;
+      console.log(perfil);
+      console.log('Perfil del estudiante encontrado:', JSON.stringify(perfil, null, 2));
 
       const idPerfil = perfil.id;
       const horas = parseFloat(registro.horas_realizadas) || 0;
@@ -533,6 +536,9 @@ export async function getResumenProyecto(request, reply) {
           actividades: []
         });
       }
+
+      //* estuiante map console log para ver que tiene el estudiante map
+      console.log(`🔍 Estudiante `, JSON.stringify(estudiantesMap.get(idPerfil)));
 
       const estudianteData = estudiantesMap.get(idPerfil);
       estudianteData.total_horas_registradas += horas;
@@ -578,6 +584,8 @@ export async function getResumenProyecto(request, reply) {
       },
       estudiantes: Array.from(estudiantesMap.values())
     });
+    
+    console.log('Este es ' +JSON.stringify({ proyecto: proyecto.nombre, total_registros: registrosProyecto.length, numero_estudiantes: estudiantesMap.size, estudiantes: Array.from(estudiantesMap.values()) }, null, 2));
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
