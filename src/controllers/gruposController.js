@@ -97,12 +97,39 @@ export async function createGrupo(request, reply) {
   try {
     const { nombre, codigo, descripcion, horas_ambientales, horas_sociales, carreras = [] } = request.body;
 
-    const grupo = await Grupos.create({ nombre, codigo, descripcion, horas_ambientales, horas_sociales }, { transaction });
+    // ✅ Validar que todas las carreras existen ANTES de crear nada
+    if (carreras.length > 0) {
+      const carrerasEncontradas = await Carreras.findAll({
+        where: { id: carreras },
+        attributes: ['id'],
+        transaction
+      });
+
+      if (carrerasEncontradas.length !== carreras.length) {
+        await transaction.rollback();
+
+        const idsEncontrados = carrerasEncontradas.map(c => c.id);
+        const idsInvalidos = carreras.filter(id => !idsEncontrados.includes(id));
+
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'CARRERAS_NOT_FOUND',
+            message: `Las siguientes carreras no existen: ${idsInvalidos.join(', ')}`
+          }
+        });
+      }
+    }
+
+    const grupo = await Grupos.create(
+      { nombre, codigo, descripcion, horas_ambientales, horas_sociales },
+      { transaction }
+    );
 
     if (carreras.length > 0) {
       const registros = carreras.map(id => ({
         id_grupo: grupo.id,
-        id_carrera : id
+        id_carrera: id
       }));
 
       await GrupoCarrera.bulkCreate(registros, { transaction });
@@ -115,12 +142,7 @@ export async function createGrupo(request, reply) {
         {
           model: GrupoCarrera,
           as: 'grupos_carrera',
-          include: [
-            {
-              model: Carreras,
-              as: 'carrera'
-            }
-          ]
+          include: [{ model: Carreras, as: 'carrera' }]
         }
       ]
     });
@@ -142,7 +164,7 @@ export async function createGrupo(request, reply) {
 // UPDATE
 export async function updateGrupo(request, reply) {
   const { id } = request.params;
-  const { nombre, carreras } = request.body;
+  const { nombre, codigo, descripcion, horas_ambientales, horas_sociales, carreras } = request.body;
 
   const transaction = await Grupos.sequelize.transaction();
 
@@ -151,46 +173,66 @@ export async function updateGrupo(request, reply) {
 
     if (!grupo) {
       await transaction.rollback();
-      return reply.status(404).send(createErrorResponse(
-        'Grupo no encontrado',
-        'GRUPO_NOT_FOUND'
-      ));
+      return reply.status(404).send(createErrorResponse('Grupo no encontrado', 'GRUPO_NOT_FOUND'));
     }
 
-    await grupo.update({ nombre }, { transaction });
+    await grupo.update(
+      { nombre, codigo, descripcion, horas_ambientales, horas_sociales },
+      { transaction }
+    );
 
     if (carreras !== undefined) {
 
-      // 🔹 1. Desactivar todas las relaciones actuales
-      await GrupoCarrera.update(
-        { activo: false },
-        {
-          where: { id_grupo: id },
-          transaction
-        }
-      );
+      if (carreras.length === 0) {
+        // Quitar todas las carreras del grupo
+        await GrupoCarrera.update(
+          { activo: false },
+          { where: { id_grupo: id }, transaction }
+        );
 
-      // 🔹 2. Procesar nuevas carreras
-      for (const id_carrera of carreras) {
-
-        const existente = await GrupoCarrera.findOne({
-          where: {
-            id_grupo: id,
-            id_carrera
-          },
+      } else {
+        // Validar que todas las carreras existen
+        const carrerasEncontradas = await Carreras.findAll({
+          where: { id: carreras },
+          attributes: ['id'],
           transaction
         });
 
-        if (existente) {
-          // 🔥 Reactivar
-          await existente.update({ activo: true }, { transaction });
-        } else {
-          // 🔥 Crear nuevo
-          await GrupoCarrera.create({
-            id_grupo: id,
-            id_carrera,
-            activo: true
-          }, { transaction });
+        if (carrerasEncontradas.length !== carreras.length) {
+          await transaction.rollback();
+          const idsEncontrados = carrerasEncontradas.map(c => c.id);
+          const idsInvalidos = carreras.filter(id => !idsEncontrados.includes(id));
+
+          return reply.status(400).send({
+            success: false,
+            error: {
+              code: 'CARRERAS_NOT_FOUND',
+              message: `Las siguientes carreras no existen: ${idsInvalidos.join(', ')}`
+            }
+          });
+        }
+
+        // Desactivar todas las relaciones actuales
+        await GrupoCarrera.update(
+          { activo: false },
+          { where: { id_grupo: id }, transaction }
+        );
+
+        // Reactivar las existentes o crear nuevas
+        for (const id_carrera of carreras) {
+          const existente = await GrupoCarrera.findOne({
+            where: { id_grupo: id, id_carrera },
+            transaction
+          });
+
+          if (existente) {
+            await existente.update({ activo: true }, { transaction });
+          } else {
+            await GrupoCarrera.create(
+              { id_grupo: id, id_carrera, activo: true },
+              { transaction }
+            );
+          }
         }
       }
     }
@@ -202,14 +244,9 @@ export async function updateGrupo(request, reply) {
         {
           model: GrupoCarrera,
           as: 'grupos_carrera',
-          where: { activo: true }, // 🔥 solo activos
+          where: { activo: true },
           required: false,
-          include: [
-            {
-              model: Carreras,
-              as: 'carrera'
-            }
-          ]
+          include: [{ model: Carreras, as: 'carrera' }]
         }
       ]
     });
@@ -219,12 +256,7 @@ export async function updateGrupo(request, reply) {
   } catch (error) {
     await transaction.rollback();
     request.log.error(error);
-
-    reply.status(500).send(createErrorResponse(
-      'Error al actualizar grupo',
-      'UPDATE_GRUPO_ERROR',
-      error
-    ));
+    reply.status(500).send(createErrorResponse('Error al actualizar grupo', 'UPDATE_GRUPO_ERROR', error));
   }
 }
 
