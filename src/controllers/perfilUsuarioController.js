@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { PerfilUsuario, Carreras, Usuarios, Escuelas, AplicacionesEstudiantes, Roles, Instituciones, EncargadoInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
@@ -637,6 +638,81 @@ export async function updateUsuarioConPerfil(request, reply) {
     reply.status(500).send(createErrorResponse(
       'Error al actualizar el usuario y perfil',
       'UPDATE_USUARIO_PERFIL_ERROR',
+      error
+    ));
+  }
+}
+
+/**
+ * Obtiene perfiles de usuario filtrados por rol y carrera con paginación.
+ * Los filtros rol_id e id_carrera son obligatorios.
+ */
+export async function getPerfilesUsuarioFiltrados(request, reply) {
+  const {
+    rol_id,
+    id_carrera,
+    page = 1,
+    limit = 10
+  } = request.query;
+
+  if (!rol_id && !id_carrera) {
+    return reply.status(400).send(createErrorResponse(
+      'Debe proporcionar al menos un filtro: rol_id o id_carrera',
+      'FILTRO_REQUERIDO'
+    ));
+  }
+
+  const offset = (page - 1) * limit;
+
+  // Where sobre PerfilUsuario solo si se filtra por carrera
+  const perfilWhere = id_carrera ? { id_carrera } : {};
+
+  // Include de Usuarios: si se filtra por rol aplica where, si no solo hace join normal
+  const usuarioInclude = {
+    model: Usuarios,
+    as: 'usuario',
+    attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email', 'rol_id'],
+    ...(rol_id ? { where: { rol_id }, required: true } : { required: false }),
+    include: [{
+      model: Roles,
+      as: 'rol',
+      attributes: ['id', 'nombre']
+    }]
+  };
+
+  try {
+    const { count, rows } = await PerfilUsuario.findAndCountAll({
+      where: perfilWhere,
+      include: [
+        {
+          model: Carreras,
+          as: 'carrera',
+          attributes: ['id', 'nombre'],
+          include: [{
+            model: Escuelas,
+            as: 'escuela',
+            attributes: ['id', 'nombre']
+          }]
+        },
+        usuarioInclude
+      ],
+      limit: Number(limit),
+      offset: Number(offset),
+      distinct: true
+    });
+
+    reply.send({
+      total: count,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(count / limit),
+      data: rows
+    });
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al filtrar los perfiles de usuario',
+      'GET_PERFILES_FILTRADOS_ERROR',
       error
     ));
   }
