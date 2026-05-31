@@ -190,7 +190,7 @@ export async function getProyectoInstitucionById(request, reply) {
 export async function createProyectoInstitucion(request, reply) {
   const { institucion_id, nombre, descripcion, sitio_web,
     fecha_inicio, fecha_fin, modalidad, direccion, actividad_principal,
-    horario_requerido, disponibilidad, id_encargado } = request.body;
+    horario_requerido, disponibilidad, id_encargado, horas_requeridas,personas_requeridas, tipo_proyecto } = request.body;
   try {
     const nuevoProyecto = await ProyectosInstitucion.create({
       institucion_id,
@@ -206,6 +206,7 @@ export async function createProyectoInstitucion(request, reply) {
       disponibilidad,
       horas_requeridas,
       personas_requeridas,
+      tipo_proyecto,
       id_encargado
     });
     const proyectoActualizado = await ProyectosInstitucion.findByPk(nuevoProyecto.id, {
