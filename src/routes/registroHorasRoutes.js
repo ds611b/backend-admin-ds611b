@@ -5,7 +5,8 @@ import {
   updateRegistroHoras,
   deleteRegistroHoras,
   getHorasPorEstudiante,
-  getResumenProyecto
+  getResumenProyecto,
+  validarRegistroHoras   
 } from '../controllers/registroHoras.controller.js';
 
 async function registroHorasRoutes(fastify) {
@@ -246,6 +247,59 @@ async function registroHorasRoutes(fastify) {
       }
     }
   }, getResumenProyecto);
+  // ✅ NUEVA — validar uno o varios registros
+  fastify.patch('/registro-horas/validar', {
+    schema: {
+      description: 'Aprueba, rechaza o revierte uno o múltiples registros de horas',
+      tags: ['Registro de horas'],
+      body: {
+        type: 'object',
+        required: ['ids', 'accion', 'validado_por'],
+        properties: {
+          ids:                      { type: 'array', items: { type: 'integer' }, minItems: 1 },
+          accion:                   { type: 'string', enum: ['Aprobado', 'Rechazado', 'Pendiente'] },
+          validado_por:             { type: 'integer' },
+          observaciones_validacion: { type: 'string' }
+        }
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            mensaje:      { type: 'string' },
+            accion:       { type: 'string' },
+            validado_por: { type: 'integer' },
+            exitosos: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id:              { type: 'integer' },
+                  estado_anterior: { type: 'string' },
+                  estado_nuevo:    { type: 'string' }
+                }
+              }
+            },
+            fallidos: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id:    { type: 'integer' },
+                  error: { type: 'string' }
+                }
+              }
+            }
+          }
+        },
+        400: { $ref: 'ErrorResponse' },
+        404: { $ref: 'ErrorResponse' },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, validarRegistroHoras);
+  
 }
+
 
 export default registroHorasRoutes;

@@ -152,20 +152,32 @@ export async function updateRegistroHoras(request, reply) {
 
   try {
     const {
-      id_horas_requisito,
       id_proyecto,
       fecha,
       horas_realizadas,
       descripcion_actividad,
       evidencia_url,
       supervisor_nombre,
-      supervisor_cargo,
-      estado_validacion,
-      observaciones_validacion,
-      validado_por
+      supervisor_cargo
     } = request.body;
 
-    const registro = await RegistroHoras.findByPk(id, { transaction });
+    // 1️⃣ Verificar que el registro existe (igual que el create verifica el proyecto)
+    const registro = await RegistroHoras.findByPk(id, {
+      include: [
+        {
+          model: GrupoEstudiantes,
+          as: 'grupo_estudiante',
+          include: [
+            {
+              model: HorasRequisito,
+              as: 'horas_requisito'
+            }
+          ]
+        }
+      ],
+      transaction
+    });
+
     if (!registro) {
       await transaction.rollback();
       return reply.status(404).send(createErrorResponse(
@@ -174,51 +186,64 @@ export async function updateRegistroHoras(request, reply) {
       ));
     }
 
-    // Actualizar horas completadas si cambia el estado a Aprobado
-    if (estado_validacion === 'Aprobado' && registro.estado_validacion !== 'Aprobado') {
-      const requisito = await HorasRequisito.findByPk(id_horas_requisito, { transaction });
-      if (requisito) {
-        await requisito.update({
-          horas_completadas: requisito.horas_completadas + horas_realizadas
-        }, { transaction });
-      }
+    // 2️⃣ Guard: no editar si ya fue aprobado
+    if (registro.estado_validacion === 'Aprobado') {
+      await transaction.rollback();
+      return reply.status(409).send(createErrorResponse(
+        'No se puede editar un registro ya aprobado',
+        'REGISTRO_ALREADY_APPROVED'
+      ));
     }
 
-    // Si cambia de Aprobado a otro estado, restar horas
-    if (registro.estado_validacion === 'Aprobado' && estado_validacion !== 'Aprobado') {
-      const requisito = await HorasRequisito.findByPk(id_horas_requisito, { transaction });
-      if (requisito) {
-        await requisito.update({
-          horas_completadas: requisito.horas_completadas - registro.horas_realizadas
-        }, { transaction });
-      }
+    // 3️⃣ Si cambia el proyecto, recalcular tipo_horas (igual que el create)
+    let tipo_horas = registro.tipo_horas;
+
+    if (id_proyecto && id_proyecto !== registro.id_proyecto) {
+      const proyecto = await ProyectosInstitucion.findOne({
+        where: { id: id_proyecto },
+        attributes: ['tipo_proyecto'],
+        transaction
+      });
+      tipo_horas = proyecto?.tipo_proyecto ?? registro.tipo_horas;
     }
 
+    // 4️⃣ Actualizar — vuelve a Pendiente si el estudiante edita
     await registro.update({
-      id_horas_requisito,
-      id_proyecto,
-      fecha,
-      horas_realizadas,
-      descripcion_actividad,
-      evidencia_url,
-      supervisor_nombre,
-      supervisor_cargo,
-      estado_validacion,
-      observaciones_validacion,
-      validado_por,
-      fecha_validacion: estado_validacion !== 'Pendiente' ? new Date() : null
+      id_proyecto:            id_proyecto            ?? registro.id_proyecto,
+      fecha:                  fecha                  ?? registro.fecha,
+      horas_realizadas:       horas_realizadas       ?? registro.horas_realizadas,
+      descripcion_actividad:  descripcion_actividad  ?? registro.descripcion_actividad,
+      evidencia_url:          evidencia_url          ?? registro.evidencia_url,
+      supervisor_nombre:      supervisor_nombre      ?? registro.supervisor_nombre,
+      supervisor_cargo:       supervisor_cargo       ?? registro.supervisor_cargo,
+      tipo_horas,
+      estado_validacion: 'Pendiente',   // siempre vuelve a revisión
+      observaciones_validacion: null,   // limpiar observaciones anteriores
+      validado_por: null,
+      fecha_validacion: null
     }, { transaction });
+
+    // 5️⃣ Retornar completo con los mismos includes que el create
+    const registroActualizado = await RegistroHoras.findByPk(id, {
+      include: [
+        {
+          model: GrupoEstudiantes,
+          as: 'grupo_estudiante',
+          include: [
+            {
+              model: HorasRequisito,
+              as: 'horas_requisito'
+            }
+          ]
+        }
+      ],
+      transaction
+    });
 
     await transaction.commit();
 
-    const registroActualizado = await RegistroHoras.findByPk(id, {
-      include: [
-        { model: HorasRequisito },
-        { model: ProyectosInstitucion }
-      ]
-    });
-
     reply.send(registroActualizado);
+
   } catch (error) {
     await transaction.rollback();
     request.log.error(error);
@@ -591,6 +616,165 @@ export async function getResumenProyecto(request, reply) {
     reply.status(500).send(createErrorResponse(
       'Error al obtener el resumen del proyecto',
       'GET_RESUMEN_PROYECTO_ERROR',
+      error
+    ));
+  }
+}
+
+export async function validarRegistroHoras(request, reply) {
+  const transaction = await RegistroHoras.sequelize.transaction();
+
+  try {
+    const {
+      ids,
+      accion,
+      validado_por,
+      observaciones_validacion
+    } = request.body;
+
+    // ── Validaciones básicas del body ──────────────────────────────────────
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      await transaction.rollback();
+      return reply.status(400).send(createErrorResponse(
+        'El campo "ids" es requerido y debe ser un array no vacío',
+        'VALIDATION_ERROR'
+      ));
+    }
+
+    const accionesValidas = ['Aprobado', 'Rechazado', 'Pendiente'];
+    if (!accionesValidas.includes(accion)) {
+      await transaction.rollback();
+      return reply.status(400).send(createErrorResponse(
+        `La acción debe ser una de: ${accionesValidas.join(', ')}`,
+        'VALIDATION_ERROR'
+      ));
+    }
+
+    if (accion === 'Rechazado' && !observaciones_validacion?.trim()) {
+      await transaction.rollback();
+      return reply.status(400).send(createErrorResponse(
+        'Las observaciones son requeridas cuando se rechaza un registro',
+        'VALIDATION_ERROR'
+      ));
+    }
+
+    if (!validado_por) {
+      await transaction.rollback();
+      return reply.status(400).send(createErrorResponse(
+        'El campo "validado_por" es requerido',
+        'VALIDATION_ERROR'
+      ));
+    }
+
+    // ── Buscar todos los registros de una sola vez ─────────────────────────
+    const registros = await RegistroHoras.findAll({
+      where: { id: ids },
+      include: [
+        {
+          model: GrupoEstudiantes,
+          as: 'grupo_estudiante',
+          include: [
+            {
+              model: HorasRequisito,
+              as: 'horas_requisito'
+            }
+          ]
+        }
+      ],
+      transaction
+    });
+
+    // Detectar IDs que no existen en BD
+    const idsEncontrados = registros.map(r => r.id);
+    const idsNoEncontrados = ids.filter(id => !idsEncontrados.includes(id));
+    if (idsNoEncontrados.length > 0) {
+      await transaction.rollback();
+      return reply.status(404).send(createErrorResponse(
+        `Los siguientes registros no fueron encontrados: ${idsNoEncontrados.join(', ')}`,
+        'REGISTRO_HORAS_NOT_FOUND'
+      ));
+    }
+
+    // ── Procesar cada registro ─────────────────────────────────────────────
+    const resultados = { exitosos: [], fallidos: [] };
+
+    for (const registro of registros) {
+      try {
+        const requisito = registro.grupo_estudiante?.horas_requisito;
+        const estadoAnterior = registro.estado_validacion;
+
+        // Caso 1: Se está aprobando un registro que antes NO estaba aprobado
+        if (accion === 'Aprobado' && estadoAnterior !== 'Aprobado') {
+          if (requisito) {
+            await requisito.update({
+              horas_completadas: parseFloat(requisito.horas_completadas) + parseFloat(registro.horas_realizadas)
+            }, { transaction });
+          }
+        }
+
+        // Caso 2: Se está revirtiendo un registro que SÍ estaba aprobado
+        if (estadoAnterior === 'Aprobado' && accion !== 'Aprobado') {
+          if (requisito) {
+            const nuevasHoras = Math.max(
+              0,
+              parseFloat(requisito.horas_completadas) - parseFloat(registro.horas_realizadas)
+            );
+            await requisito.update({
+              horas_completadas: nuevasHoras
+            }, { transaction });
+          }
+        }
+
+        // Actualizar el registro
+        await registro.update({
+          estado_validacion: accion,
+          validado_por,
+          observaciones_validacion: observaciones_validacion ?? null,
+          fecha_validacion: accion !== 'Pendiente' ? new Date() : null
+        }, { transaction });
+
+        resultados.exitosos.push({
+          id: registro.id,
+          estado_anterior: estadoAnterior,
+          estado_nuevo: accion
+        });
+
+      } catch (innerError) {
+        // Si falla uno en lote, lo registramos pero no interrumpimos los demás
+        resultados.fallidos.push({
+          id: registro.id,
+          error: innerError.message
+        });
+      }
+    }
+
+    // Si todos fallaron, rollback total
+    if (resultados.exitosos.length === 0) {
+      await transaction.rollback();
+      return reply.status(500).send(createErrorResponse(
+        'No se pudo procesar ningún registro',
+        'VALIDACION_BATCH_ERROR',
+        resultados.fallidos
+      ));
+    }
+
+    await transaction.commit();
+
+    // Respuesta con detalle del lote
+    return reply.status(200).send({
+      mensaje: `${resultados.exitosos.length} registro(s) procesado(s) correctamente`,
+      accion,
+      validado_por,
+      exitosos: resultados.exitosos,
+      ...(resultados.fallidos.length > 0 && { fallidos: resultados.fallidos })
+    });
+
+  } catch (error) {
+    await transaction.rollback();
+    request.log.error(error);
+    return reply.status(500).send(createErrorResponse(
+      'Error al validar los registros de horas',
+      'VALIDAR_REGISTRO_HORAS_ERROR',
       error
     ));
   }
