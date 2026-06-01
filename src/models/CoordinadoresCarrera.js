@@ -1,6 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from './db.js';
 import Carreras from './Carreras.js'; 
+import Usuarios from './Usuarios.js';
 
 const CoordinadoresCarrera = sequelize.define('CoordinadoresCarrera', {
   id: {
@@ -29,6 +30,14 @@ const CoordinadoresCarrera = sequelize.define('CoordinadoresCarrera', {
     allowNull: true,
     references: {
       model: Carreras,
+      key: 'id'
+    }
+  },
+  id_usuario: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: Usuarios,
       key: 'id'
     }
   },
