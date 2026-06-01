@@ -66,7 +66,18 @@ async function coordinadoresCarreraRoutes(fastify, options) {
       response: {
         201: {
           description: 'Coordinador creado exitosamente',
-          $ref: 'CoordinadoresWithCarrera'
+          type: 'object',                        
+          properties: {
+            coordinador:  { $ref: 'CoordinadoresWithCarrera' },
+            credenciales: {
+              type: 'object',
+              properties: {
+                email:    { type: 'string' },
+                password: { type: 'string' },
+                nota:     { type: 'string' }
+              }
+            }
+          }
         },
         400: {
           description: 'La carrera especificada no existe',
