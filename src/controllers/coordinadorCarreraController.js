@@ -13,7 +13,7 @@ export async function getCoordinadores(request, reply) {
         attributes: ['id', 'nombre'],
         include: [{
           model: Escuelas,
-          as: 'Escuela',
+          as: 'escuela',
           attributes: ['id', 'nombre']
         }]
       }],
@@ -43,7 +43,7 @@ export async function getCoordinadorById(request, reply) {
         attributes: ['id', 'nombre'],
         include: [{
           model: Escuelas,
-          as: 'Escuela',
+          as: 'escuela',
           attributes: ['id', 'nombre']
         }]
       }]
@@ -106,7 +106,7 @@ export async function createCoordinador(request, reply) {
         as: 'Carrera',
         include: [{
           model: Escuelas,
-          as: 'Escuela'
+          as: 'escuela'
         }]
       }]
     });
@@ -177,7 +177,7 @@ export async function updateCoordinador(request, reply) {
         as: 'Carrera',
         include: [{
           model: Escuelas,
-          as: 'Escuela'
+          as: 'escuela'
         }]
       }]
     });
