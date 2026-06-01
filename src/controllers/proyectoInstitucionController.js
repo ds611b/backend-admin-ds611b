@@ -245,7 +245,7 @@ export async function updateProyectoInstitucion(request, reply) {
       institucion_id,
       nombre,
       descripcion,
-      sitio_web,
+      sitio_web: sitio_web || null,
       fecha_inicio: fecha_inicio ? new Date(fecha_inicio) : null,
       fecha_fin: fecha_fin ? new Date(fecha_fin) : null,
       modalidad,

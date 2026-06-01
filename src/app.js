@@ -137,13 +137,7 @@ fastify.addSchema({
     institucion_id: { type: 'integer', example: 1 },
     nombre: { type: 'string', example: 'Proyecto de Modernización' },
     descripcion: { type: 'string', example: 'Implementación de nuevas tecnologías en la institución.' },
-    sitio_web: {
-      anyOf: [
-        { type: 'string', format: 'uri' },
-        { type: 'string', maxLength: 0 },
-        { type: 'null' }
-      ]
-    },
+    sitio_web: { type: 'string', example: 'https://www.institucion.com/proyecto' },
     fecha_inicio: { type: 'string', format: 'date', example: '2024-01-15' },
     fecha_fin: { type: 'string', format: 'date', example: '2024-12-31' },
     modalidad: { type: 'string', example: 'Presencial' },
