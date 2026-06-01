@@ -175,7 +175,7 @@ export async function getAplicacionesByProyecto(request, reply) {
     });
 
     if (aplicaciones.length === 0) {
-      reply.status(404).send(createErrorResponse(
+      reply.status(200).send(createErrorResponse(
         'No se encontraron aplicaciones para este proyecto',
         'PROJECT_APPLICATIONS_NOT_FOUND'
       ));
