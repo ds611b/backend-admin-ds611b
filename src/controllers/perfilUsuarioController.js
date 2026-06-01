@@ -717,3 +717,65 @@ export async function getPerfilesUsuarioFiltrados(request, reply) {
     ));
   }
 }
+
+/**
+ * Obtiene perfiles de usuario filtrados por id_carrera o id_escuela (ambos opcionales) con paginación.
+ * Si se filtra por id_escuela, se hace JOIN a Carreras para encontrar perfiles cuya carrera pertenece a esa escuela.
+ */
+export async function getPerfilesPorCarreraOEscuela(request, reply) {
+  const {
+    id_carrera,
+    id_escuela,
+    page = 1,
+    limit = 10
+  } = request.query;
+
+  const offset = (Number(page) - 1) * Number(limit);
+
+  // Filtro directo sobre PerfilUsuario si viene id_carrera
+  const perfilWhere = id_carrera ? { id_carrera: Number(id_carrera) } : {};
+
+  // Si viene id_escuela, filtrar por carrera que pertenezca a esa escuela (INNER JOIN forzado)
+  const carreraInclude = {
+    model: Carreras,
+    as: 'carrera',
+    attributes: ['id', 'nombre'],
+    ...(id_escuela
+      ? { where: { id_escuela: Number(id_escuela) }, required: true }
+      : { required: false }
+    ),
+    include: [{
+      model: Escuelas,
+      as: 'escuela',
+      attributes: ['id', 'nombre']
+    }]
+  };
+
+  try {
+    const { count, rows } = await PerfilUsuario.findAndCountAll({
+      where: perfilWhere,
+      include: [
+        carreraInclude,
+        { ...usuarioIncludeConRol }
+      ],
+      limit: Number(limit),
+      offset,
+      distinct: true
+    });
+
+    reply.send({
+      total: count,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(count / Number(limit)),
+      data: rows
+    });
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al filtrar perfiles por carrera o escuela',
+      'GET_PERFILES_POR_CARRERA_ESCUELA_ERROR',
+      error
+    ));
+  }
+}

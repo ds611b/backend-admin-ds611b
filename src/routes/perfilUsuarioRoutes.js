@@ -5,6 +5,7 @@ import {
   getResumenAcademicoByUsuarioId,
   getPerfilesUsuarioByGenero,
   getPerfilesUsuarioFiltrados,
+  getPerfilesPorCarreraOEscuela,
   createPerfilUsuario,
   updatePerfilUsuario,
   deletePerfilUsuario,
@@ -316,6 +317,37 @@ async function perfilUsuarioRoutes(fastify, options) {
       }
     }
   }, updateUsuarioConPerfil);
+
+  // Filtrar perfiles por carrera o escuela con paginación
+  fastify.get('/perfiles-usuario/filtro/carrera-escuela', {
+    schema: {
+      description: 'Obtiene perfiles de usuario filtrados por id_carrera o id_escuela (ambos opcionales) con paginación. Si se filtra por id_escuela se resuelve a través del JOIN con Carreras.',
+      tags: ['Perfiles de Usuario'],
+      querystring: {
+        type: 'object',
+        properties: {
+          id_carrera: { type: 'integer', description: 'ID de la carrera del perfil.' },
+          id_escuela: { type: 'integer', description: 'ID de la escuela. Filtra perfiles cuya carrera pertenece a esta escuela.' },
+          page: { type: 'integer', minimum: 1, default: 1, description: 'Número de página.' },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: 10, description: 'Cantidad de registros por página.' }
+        }
+      },
+      response: {
+        200: {
+          description: 'Perfiles filtrados con paginación.',
+          type: 'object',
+          properties: {
+            total: { type: 'integer' },
+            page: { type: 'integer' },
+            limit: { type: 'integer' },
+            totalPages: { type: 'integer' },
+            data: { type: 'array', items: { $ref: 'PerfilUsuario' } }
+          }
+        },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, getPerfilesPorCarreraOEscuela);
 }
 
 export default perfilUsuarioRoutes;
