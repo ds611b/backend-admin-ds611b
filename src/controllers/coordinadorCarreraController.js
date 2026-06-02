@@ -104,7 +104,7 @@ export async function createCoordinador(request, reply) {
       correo_institucional,
       telefono,
       id_carrera,
-      rol_id = 4
+      rol_id = 3
     } = request.body;
 
     // 1️⃣ Validar carrera
