@@ -10,9 +10,9 @@ export async function getGrupos(request, reply) {
           model: GrupoCarrera,
           as: 'grupos_carrera',
           where: {
-            activo: true   // 🔥 esto filtra SOLO las carreras
+            activo: true   
           },
-          required: false, // 🔥 esto evita filtrar grupos
+          required: false, 
           include: [
             {
               model: Carreras,
@@ -49,10 +49,13 @@ export async function getGrupoById(request, reply) {
 
   try {
     const grupo = await Grupos.findByPk(id, {
-      include: [
-        {
+      include: [{
           model: GrupoCarrera,
           as: 'grupos_carrera',
+          where: {
+            activo: true   
+          },
+          required: false, 
           include: [
             {
               model: Carreras,
