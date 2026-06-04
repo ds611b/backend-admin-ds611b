@@ -212,7 +212,7 @@ fastify.addSchema({
     id: { type: 'number', example: 1 },
     estudiante_id: { type: 'number', example: 123 },
     proyecto_id: { type: 'number', example: 456 },
-    estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+    estado: { type: 'string', example: 'Pendiente', enum: ['Pendiente', 'Aprobado', 'Rechazado', 'Cancelado'] },
     proyecto: { $ref: 'ProyectosInstitucion' },
     estudiante: { $ref: 'Estudiante' },
     created_at: { type: 'string', example: '2023-01-01T00:00:00.000Z' },
@@ -228,7 +228,7 @@ fastify.addSchema({
     estado: {
       type: 'string',
       example: 'Pendiente',
-      enum: ['Pendiente', 'Aprobado', 'Rechazado']
+      enum: ['Pendiente', 'Aprobado', 'Rechazado', 'Cancelado']
     },
     proyectos: {
       $ref: 'ProyectosInstitucion'
@@ -250,7 +250,7 @@ fastify.addSchema({
     estado: {
       type: 'string',
       example: 'Pendiente',
-      enum: ['Pendiente', 'Aprobado', 'Rechazado']
+      enum: ['Pendiente', 'Aprobado', 'Rechazado', 'Cancelado']
     },
     proyecto: {
       allOf: [
@@ -275,7 +275,7 @@ fastify.addSchema({
               aplicacion_id: { type: 'integer', example: 1 },
               estado: {
                 type: 'string',
-                enum: ['Pendiente', 'Aprobado', 'Rechazado'],
+                enum: ['Pendiente', 'Aprobado', 'Rechazado', 'Cancelado'],
                 example: 'Pendiente'
               }
             }
