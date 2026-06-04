@@ -124,7 +124,7 @@ async function institucionRoutes(fastify, options) {
         required: ['id']
       },
       body: {
-        $ref: 'InstitucionesValidation',
+        $ref: 'InstitucionesCompletaValidation',
       },
       response: {
         200: {
