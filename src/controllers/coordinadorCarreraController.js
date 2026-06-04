@@ -281,19 +281,30 @@ export async function updateCoordinador(request, reply) {
  */
 export async function deleteCoordinador(request, reply) {
   const { id } = request.params;
-  
+  const transaction = await CoordinadoresCarrera.sequelize.transaction();
+
   try {
-    const coordinador = await CoordinadoresCarrera.findByPk(id);
+    const coordinador = await CoordinadoresCarrera.findByPk(id, { transaction });
     if (!coordinador) {
+      await transaction.rollback();
       return reply.status(404).send(createErrorResponse(
         'Coordinador no encontrado',
         'COORDINADOR_NOT_FOUND'
       ));
     }
 
-    await coordinador.destroy();
+    const usuarioId = coordinador.id_usuario;
+
+    await coordinador.destroy({ transaction });
+
+    if (usuarioId) {
+      await Usuarios.destroy({ where: { id: usuarioId }, transaction });
+    }
+
+    await transaction.commit();
     reply.status(204).send();
   } catch (error) {
+    await transaction.rollback();
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al eliminar el coordinador',

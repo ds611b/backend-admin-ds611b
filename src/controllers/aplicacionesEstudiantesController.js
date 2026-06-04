@@ -217,6 +217,21 @@ export async function getAplicacionesByProyecto(request, reply) {
  */
 export async function createAplicacionEstudiante(request, reply) {
   try {
+    const { estudiante_id } = request.body;
+
+    // Validar que el estudiante no tenga una aplicación activa (Pendiente o Aprobado)
+    const ultimaAplicacion = await AplicacionesEstudiantes.findOne({
+      where: { estudiante_id },
+      order: [['created_at', 'DESC']]
+    });
+
+    if (ultimaAplicacion && ultimaAplicacion.estado !== 'Rechazado') {
+      return reply.status(409).send(createErrorResponse(
+        `No puedes aplicar a un nuevo proyecto porque tu última aplicación se encuentra en estado "${ultimaAplicacion.estado}". Solo puedes aplicar nuevamente si tu última aplicación fue Rechazada.`,
+        'APLICACION_ACTIVA_EXISTENTE'
+      ));
+    }
+
     const aplicacionCreada = await AplicacionesEstudiantes.create(request.body);
 
     const aplicacionAsociaciones = await AplicacionesEstudiantes.findByPk(aplicacionCreada.id, {

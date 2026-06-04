@@ -298,172 +298,163 @@ export async function deleteRegistroHoras(request, reply) {
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
  */
+/**
+ * Helper interno: consulta horas de un estudiante, opcionalmente filtradas por proyecto/tipo.
+ */
+async function _consultarHorasEstudiante(id_perfil_usuario, id_proyecto, tipo_horas) {
+  const perfilUsuario = await PerfilUsuario.findByPk(id_perfil_usuario, {
+    include: [{
+      model: Usuarios,
+      as: 'usuario',
+      attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+    }]
+  });
+
+  if (!perfilUsuario) return null;
+
+  // Si viene id_proyecto pero no tipo_horas, derivarlo del proyecto
+  if (id_proyecto && !tipo_horas) {
+    const proyecto = await ProyectosInstitucion.findByPk(id_proyecto, {
+      attributes: ['tipo_proyecto']
+    });
+    tipo_horas = proyecto?.tipo_proyecto || null;
+  }
+
+  // Validar que existan requisitos de horas para el estudiante
+  const whereRequisito = { id_estudiante: id_perfil_usuario };
+  if (tipo_horas) whereRequisito.tipo_horas = tipo_horas;
+
+  const requisitosHoras = await HorasRequisito.findAll({ where: whereRequisito });
+
+  const estudianteInfo = {
+    id: perfilUsuario.id,
+    nombre_completo: `${perfilUsuario.usuario.primer_nombre} ${perfilUsuario.usuario.segundo_nombre || ''} ${perfilUsuario.usuario.primer_apellido} ${perfilUsuario.usuario.segundo_apellido || ''}`.trim(),
+    carnet: perfilUsuario.carnet,
+    email: perfilUsuario.usuario?.email
+  };
+
+  if (!requisitosHoras.length) {
+    return { estudiante: estudianteInfo, total_horas_registradas: 0, total_horas_aprobadas: 0, registros: [] };
+  }
+
+  // Obtener IDs de grupos del estudiante
+  const gruposEstudiante = await GrupoEstudiantes.findAll({
+    where: { id_estudiante: id_perfil_usuario },
+    attributes: ['id']
+  });
+  const idsGrupoEstudiante = gruposEstudiante.map(g => g.id);
+
+  // Filtro sobre RegistroHoras
+  const whereRegistros = { id_grupo_estudiante: idsGrupoEstudiante };
+  if (id_proyecto) whereRegistros.id_proyecto = Number(id_proyecto);
+  if (tipo_horas)  whereRegistros.tipo_horas   = tipo_horas;
+
+  const registros = await RegistroHoras.findAll({
+    where: whereRegistros,
+    include: [
+      {
+        model: ProyectosInstitucion,
+        as: 'proyecto',
+        attributes: ['id', 'nombre'],
+        include: [{
+          model: Instituciones,
+          as: 'institucion',
+          attributes: ['id', 'nombre']
+        }]
+      }
+    ],
+    order: [['fecha', 'DESC']]
+  });
+
+  // Deduplicar por id (por si el estudiante estuviera en varios grupos)
+  const seen = new Set();
+  const registrosUnicos = registros.filter(r => {
+    if (seen.has(r.id)) return false;
+    seen.add(r.id);
+    return true;
+  });
+
+  let totalHorasRegistradas = 0;
+  let totalHorasAprobadas   = 0;
+
+  const registrosDetallados = registrosUnicos.map(registro => {
+    const horas = parseFloat(registro.horas_realizadas) || 0;
+    totalHorasRegistradas += horas;
+    if (registro.estado_validacion === 'Aprobado') totalHorasAprobadas += horas;
+
+    return {
+      id: registro.id,
+      fecha: registro.fecha,
+      horas_realizadas: horas,
+      descripcion_actividad: registro.descripcion_actividad,
+      tipo_horas: registro.tipo_horas,
+      estado_validacion: registro.estado_validacion,
+      observaciones_validacion: registro.observaciones_validacion,
+      proyecto: registro.proyecto ? {
+        id: registro.proyecto.id,
+        nombre: registro.proyecto.nombre,
+        institucion: registro.proyecto.institucion?.nombre ?? null
+      } : null,
+      supervisor: {
+        nombre: registro.supervisor_nombre,
+        cargo: registro.supervisor_cargo
+      },
+      evidencia_url: registro.evidencia_url
+    };
+  });
+
+  return {
+    estudiante: estudianteInfo,
+    total_horas_registradas: totalHorasRegistradas,
+    total_horas_aprobadas: totalHorasAprobadas,
+    registros: registrosDetallados
+  };
+}
+
 export async function getHorasPorEstudiante(request, reply) {
   const { id_perfil_usuario } = request.params;
   const { id_proyecto, tipo_horas } = request.query;
 
   try {
-    // 🔹 Obtener perfil del estudiante
-    const perfilUsuario = await PerfilUsuario.findByPk(id_perfil_usuario, {
-      include: [{
-        model: Usuarios,
-        as: 'usuario',
-        attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
-      }]
-    });
-
-    if (!perfilUsuario) {
+    const resultado = await _consultarHorasEstudiante(id_perfil_usuario, id_proyecto, tipo_horas);
+    if (!resultado) {
       return reply.status(404).send(createErrorResponse(
         'Perfil de usuario no encontrado',
         'PERFIL_USUARIO_NOT_FOUND'
       ));
     }
-
-    // 🔹 Buscar requisitos del estudiante — SIN filtrar por id_proyecto
-    //    porque HorasRequisito no tiene columna id_proyecto
-    const whereRequisito = {
-      id_estudiante: id_perfil_usuario
-    };
-
-    // ✅ Si viene id_proyecto, obtener tipo_horas y filtrar requisitos por tipo
-    if (id_proyecto && !tipo_horas) {
-      const proyecto = await ProyectosInstitucion.findByPk(id_proyecto, {
-        attributes: ['tipo_proyecto']
-      });
-      tipo_horas = proyecto?.tipo_proyecto || null;
-    }
-
-    if (tipo_horas) {
-      whereRequisito.tipo_horas = tipo_horas;
-    }
-
-    const requisitosHoras = await HorasRequisito.findAll({
-      where: whereRequisito
-    });
-
-    console.log(`Requisitos encontrados para estudiante ${id_perfil_usuario} con tipo_horas ${tipo_horas}:`, requisitosHoras.length);
-
-    // ver que tiene requisitosHoras
-    console.log('RequisitosHoras:', JSON.stringify(requisitosHoras, null, 2));
-
-    if (!requisitosHoras.length) {
-      return reply.send({
-        estudiante: {
-          id: perfilUsuario.id,
-          nombre_completo: `${perfilUsuario.usuario.primer_nombre} ${perfilUsuario.usuario.segundo_nombre || ''} ${perfilUsuario.usuario.primer_apellido} ${perfilUsuario.usuario.segundo_apellido || ''}`.trim(),
-          carnet: perfilUsuario.carnet,
-          email: perfilUsuario.usuario?.email
-        },
-        total_horas_registradas: 0,
-        total_horas_aprobadas: 0,
-        registros: []
-      });
-    }
-
-    // 🔹 obtener los IDs de grupos del estudiante de la tabla grupoEstudiante
-    const idGrupoEstudiante = await GrupoEstudiantes.findAll({
-      where: {
-        id_estudiante: id_perfil_usuario
-      },
-      attributes: ['id']
-    });
-
-    const idsGrupoEstudiante = idGrupoEstudiante.map(g => g.id);
-
-    // 🔹 Filtro sobre RegistroHoras
-    const whereRegistros = {
-      id_grupo_estudiante: idsGrupoEstudiante
-    };
-
-    // ✅ id_proyecto se filtra aquí, en RegistroHoras, donde SÍ existe la columna
-    if (id_proyecto) {
-      whereRegistros.id_proyecto = id_proyecto;
-    }
-
-    // 🔹 Obtener registros incluyendo datos del proyecto
-    const registros = await RegistroHoras.findAll({
-      where: whereRegistros,
-      include: [
-        {
-          model: ProyectosInstitucion,
-          as: 'proyecto',
-          attributes: ['id', 'nombre'],
-          include: [
-            {
-              model: Instituciones,
-              as: 'institucion',
-              attributes: ['id', 'nombre']
-            }
-          ]
-        }
-      ],
-      order: [['fecha', 'DESC']]
-    });
-
-    console.log(whereRegistros);
-
-        console.log('registros:', JSON.stringify(registros, null, 2));
-
-    // 🔹 Evitar duplicados
-    const registrosUnicos = [];
-    const ids = new Set();
-    for (const r of registros) {
-      if (!ids.has(r.id)) {
-        ids.add(r.id);
-        registrosUnicos.push(r);
-      }
-    }
-
-    let totalHorasRegistradas = 0;
-    let totalHorasAprobadas = 0;
-
-    const registrosDetallados = registrosUnicos.map(registro => {
-      const horas = parseFloat(registro.horas_realizadas) || 0;
-      totalHorasRegistradas += horas;
-
-      if (registro.estado_validacion === 'Aprobado') {
-        totalHorasAprobadas += horas;
-      }
-
-      return {
-        id: registro.id,
-        fecha: registro.fecha,
-        horas_realizadas: horas,
-        descripcion_actividad: registro.descripcion_actividad,
-        tipo_horas: registro.horas_requisito?.tipo_horas,
-        estado_validacion: registro.estado_validacion,
-        observaciones_validacion: registro.observaciones_validacion,
-        // ✅ Ahora sí viene del include correctamente
-        proyecto: registro.proyecto ? {
-          id: registro.proyecto.id,
-          nombre: registro.proyecto.nombre,
-          institucion: registro.proyecto.institucion?.nombre ?? null
-        } : null,
-        supervisor: {
-          nombre: registro.supervisor_nombre,
-          cargo: registro.supervisor_cargo
-        },
-        evidencia_url: registro.evidencia_url
-      };
-    });
-
-    reply.send({
-      estudiante: {
-        id: perfilUsuario.id,
-        nombre_completo: `${perfilUsuario.usuario.primer_nombre} ${perfilUsuario.usuario.segundo_nombre || ''} ${perfilUsuario.usuario.primer_apellido} ${perfilUsuario.usuario.segundo_apellido || ''}`.trim(),
-        carnet: perfilUsuario.carnet,
-        email: perfilUsuario.usuario?.email
-      },
-      total_horas_registradas: totalHorasRegistradas,
-      total_horas_aprobadas: totalHorasAprobadas,
-      registros: registrosDetallados
-    });
-
+    reply.send(resultado);
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al obtener las horas del estudiante',
       'GET_HORAS_ESTUDIANTE_ERROR',
+      error
+    ));
+  }
+}
+
+/**
+ * Obtiene las horas de un estudiante filtradas obligatoriamente por proyecto.
+ * Útil cuando se está visualizando un proyecto específico.
+ */
+export async function getHorasPorEstudianteEnProyecto(request, reply) {
+  const { id_perfil_usuario, id_proyecto } = request.params;
+
+  try {
+    const resultado = await _consultarHorasEstudiante(id_perfil_usuario, id_proyecto, null);
+    if (!resultado) {
+      return reply.status(404).send(createErrorResponse(
+        'Perfil de usuario no encontrado',
+        'PERFIL_USUARIO_NOT_FOUND'
+      ));
+    }
+    reply.send(resultado);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener las horas del estudiante en el proyecto',
+      'GET_HORAS_ESTUDIANTE_PROYECTO_ERROR',
       error
     ));
   }
