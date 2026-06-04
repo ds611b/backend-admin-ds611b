@@ -272,6 +272,7 @@ fastify.addSchema({
           {
             type: 'object',
             properties: {
+              perfil_id: { type: ['integer', 'null'], example: 5 },
               aplicacion_id: { type: 'integer', example: 1 },
               estado: {
                 type: 'string',

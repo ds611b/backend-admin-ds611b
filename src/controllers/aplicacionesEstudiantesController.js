@@ -169,7 +169,13 @@ export async function getAplicacionesByProyecto(request, reply) {
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email'],
+          include: [
+            {
+              model: PerfilUsuario,
+              attributes: ['id']
+            }
+          ]
         }
       ],
       order: [['created_at', 'DESC']]
@@ -184,6 +190,7 @@ export async function getAplicacionesByProyecto(request, reply) {
     }
     const estudiantes = aplicaciones.map(app => ({
       ...app.estudiante.get({ plain: true }),
+      perfil_id: app.estudiante.PerfilUsuario?.id ?? null,
       aplicacion_id: app.id,
       estado: app.estado
     }));
@@ -479,7 +486,13 @@ export async function getEstudiantesAplicadosByProyecto(request, reply) {
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email'],
+          include: [
+            {
+              model: PerfilUsuario,
+              attributes: ['id']
+            }
+          ]
         }
       ],
       limit: parseInt(limit),
@@ -496,6 +509,7 @@ export async function getEstudiantesAplicadosByProyecto(request, reply) {
       primer_apellido: app.estudiante.primer_apellido,
       segundo_apellido: app.estudiante.segundo_apellido,
       email: app.estudiante.email,
+      perfil_id: app.estudiante.PerfilUsuario?.id ?? null,
       aplicacion_id: app.id,
       estado: app.estado,
       fecha_aplicacion: app.created_at
