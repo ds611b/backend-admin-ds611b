@@ -9,7 +9,7 @@ const SECURITY_SERVICE_URL = process.env.SECURITY_SERVICE_URL;
  * @param {object} usuarioData - Datos del usuario a registrar.
  * @returns {Promise<object>} El usuario creado con su id.
  */
-async function registrarUsuarioSeguridad(usuarioData) {
+export async function registrarUsuarioSeguridad(usuarioData) {
   let response;
   try {
     response = await fetch(`${SECURITY_SERVICE_URL}/api/auth/register`, {
