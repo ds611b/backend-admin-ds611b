@@ -1,3 +1,4 @@
+import { Console } from 'console';
 import {
   RegistroHoras,
   HorasRequisito,
@@ -6,7 +7,8 @@ import {
   Usuarios,
   Instituciones,
   GrupoEstudiantes,
-  Grupos
+  Grupos,
+  Roles
 } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
@@ -300,7 +302,7 @@ export async function deleteRegistroHoras(request, reply) {
  */
 export async function getHorasPorEstudiante(request, reply) {
   const { id_perfil_usuario } = request.params;
-  const { id_proyecto, tipo_horas } = request.query;
+  let { id_proyecto, tipo_horas } = request.query;
 
   try {
     // 🔹 Obtener perfil del estudiante
@@ -724,11 +726,30 @@ export async function validarRegistroHoras(request, reply) {
             }, { transaction });
           }
         }
+        console.log ('Perfil validador ID:', validado_por);
+        const perfilValidador = await PerfilUsuario.findOne({
+          where: { id: validado_por },
+          attributes: ['id', 'usuario_id'],
+        });
+
+        console.log('Perfil validador encontrado:', JSON.stringify(perfilValidador, null, 2));
+        const usuarioValidador = await Usuarios.findOne({
+          where: { id: perfilValidador?.usuario_id },
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'rol_id'],
+        });
+        console.log('Usuario validador encontrado:', JSON.stringify(usuarioValidador, null, 2));
+        const cargoValidador = await Roles.findOne({
+          where: { id: usuarioValidador?.rol_id },
+          attributes: ['nombre'], 
+        });
+        console.log('Cargo validador encontrado:', JSON.stringify(cargoValidador, null, 2));
 
         // Actualizar el registro
         await registro.update({
           estado_validacion: accion,
           validado_por,
+          supervisor_nombre: usuarioValidador ? `${usuarioValidador.primer_nombre} ${usuarioValidador.primer_apellido}` : null,
+          supervisor_cargo: cargoValidador ? cargoValidador.nombre : null,
           observaciones_validacion: observaciones_validacion ?? null,
           fecha_validacion: accion !== 'Pendiente' ? new Date() : null
         }, { transaction });

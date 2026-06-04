@@ -235,7 +235,7 @@ export async function updateProyectoInstitucion(request, reply) {
   const { id } = request.params;
   const { institucion_id, nombre, descripcion, sitio_web,
     fecha_inicio, fecha_fin, modalidad, direccion, actividad_principal,
-    horario_requerido, disponibilidad, estado, horas_requeridas, personas_requeridas, id_encargado } = request.body;
+    horario_requerido, disponibilidad, estado, horas_requeridas, personas_requeridas, id_encargado, tipo_proyecto } = request.body;
   try {
     const proyecto = await ProyectosInstitucion.findByPk(id);
     if (!proyecto) {
@@ -254,6 +254,7 @@ export async function updateProyectoInstitucion(request, reply) {
       horario_requerido,
       disponibilidad,
       estado,
+      tipo_proyecto,
       horas_requeridas,
       personas_requeridas,
       id_encargado
