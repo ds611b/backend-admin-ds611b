@@ -217,59 +217,95 @@ export async function getAplicacionesByProyecto(request, reply) {
  */
 export async function createAplicacionEstudiante(request, reply) {
   try {
-    const { estudiante_id } = request.body;
 
-    // Validar que el estudiante no tenga una aplicación activa (Pendiente o Aprobado)
-    const ultimaAplicacion = await AplicacionesEstudiantes.findOne({
-      where: { estudiante_id },
-      order: [['created_at', 'DESC']]
+    const { estudiante_id, proyecto_id } = request.body;
+
+    const aplicacionExistente = await AplicacionesEstudiantes.findOne({
+      where: {
+        estudiante_id,
+        proyecto_id
+      }
     });
 
-    if (ultimaAplicacion && ultimaAplicacion.estado !== 'Rechazado') {
-      return reply.status(409).send(createErrorResponse(
-        `No puedes aplicar a un nuevo proyecto porque tu última aplicación se encuentra en estado "${ultimaAplicacion.estado}". Solo puedes aplicar nuevamente si tu última aplicación fue Rechazada.`,
-        'APLICACION_ACTIVA_EXISTENTE'
-      ));
+    if (aplicacionExistente) {
+
+      if (aplicacionExistente.estado === 'Cancelado') {
+
+        await aplicacionExistente.update({
+          estado: 'Pendiente'
+        });
+
+        const aplicacionActualizada = await AplicacionesEstudiantes.findByPk(
+          aplicacionExistente.id,
+          {
+            include: [
+              {
+                model: ProyectosInstitucion,
+                as: 'proyecto'
+              },
+              {
+                model: Usuarios,
+                as: 'estudiante'
+              }
+            ]
+          }
+        );
+
+        return reply.status(200).send(aplicacionActualizada);
+      }
+
+      return reply.status(409).send(
+        createErrorResponse(
+          'El estudiante ya tiene una aplicación activa para este proyecto',
+          'DUPLICATE_APLICACION_ESTUDIANTE'
+        )
+      );
     }
 
     const aplicacionCreada = await AplicacionesEstudiantes.create(request.body);
 
-    const aplicacionAsociaciones = await AplicacionesEstudiantes.findByPk(aplicacionCreada.id, {
-      include: [
-        {
-          model: ProyectosInstitucion,
-          as: 'proyecto'
-        },
-        {
-          model: Usuarios,
-          as: 'estudiante'
-        }
-      ],
-    });
+    const aplicacionAsociaciones = await AplicacionesEstudiantes.findByPk(
+      aplicacionCreada.id,
+      {
+        include: [
+          {
+            model: ProyectosInstitucion,
+            as: 'proyecto'
+          },
+          {
+            model: Usuarios,
+            as: 'estudiante'
+          }
+        ]
+      }
+    );
+
     if (aplicacionAsociaciones) {
-      reply.status(201).send(aplicacionAsociaciones);
-    } else {
-      request.log.error(`Registro creado con ID ${aplicacionCreada.id} pero no encontrado con asociaciones.`);
-      reply.status(500).send(createErrorResponse(
+      return reply.status(201).send(aplicacionAsociaciones);
+    }
+
+    request.log.error(
+      `Registro creado con ID ${aplicacionCreada.id} pero no encontrado con asociaciones.`
+    );
+
+    return reply.status(500).send(
+      createErrorResponse(
         'Error al recuperar el registro con sus relaciones después de crearlo',
         'NO_OBTENIDO_CREADO_ERROR'
-      ));
-    }
+      )
+    );
+
   } catch (error) {
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      reply.status(409).send(createErrorResponse(
-        'El estudiante ya tiene una aplicación activa para este proyecto',
-        'DUPLICATE_APLICACION_ESTUDIANTE',
-        error
-      ));
-    } else {
-      request.log.error(error);
-      reply.status(500).send(createErrorResponse(
+
+    request.log.error(error);
+
+    return reply.status(500).send(
+      createErrorResponse(
         'Error al crear la aplicación de estudiante',
         'CREATE_APLICACION_ERROR',
         error
-      ));
-    }
+      )
+    );
   }
 }
 
