@@ -1134,13 +1134,37 @@ fastify.addSchema({
 fastify.addSchema({
   $id: 'InstitucionesCompletaValidation',
   type: 'object',
-  description: 'Payload para crear institución, encargado y usuario de acceso en un solo request',
+  description: 'Payload para crear o asignar encargado a una institución',
+
   properties: {
     institucion: { $ref: 'InstitucionInput#' },
-    encargado:   { $ref: 'EncargadoInput#' },
-    usuario:     { $ref: 'UsuarioSecuridadInput#' }
+
+    id_encargado: {
+      type: 'integer',
+      minimum: 0
+    },
+
+    encargado: {
+      anyOf: [
+        { $ref: 'EncargadoInput#' },
+        { type: 'null' }
+      ]
+    },
+
+    id_usuario: {
+      type: 'integer',
+      minimum: 0
+    },
+
+    usuario: {
+      anyOf: [
+        { $ref: 'UsuarioSecuridadInput#' },
+        { type: 'null' }
+      ]
+    }
   },
-  required: ['institucion', 'encargado', 'usuario']
+
+  required: ['institucion']
 });
 
 fastify.addSchema({
