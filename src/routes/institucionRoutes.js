@@ -2,6 +2,7 @@ import {
   getInstituciones,
   getInstitucionById,
   createInstitucionCompleta,
+  createInstitucion,
   getInstitucionesActivas,
   updateInstitucion,
   deleteInstitucion,
@@ -109,7 +110,7 @@ async function institucionRoutes(fastify, options) {
         }
       }
     }
-  }, createInstitucionCompleta);
+  }, createInstitucion);
 
   // PUT /instituciones/:id
   fastify.put('/instituciones/:id', {

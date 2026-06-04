@@ -3,6 +3,7 @@ import { createErrorResponse } from '../utils/errorResponse.js';
 import {
   createInstitucionCompleta as createInstitucionCompletaService,
   assignEncargadoToInstitucion as assignEncargadoToInstitucionService,
+  registrarUsuarioSeguridad
 } from '../services/institucionService.js';
 
 /**
