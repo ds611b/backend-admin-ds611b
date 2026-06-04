@@ -752,7 +752,7 @@ fastify.addSchema({
   properties: {
     estudiante_id: { type: 'number' },
     proyecto_id: { type: 'number' },
-    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado'] },
+    estado: { type: 'string', enum: ['Pendiente', 'Aprobado', 'Rechazado', 'Cancelado'] },
   },
   required: ['estudiante_id', 'proyecto_id', 'estado']
 });
