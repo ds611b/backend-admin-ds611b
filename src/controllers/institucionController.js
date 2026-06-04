@@ -1,4 +1,4 @@
-import { Instituciones, EncargadoInstitucion, ProyectosInstitucion } from '../models/index.js';
+import { Instituciones, EncargadoInstitucion, ProyectosInstitucion, Usuarios } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 import {
   createInstitucionCompleta as createInstitucionCompletaService,
