@@ -1090,7 +1090,12 @@ fastify.addSchema({
     telefono:        { type: 'string', description: 'Teléfono de contacto' },
     email:           { type: 'string', format: 'email', description: 'Correo de la institución' },
     nit:             { type: 'string', description: 'NIT de la institución' },
-    fecha_fundacion: { type: 'string', format: 'date', description: 'Fecha de fundación (YYYY-MM-DD)' }
+    fecha_fundacion: { type: 'string', format: 'date', description: 'Fecha de fundación (YYYY-MM-DD)' },
+    estado: {
+      type: 'string',
+      enum: ['Pendiente', 'Aprobado', 'Rechazado'],
+      description: 'Estado de la institución en el proceso de aprobación'
+    }
   },
   required: ['nombre', 'email', 'nit']
 });
@@ -1161,11 +1166,6 @@ fastify.addSchema({
         { $ref: 'UsuarioSecuridadInput#' },
         { type: 'null' }
       ]
-    },
-    estado: {
-      type: 'string',
-      enum: ['Pendiente', 'Aprobado', 'Rechazado'],
-      description: 'Estado de la institución en el proceso de aprobación'
     }
   },
 
