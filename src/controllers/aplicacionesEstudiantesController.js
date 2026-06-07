@@ -217,40 +217,24 @@ export async function getAplicacionesByProyecto(request, reply) {
  */
 export async function createAplicacionEstudiante(request, reply) {
   try {
-
     const { estudiante_id, proyecto_id } = request.body;
 
+    // ── 1. Verificar aplicación duplicada (tu lógica actual) ─────────────────
     const aplicacionExistente = await AplicacionesEstudiantes.findOne({
-      where: {
-        estudiante_id,
-        proyecto_id
-      }
+      where: { estudiante_id, proyecto_id }
     });
 
     if (aplicacionExistente) {
-
       if (aplicacionExistente.estado === 'Cancelado') {
-
-        await aplicacionExistente.update({
-          estado: 'Pendiente'
-        });
+        await aplicacionExistente.update({ estado: 'Pendiente' });
 
         const aplicacionActualizada = await AplicacionesEstudiantes.findByPk(
           aplicacionExistente.id,
-          {
-            include: [
-              {
-                model: ProyectosInstitucion,
-                as: 'proyecto'
-              },
-              {
-                model: Usuarios,
-                as: 'estudiante'
-              }
-            ]
-          }
+          { include: [
+              { model: ProyectosInstitucion, as: 'proyecto' },
+              { model: Usuarios, as: 'estudiante' }
+          ]}
         );
-
         return reply.status(200).send(aplicacionActualizada);
       }
 
@@ -262,22 +246,45 @@ export async function createAplicacionEstudiante(request, reply) {
       );
     }
 
+    // ── 2. Obtener el proyecto al que quiere aplicar ──────────────────────────
+    const proyectoNuevo = await ProyectosInstitucion.findByPk(proyecto_id);
+
+    if (!proyectoNuevo) {
+      return reply.status(404).send(
+        createErrorResponse('Proyecto no encontrado', 'PROYECTO_NOT_FOUND')
+      );
+    }
+
+    // ── 3. Obtener proyectos activos del estudiante ───────────────────────────
+    const aplicacionesActivas = await AplicacionesEstudiantes.findAll({
+      where: {
+        estudiante_id,
+        estado: ['Aprobado']   
+      },
+      include: [{ model: ProyectosInstitucion, as: 'proyecto' }]
+    });
+
+    // ── 4. Validar choque de horario con cada proyecto activo ─────────────────
+    for (const aplicacion of aplicacionesActivas) {
+      if (proyectosChocان(proyectoNuevo, aplicacion.proyecto)) {
+        return reply.status(409).send(
+          createErrorResponse(
+            `El horario del proyecto "${proyectoNuevo.nombre}" choca con "${aplicacion.proyecto.nombre}"`,
+            'HORARIO_CONFLICT'
+          )
+        );
+      }
+    }
+
+    // ── 5. Crear la aplicación (tu lógica actual) ─────────────────────────────
     const aplicacionCreada = await AplicacionesEstudiantes.create(request.body);
 
     const aplicacionAsociaciones = await AplicacionesEstudiantes.findByPk(
       aplicacionCreada.id,
-      {
-        include: [
-          {
-            model: ProyectosInstitucion,
-            as: 'proyecto'
-          },
-          {
-            model: Usuarios,
-            as: 'estudiante'
-          }
-        ]
-      }
+      { include: [
+          { model: ProyectosInstitucion, as: 'proyecto' },
+          { model: Usuarios, as: 'estudiante' }
+      ]}
     );
 
     if (aplicacionAsociaciones) {
@@ -296,9 +303,7 @@ export async function createAplicacionEstudiante(request, reply) {
     );
 
   } catch (error) {
-
     request.log.error(error);
-
     return reply.status(500).send(
       createErrorResponse(
         'Error al crear la aplicación de estudiante',
@@ -559,4 +564,75 @@ export async function getEstudiantesAplicadosByProyecto(request, reply) {
       error
     ));
   }
+}
+
+// helpers/horario.helper.js
+const DIAS_MAP = {
+  'lun': 1, 'mar': 2, 'mié': 3, 'mie': 3,
+  'jue': 4, 'vie': 5, 'sáb': 6, 'sab': 6, 'dom': 0
+};
+
+function parsearHorario(horario_requerido) {
+  if (!horario_requerido) return null;
+
+  // Ejemplo: "Lun, Mar, Mié de 08:00 a 10:00"
+  const match = horario_requerido
+    .toLowerCase()
+    .match(/^([\w,\s]+)\s+de\s+(\d{2}:\d{2})\s+a\s+(\d{2}:\d{2})$/);
+
+  if (!match) return null;
+
+  const diasStr = match[1].split(',').map(d => d.trim());
+  const dias = diasStr.map(d => DIAS_MAP[d]).filter(d => d !== undefined);
+  const horaInicio = match[2]; // "08:00"
+  const horaFin    = match[3]; // "10:00"
+
+  return { dias, horaInicio, horaFin };
+}
+
+function horasChocان(horario1, horario2) {
+  // Verificar si comparten algún día
+  const diasComunes = horario1.dias.filter(d => horario2.dias.includes(d));
+  if (!diasComunes.length) return false;
+
+  // Verificar si las horas se solapan
+  // Convertir "08:00" a minutos para comparar fácil
+  const toMinutos = (h) => {
+    const [hh, mm] = h.split(':').map(Number);
+    return hh * 60 + mm;
+  };
+
+  const inicio1 = toMinutos(horario1.horaInicio);
+  const fin1    = toMinutos(horario1.horaFin);
+  const inicio2 = toMinutos(horario2.horaInicio);
+  const fin2    = toMinutos(horario2.horaFin);
+
+  // Hay choque si los rangos se solapan
+  return inicio1 < fin2 && inicio2 < fin1;
+}
+
+function fechasChocان(proyecto1, proyecto2) {
+  if (!proyecto1.fecha_inicio || !proyecto1.fecha_fin ||
+      !proyecto2.fecha_inicio || !proyecto2.fecha_fin) return true; // si no hay fechas, asumir choque
+
+  const inicio1 = new Date(proyecto1.fecha_inicio);
+  const fin1    = new Date(proyecto1.fecha_fin);
+  const inicio2 = new Date(proyecto2.fecha_inicio);
+  const fin2    = new Date(proyecto2.fecha_fin);
+
+  return inicio1 <= fin2 && inicio2 <= fin1;
+}
+
+export function proyectosChocان(proyectoNuevo, proyectoExistente) {
+  // 1. ¿Las fechas se solapan?
+  if (!fechasChocان(proyectoNuevo, proyectoExistente)) return false;
+
+  // 2. ¿Los horarios chocan?
+  const horario1 = parsearHorario(proyectoNuevo.horario_requerido);
+  const horario2 = parsearHorario(proyectoExistente.horario_requerido);
+
+  // Si no se puede parsear alguno, asumir choque por seguridad
+  if (!horario1 || !horario2) return true;
+
+  return horasChocان(horario1, horario2);
 }
