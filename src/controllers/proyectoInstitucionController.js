@@ -208,7 +208,7 @@ export async function createProyectoInstitucion(request, reply) {
       personas_requeridas,
       tipo_proyecto,
       id_encargado,
-      estado
+      estado: estado || 'Pendiente' 
     });
     const proyectoActualizado = await ProyectosInstitucion.findByPk(nuevoProyecto.id, {
       include: [
