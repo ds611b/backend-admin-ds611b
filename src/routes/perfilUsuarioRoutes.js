@@ -2,7 +2,10 @@ import {
   getPerfilesUsuario,
   getPerfilUsuarioById,
   getPerfilUsuarioByUsuarioId,
+  getResumenAcademicoByUsuarioId,
   getPerfilesUsuarioByGenero,
+  getPerfilesUsuarioFiltrados,
+  getPerfilesPorCarreraOEscuela,
   createPerfilUsuario,
   updatePerfilUsuario,
   deletePerfilUsuario,
@@ -92,6 +95,35 @@ async function perfilUsuarioRoutes(fastify, options) {
     },
   }, getPerfilUsuarioByUsuarioId);
 
+  // Obtener resumen académico por ID de usuario (carrera, escuela y rol)
+  fastify.get('/perfiles-usuario/usuario/:usuario_id/resumen-academico', {
+    schema: {
+      description: 'Obtiene carrera, escuela y rol del usuario. Si el usuario tiene rol institución (rol_id = 4), devuelve institución (buscada a través de EncargadoInstitucion) en lugar de carrera.',
+      tags: ['Perfiles de Usuario'],
+      params: {
+        type: 'object',
+        properties: {
+          usuario_id: { type: 'integer', description: 'ID único del usuario asociado al perfil.' },
+        },
+        required: ['usuario_id'],
+      },
+      response: {
+        200: {
+          description: 'Resumen académico del usuario obtenido exitosamente.',
+          $ref: 'PerfilUsuarioResumenAcademico',
+        },
+        404: {
+          description: 'Perfil de usuario, encargado de institución o usuario no encontrado.',
+          $ref: 'ErrorResponse',
+        },
+        500: {
+          description: 'Error al obtener el resumen académico del usuario.',
+          $ref: 'ErrorResponse',
+        },
+      },
+    },
+  }, getResumenAcademicoByUsuarioId);
+
   // Crear un nuevo perfil de usuario
   fastify.post('/perfiles-usuario', {
     schema: {
@@ -178,6 +210,38 @@ async function perfilUsuarioRoutes(fastify, options) {
     },
   }, deletePerfilUsuario);
 
+  // Filtrar perfiles por rol y carrera con paginación
+  fastify.get('/perfiles-usuario/filtro-dinamico', {
+    schema: {
+      description: 'Obtiene perfiles de usuario filtrados por rol o carrera con paginación. Se debe enviar al menos uno de los dos filtros: rol_id o id_carrera.',
+      tags: ['Perfiles de Usuario'],
+      querystring: {
+        type: 'object',
+        properties: {
+          rol_id: { type: 'integer', description: 'ID del rol del usuario.' },
+          id_carrera: { type: 'integer', description: 'ID de la carrera del perfil.' },
+          page: { type: 'integer', minimum: 1, default: 1, description: 'Número de página.' },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: 10, description: 'Cantidad de registros por página.' }
+        }
+      },
+      response: {
+        200: {
+          description: 'Perfiles filtrados con paginación.',
+          type: 'object',
+          properties: {
+            total: { type: 'integer' },
+            page: { type: 'integer' },
+            limit: { type: 'integer' },
+            totalPages: { type: 'integer' },
+            data: { type: 'array', items: { $ref: 'PerfilUsuario' } }
+          }
+        },
+        400: { $ref: 'ErrorResponse' },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, getPerfilesUsuarioFiltrados);
+
   // Filtrar perfiles por género
   fastify.get('/perfiles-usuario/genero/:genero', {
     schema: {
@@ -240,18 +304,50 @@ async function perfilUsuarioRoutes(fastify, options) {
           genero: { type: 'string', enum: ['Masculino', 'Femenino', 'Otro'] },
           carnet: { type: 'string', maxLength: 7 },
           anio_academico: { type: 'string', maxLength: 25 },
-          id_carrera: { type: 'integer' }
+          id_carrera: { type: 'integer' },
+          id_institucion: { type: 'integer' }
         }
       },
       response: {
         200: { description: 'Usuario y perfil actualizados exitosamente', $ref: 'PerfilUsuario' },
-        400: { description: 'Carnet requerido o carrera no encontrada', $ref: 'ErrorResponse' },
+        400: { description: 'Carnet requerido, carrera o institución no encontrada', $ref: 'ErrorResponse' },
         404: { description: 'Usuario no encontrado', $ref: 'ErrorResponse' },
         409: { description: 'Email o carnet duplicado', $ref: 'ErrorResponse' },
         500: { description: 'Error al actualizar', $ref: 'ErrorResponse' }
       }
     }
   }, updateUsuarioConPerfil);
+
+  // Filtrar perfiles por carrera o escuela con paginación
+  fastify.get('/perfiles-usuario/filtro/carrera-escuela', {
+    schema: {
+      description: 'Obtiene perfiles de usuario filtrados por id_carrera o id_escuela (ambos opcionales) con paginación. Si se filtra por id_escuela se resuelve a través del JOIN con Carreras.',
+      tags: ['Perfiles de Usuario'],
+      querystring: {
+        type: 'object',
+        properties: {
+          id_carrera: { type: 'integer', description: 'ID de la carrera del perfil.' },
+          id_escuela: { type: 'integer', description: 'ID de la escuela. Filtra perfiles cuya carrera pertenece a esta escuela.' },
+          page: { type: 'integer', minimum: 1, default: 1, description: 'Número de página.' },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: 10, description: 'Cantidad de registros por página.' }
+        }
+      },
+      response: {
+        200: {
+          description: 'Perfiles filtrados con paginación.',
+          type: 'object',
+          properties: {
+            total: { type: 'integer' },
+            page: { type: 'integer' },
+            limit: { type: 'integer' },
+            totalPages: { type: 'integer' },
+            data: { type: 'array', items: { $ref: 'PerfilUsuario' } }
+          }
+        },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, getPerfilesPorCarreraOEscuela);
 }
 
 export default perfilUsuarioRoutes;

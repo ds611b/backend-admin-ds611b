@@ -22,6 +22,35 @@ export async function getGrupoEstudiantes(request, reply) {
   }
 }
 
+export async function getGrupoEstudianteById(request, reply) {
+  const { id } = request.params;
+
+  try {
+    const registro = await GrupoEstudiantes.findByPk(id, {
+      include: [
+        { model: Grupos },
+        { model: PerfilUsuario, as: 'perfil_estudiante' }
+      ]
+    });
+
+    if (!registro) {
+      return reply.status(404).send(createErrorResponse(
+        'Registro no encontrado',
+        'GRUPO_ESTUDIANTE_NOT_FOUND'
+      ));
+    }
+
+    reply.send(registro);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener el registro de grupo',
+      'GET_GRUPO_ESTUDIANTE_BY_ID_ERROR',
+      error
+    ));
+  }
+}
+
 export async function createGrupoEstudiante(request, reply) {
   const transaction = await GrupoEstudiantes.sequelize.transaction();
 

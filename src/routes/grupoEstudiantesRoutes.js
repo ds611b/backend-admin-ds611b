@@ -1,5 +1,6 @@
 import {
   getGrupoEstudiantes,
+  getGrupoEstudianteById,
   createGrupoEstudiante,
   deleteGrupoEstudiante
 } from '../controllers/grupoEstudiantesController.js';
@@ -20,6 +21,26 @@ async function grupoEstudiantesRoutes(fastify) {
       }
     }
   }, getGrupoEstudiantes);
+
+  // GET BY ID
+  fastify.get('/grupo-estudiantes/:id', {
+    schema: {
+      description: 'Obtiene una asignación de estudiante a grupo por ID',
+      tags: ['Grupo Estudiantes'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' }
+        },
+        required: ['id']
+      },
+      response: {
+        200: { $ref: 'GrupoEstudiante' },
+        404: { $ref: 'ErrorResponse' },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, getGrupoEstudianteById);
 
   // POST
   fastify.post('/grupo-estudiantes', {

@@ -25,14 +25,15 @@ import DocumentosHoras from './DocumentosHoras.js';
 import Grupos from './Grupos.js';
 import GrupoCarrera from './GrupoCarrera.js';
 import GrupoEstudiantes from './GrupoEstudiantes.js';
+import Notificaciones from './Notificaciones.js';
 
 
 
 // Definir relaciones
 
 // Roles y Usuarios (1:N)
-Roles.hasMany(Usuarios, { foreignKey: 'rol_id', onDelete: 'RESTRICT' });
-Usuarios.belongsTo(Roles, { foreignKey: 'rol_id', onDelete: 'RESTRICT' });
+Roles.hasMany(Usuarios, { foreignKey: 'rol_id', as: 'usuarios', onDelete: 'RESTRICT' });
+Usuarios.belongsTo(Roles, { foreignKey: 'rol_id', as: 'rol', onDelete: 'RESTRICT' });
 
 // Usuarios y PerfilUsuario (1:1)
 Usuarios.hasOne(PerfilUsuario, { foreignKey: 'usuario_id', onDelete: 'CASCADE' });
@@ -77,8 +78,13 @@ Carreras.belongsTo(Escuelas, { foreignKey: 'id_escuela', as: 'escuela', onDelete
 PerfilUsuario.belongsTo(Carreras, { foreignKey: 'id_carrera', as: 'carrera', onDelete: 'SET NULL' });
 Carreras.hasMany(PerfilUsuario, { foreignKey: 'id_carrera', as: 'perfiles' });
 
+// PerfilUsuario e Instituciones (N:1)
+PerfilUsuario.belongsTo(Instituciones, { foreignKey: 'id_institucion', as: 'institucion', onDelete: 'SET NULL' });
+Instituciones.hasMany(PerfilUsuario, { foreignKey: 'id_institucion', as: 'perfiles' });
 
 // ContactoEmergencia y PerfilUsuario (1:N)
+ContactoEmergencia.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', as: 'PerfilUsuario', onDelete: 'CASCADE' });
+PerfilUsuario.hasOne(ContactoEmergencia, { foreignKey: 'id_perfil_usuario', onDelete: 'CASCADE' });
 ContactoEmergencia.belongsTo(PerfilUsuario, { foreignKey: 'id_perfil_usuario', onDelete: 'CASCADE' });
 
 
@@ -153,6 +159,10 @@ ProyectosInstitucion.hasMany(RegistroHoras, {
   foreignKey: 'id_proyecto'
 });
 
+// Notificaciones y Usuarios (N:1)
+Notificaciones.belongsTo(Usuarios, { foreignKey: 'usuario_id', as: 'usuario', onDelete: 'CASCADE' });
+Usuarios.hasMany(Notificaciones, { foreignKey: 'usuario_id', as: 'notificaciones', onDelete: 'CASCADE' });
+
 
 
 
@@ -179,6 +189,7 @@ export {
   EncargadoInstitucion,
   HorasRequisito,
   RegistroHoras,
+  Notificaciones,
   DocumentosHoras,
   Grupos,
   GrupoEstudiantes,

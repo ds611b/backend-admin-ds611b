@@ -5,6 +5,7 @@ import {
   updateRegistroHoras,
   deleteRegistroHoras,
   getHorasPorEstudiante,
+  getHorasPorEstudianteEnProyecto,
   getResumenProyecto,
   validarRegistroHoras   
 } from '../controllers/registroHoras.controller.js';
@@ -167,6 +168,43 @@ async function registroHorasRoutes(fastify) {
       }
     }
   }, getHorasPorEstudiante);
+
+  // Obtener horas de un estudiante en un proyecto específico (id_proyecto obligatorio en la URL)
+  fastify.get('/registro-horas/estudiante/:id_perfil_usuario/proyecto/:id_proyecto', {
+    schema: {
+      description: 'Obtiene las horas de un estudiante en un proyecto específico',
+      tags: ['Registro de horas'],
+      params: {
+        type: 'object',
+        properties: {
+          id_perfil_usuario: { type: 'integer', description: 'ID del perfil del estudiante' },
+          id_proyecto: { type: 'integer', description: 'ID del proyecto' }
+        },
+        required: ['id_perfil_usuario', 'id_proyecto']
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            estudiante: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer' },
+                nombre_completo: { type: 'string' },
+                carnet: { type: 'string' },
+                email: { type: 'string' }
+              }
+            },
+            total_horas_registradas: { type: 'number' },
+            total_horas_aprobadas: { type: 'number' },
+            registros: { type: 'array', items: { type: 'object' } }
+          }
+        },
+        404: { $ref: 'ErrorResponse' },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, getHorasPorEstudianteEnProyecto);
 
   // Obtener resumen del proyecto con horas por estudiante
   fastify.get('/registro-horas/proyecto/:id_proyecto/resumen', {

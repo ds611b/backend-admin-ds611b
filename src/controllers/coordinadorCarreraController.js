@@ -1,4 +1,4 @@
-import { CoordinadoresCarrera, Carreras, Escuelas, Usuarios } from '../models/index.js';
+import { CoordinadoresCarrera, Carreras, Escuelas, Usuarios, PerfilUsuario } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 import bcrypt from 'bcryptjs';
 
@@ -160,7 +160,15 @@ export async function createCoordinador(request, reply) {
       email:         correo_institucional,
       password_hash,
       rol_id,
-      status: 1
+      status: 0
+    }, { transaction });
+    
+    // Crear perfil de usuario para el coordinador
+    await PerfilUsuario.create({
+      usuario_id: nuevoUsuario.id,
+      telefono,
+      id_carrera,
+      carnet: ""
     }, { transaction });
 
     // 7️⃣ Crear coordinador vinculado
@@ -210,7 +218,7 @@ export async function createCoordinador(request, reply) {
  */
 export async function updateCoordinador(request, reply) {
   const { id } = request.params;
-  const { nombres, apellidos, correo_institucional, telefono, id_carrera } = request.body;
+  const { nombres, apellidos, correo_institucional, telefono, id_carrera, carnet } = request.body;
 
   try {
     const coordinador = await CoordinadoresCarrera.findByPk(id);
@@ -253,6 +261,21 @@ export async function updateCoordinador(request, reply) {
       id_carrera: id_carrera || coordinador.id_carrera
     });
 
+    const perfil = await PerfilUsuario.findOne({
+      where: {
+        usuario_id: coordinador.id_usuario
+      },
+      transaction
+    });
+
+    if (perfil) {
+      await perfil.update({
+        telefono: telefono || perfil.telefono,
+        id_carrera: id_carrera || perfil.id_carrera,
+        carnet: carnet || perfil.carnet
+      }, { transaction });
+    }
+
     // Obtener coordinador actualizado con relaciones
     const coordinadorActualizado = await CoordinadoresCarrera.findByPk(id, {
       include: [{
@@ -281,19 +304,30 @@ export async function updateCoordinador(request, reply) {
  */
 export async function deleteCoordinador(request, reply) {
   const { id } = request.params;
-  
+  const transaction = await CoordinadoresCarrera.sequelize.transaction();
+
   try {
-    const coordinador = await CoordinadoresCarrera.findByPk(id);
+    const coordinador = await CoordinadoresCarrera.findByPk(id, { transaction });
     if (!coordinador) {
+      await transaction.rollback();
       return reply.status(404).send(createErrorResponse(
         'Coordinador no encontrado',
         'COORDINADOR_NOT_FOUND'
       ));
     }
 
-    await coordinador.destroy();
+    const usuarioId = coordinador.id_usuario;
+
+    await coordinador.destroy({ transaction });
+
+    if (usuarioId) {
+      await Usuarios.destroy({ where: { id: usuarioId }, transaction });
+    }
+
+    await transaction.commit();
     reply.status(204).send();
   } catch (error) {
+    await transaction.rollback();
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
       'Error al eliminar el coordinador',

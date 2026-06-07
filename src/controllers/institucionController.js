@@ -1,6 +1,10 @@
-import { Instituciones, EncargadoInstitucion, ProyectosInstitucion } from '../models/index.js';
+import { Instituciones, EncargadoInstitucion, ProyectosInstitucion, Usuarios } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
-import { createInstitucionCompleta as createInstitucionCompletaService } from '../services/institucionService.js';
+import {
+  createInstitucionCompleta as createInstitucionCompletaService,
+  assignEncargadoToInstitucion as assignEncargadoToInstitucionService,
+  registrarUsuarioSeguridad
+} from '../services/institucionService.js';
 
 /**
  * Obtiene todas las instituciones.
@@ -59,29 +63,135 @@ export async function getInstitucionById(request, reply) {
  * @param {import('fastify').FastifyReply} reply
  */
 export async function createInstitucion(request, reply) {
-  const { nombre, direccion, telefono, email, fecha_fundacion, nit, estado, id_encargado } = request.body;
+  const {
+    institucion,
+    encargado,
+    usuario,
+    id_encargado = 0,
+    id_usuario = 0
+  } = request.body;
+
   try {
+
+    let usuarioId = id_usuario;
+    let encargadoId = id_encargado;
+
+    // ===== USUARIO =====
+
+    if (!usuarioId) {
+
+      if (!usuario) {
+        return reply.status(400).send(
+          createErrorResponse(
+            'Debe enviar el objeto usuario cuando id_usuario es 0',
+            'USUARIO_REQUIRED'
+          )
+        );
+      }
+
+      const usuarioCreado = await registrarUsuarioSeguridad(usuario);
+
+      usuarioId = usuarioCreado.id;
+
+
+    } else {
+
+      const usuarioExistente = await Usuarios.findByPk(usuarioId);
+
+      if (!usuarioExistente) {
+        return reply.status(404).send(
+          createErrorResponse(
+            'Usuario no encontrado',
+            'USUARIO_NOT_FOUND'
+          )
+        );
+      }
+    }
+
+    // ===== ENCARGADO =====
+
+    if (!encargadoId) {
+
+      if (!encargado) {
+        return reply.status(400).send(
+          createErrorResponse(
+            'Debe enviar el objeto encargado cuando id_encargado es 0',
+            'ENCARGADO_REQUIRED'
+          )
+        );
+      }
+
+      const nuevoEncargado = await EncargadoInstitucion.create({
+        nombres: encargado.nombres,
+        apellidos: encargado.apellidos,
+        correo: encargado.correo,
+        telefono: encargado.telefono,
+        usuario_id: usuarioId
+      });
+
+      encargadoId = nuevoEncargado.id;
+
+    } else {
+
+      const encargadoExistente = await EncargadoInstitucion.findByPk(encargadoId);
+
+      if (!encargadoExistente) {
+        return reply.status(404).send(
+          createErrorResponse(
+            'Encargado no encontrado',
+            'ENCARGADO_NOT_FOUND'
+          )
+        );
+      }
+    }
+
+    // ===== INSTITUCIÓN =====
+
     const nuevaInstitucion = await Instituciones.create({
-      nombre,
-      direccion,
-      telefono,
-      email,
-      fecha_fundacion: fecha_fundacion ? new Date(fecha_fundacion) : null,
-      nit,
-      estado,
-      id_encargado
+      nombre: institucion.nombre,
+      direccion: institucion.direccion,
+      telefono: institucion.telefono,
+      email: institucion.email,
+      nit: institucion.nit,
+      fecha_fundacion: institucion.fecha_fundacion
+        ? new Date(institucion.fecha_fundacion)
+        : null,
+      estado: institucion.estado ?? 'Pendiente',
+      id_encargado: encargadoId
     });
 
-    const institucionCompleta = await Instituciones.findByPk(nuevaInstitucion.id, {
-      include: [{
-        model: EncargadoInstitucion,
-        as: 'encargado'
-      }]
-    });
-    reply.status(201).send(institucionCompleta);
+    // Crear perfil de usuario para el coordinador
+    await PerfilUsuario.create({
+      usuario_id: usuarioId,
+      telefono,
+      id_institucion: nuevaInstitucion.id,
+      carnet: ""
+    }, { transaction });
+
+
+    const institucionCompleta = await Instituciones.findByPk(
+      nuevaInstitucion.id,
+      {
+        include: [{
+          model: EncargadoInstitucion,
+          as: 'encargado'
+        }]
+      }
+    );
+
+    return reply.status(201).send(institucionCompleta);
+
   } catch (error) {
+
     request.log.error(error);
-    reply.status(500).send(createErrorResponse('Error al crear la institución', 'CREATE_INSTITUCION_ERROR', error));
+
+    return reply.status(500).send(
+      createErrorResponse(
+        'Error al crear la institución',
+        'CREATE_INSTITUCION_ERROR',
+        error
+      )
+    );
   }
 }
 
@@ -119,21 +229,111 @@ export async function getInstitucionesActivas(request, reply) {
  */
 export async function updateInstitucion(request, reply) {
   const { id } = request.params;
-  const { nombre, direccion, telefono, email, fecha_fundacion, nit, estado, id_encargado } = request.body;
+
+  const {
+    institucion,
+    encargado,
+    usuario,
+    id_encargado = 0,
+    id_usuario = 0
+  } = request.body;
+
   try {
-    const institucion = await Instituciones.findByPk(id);
-    if (!institucion) {
-      return reply.status(404).send(createErrorResponse('Institución no encontrada', 'INSTITUCION_NOT_FOUND'));
+
+    const institucionActual = await Instituciones.findByPk(id);
+
+    if (!institucionActual) {
+      return reply.status(404).send(
+        createErrorResponse(
+          'Institución no encontrada',
+          'INSTITUCION_NOT_FOUND'
+        )
+      );
     }
-    await institucion.update({
-      nombre,
-      direccion,
-      telefono,
-      email,
-      fecha_fundacion: fecha_fundacion ? new Date(fecha_fundacion) : null,
-      nit,
-      estado,
-      id_encargado
+
+    let usuarioId = id_usuario;
+    let encargadoId = id_encargado;
+
+    // ===== USUARIO =====
+
+    if (!usuarioId) {
+
+      if (!usuario) {
+        return reply.status(400).send(
+          createErrorResponse(
+            'Debe enviar el objeto usuario cuando id_usuario es 0',
+            'USUARIO_REQUIRED'
+          )
+        );
+      }
+
+      const usuarioCreado = await registrarUsuarioSeguridad(usuario);
+
+      usuarioId = usuarioCreado.id;
+    } else {
+
+      const usuarioExistente = await Usuarios.findByPk(usuarioId);
+
+      if (!usuarioExistente) {
+        return reply.status(404).send(
+          createErrorResponse(
+            'Usuario no encontrado',
+            'USUARIO_NOT_FOUND'
+          )
+        );
+      }
+    }
+
+    // ===== ENCARGADO =====
+
+    if (!encargadoId) {
+
+      if (!encargado) {
+        return reply.status(400).send(
+          createErrorResponse(
+            'Debe enviar el objeto encargado cuando id_encargado es 0',
+            'ENCARGADO_REQUIRED'
+          )
+        );
+      }
+
+      const nuevoEncargado = await EncargadoInstitucion.create({
+        nombres: encargado.nombres,
+        apellidos: encargado.apellidos,
+        correo: encargado.correo,
+        telefono: encargado.telefono,
+        usuario_id: usuarioId
+      });
+
+      encargadoId = nuevoEncargado.id;
+
+    } else {
+
+      const encargadoExistente = await EncargadoInstitucion.findByPk(encargadoId);
+
+      if (!encargadoExistente) {
+        return reply.status(404).send(
+          createErrorResponse(
+            'Encargado no encontrado',
+            'ENCARGADO_NOT_FOUND'
+          )
+        );
+      }
+    }
+
+    // ===== ACTUALIZAR INSTITUCIÓN =====
+
+    await institucionActual.update({
+      nombre: institucion.nombre,
+      direccion: institucion.direccion,
+      telefono: institucion.telefono,
+      email: institucion.email,
+      nit: institucion.nit,
+      fecha_fundacion: institucion.fecha_fundacion
+        ? new Date(institucion.fecha_fundacion)
+        : null,
+      estado: institucion.estado,
+      id_encargado: encargadoId
     });
 
     const institucionActualizada = await Instituciones.findByPk(id, {
@@ -142,13 +342,22 @@ export async function updateInstitucion(request, reply) {
         as: 'encargado'
       }]
     });
-    reply.send(institucionActualizada);
+
+    return reply.send(institucionActualizada);
+
   } catch (error) {
+
     request.log.error(error);
-    reply.status(500).send(createErrorResponse('Error al actualizar la institución', 'UPDATE_INSTITUCION_ERROR', error));
+
+    return reply.status(500).send(
+      createErrorResponse(
+        'Error al actualizar la institución',
+        'UPDATE_INSTITUCION_ERROR',
+        error
+      )
+    );
   }
 }
-
 /**
  * Elimina una institución por ID.
  * @param {import('fastify').FastifyRequest} request
@@ -197,9 +406,24 @@ export async function createInstitucionCompleta(request, reply) {
  * @param {import('fastify').FastifyRequest} request
  * @param {import('fastify').FastifyReply} reply
  */
+export async function assignEncargadoToInstitucion(request, reply) {
+  const { id } = request.params;
+  const { usuario_id } = request.body;
+
+  try {
+    const result = await assignEncargadoToInstitucionService({ institucionId: id, usuarioId: usuario_id });
+    reply.send(result);
+  } catch (error) {
+    request.log.error(error);
+    const statusCode = error.statusCode || 500;
+    const code = error.code || 'ASSIGN_ENCARGADO_ERROR';
+    reply.status(statusCode).send(createErrorResponse(error.message, code, error));
+  }
+}
+
 export async function getProyectosByInstitucionId(request, reply) {
   const { id } = request.params;
-  
+
   try {
     // Verificar que la institución existe
     const institucion = await Instituciones.findByPk(id);
@@ -234,5 +458,71 @@ export async function getProyectosByInstitucionId(request, reply) {
       'GET_PROYECTOS_INSTITUCION_ERROR',
       error
     ));
+  }
+}
+
+
+// Función para activar el usuario de la institución al ser aprobada la instución
+export async function aprobarInstitucion(request, reply) {
+  const { id } = request.params;
+  const { estado } = request.body;
+
+  try {
+    const institucion = await Instituciones.findByPk(id, {
+      include: [{
+        model: EncargadoInstitucion,
+        as: 'encargado'
+      }]
+    });
+    if (!institucion) {
+      return reply.status(404).send(
+        createErrorResponse(
+          'Institución no encontrada',
+          'INSTITUCION_NOT_FOUND'
+        )
+      );
+    }
+    
+    const encargado = institucion.encargado;
+    if (!encargado) {
+      return reply.status(404).send(
+        createErrorResponse(
+          'Encargado de institución no encontrado',
+          'ENCARGADO_NOT_FOUND'
+        )
+      );
+    }
+    const usuario = await Usuarios.findByPk(encargado.usuario_id);
+    if (!usuario) {
+      return reply.status(404).send(
+        createErrorResponse(
+          'Usuario del encargado no encontrado',
+          'USUARIO_NOT_FOUND'
+        )
+      );
+    }
+
+    institucion.estado = estado;
+
+    await institucion.save();
+
+    if (estado === 'Aprobado') {
+      usuario.status = 1;
+
+      await usuario.save();
+    }
+
+    return reply.send(institucion);
+
+  } catch (error) {
+    request.log.error(error);
+
+    return reply.status(500).send(
+      createErrorResponse(
+        'Error al actualizar la institución',
+        'UPDATE_INSTITUCION_ERROR',
+        error
+      )
+    );
   }
 }

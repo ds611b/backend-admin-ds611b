@@ -1,6 +1,7 @@
 import { AplicacionesEstudiantes, ProyectosInstitucion, Usuarios, Instituciones, PerfilUsuario, HorasRequisito, GrupoEstudiantes, GrupoCarrera } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 import sequelize from '../models/db.js';
+import { crearNotificacion } from '../services/notificacionesService.js';
 
 /**
  * Obtiene todas las aplicaciones de estudiantes.
@@ -168,7 +169,13 @@ export async function getAplicacionesByProyecto(request, reply) {
         {
           model: Usuarios,
           as: 'estudiante',
-          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email'],
+          include: [
+            {
+              model: PerfilUsuario,
+              attributes: ['id']
+            }
+          ]
         }
       ],
       order: [['created_at', 'DESC']]
@@ -183,6 +190,7 @@ export async function getAplicacionesByProyecto(request, reply) {
     }
     const estudiantes = aplicaciones.map(app => ({
       ...app.estudiante.get({ plain: true }),
+      perfil_id: app.estudiante.PerfilUsuario?.id ?? null,
       aplicacion_id: app.id,
       estado: app.estado
     }));
@@ -422,6 +430,24 @@ export async function updateAplicacionEstudiante(request, reply) {
       } else {
         console.log('⚠️ Ya existe HorasRequisito');
       }
+
+      // 🔔 NOTIFICACIÓN EN TIEMPO REAL
+      // Enviar notificación al estudiante cuando su aplicación sea aceptada
+      try {
+        console.log('📤 Intentando crear notificación para usuario:', aplicacion.estudiante_id);
+        console.log('📤 Proyecto nombre:', aplicacion.proyecto.nombre_proyecto);
+        
+        const notificacionCreada = await crearNotificacion(aplicacion.estudiante_id, {
+          titulo: '¡Aplicación Aprobada!',
+          mensaje: `Tu aplicación al proyecto "${aplicacion.proyecto.nombre_proyecto}" ha sido aprobada exitosamente.`
+        });
+        
+        console.log('✅ Notificación creada exitosamente:', notificacionCreada.id);
+      } catch (notifError) {
+        // Log error pero no interrumpir el flujo principal
+        console.error('❌ Error completo al crear notificación:', notifError);
+        console.error('❌ Stack trace:', notifError.stack);
+      }
     }
 
     await transaction.commit();
@@ -462,6 +488,87 @@ export async function deleteAplicacionEstudiante(request, reply) {
     reply.status(500).send(createErrorResponse(
       'Error al eliminar la aplicación de estudiante',
       'DELETE_APLICACION_ERROR',
+      error
+    ));
+  }
+}
+
+/**
+ * Obtiene lista simplificada de estudiantes aplicados a un proyecto con paginación y filtros
+ * @param {import('fastify').FastifyRequest} request 
+ * @param {import('fastify').FastifyReply} reply 
+ */
+export async function getEstudiantesAplicadosByProyecto(request, reply) {
+  const { proyectoId } = request.params;
+  const { page = 1, limit = 10, estado } = request.query;
+
+  try {
+    // Construir condiciones de filtro
+    const whereConditions = { proyecto_id: proyectoId };
+    
+    // Agregar filtro de estado si se proporciona
+    if (estado) {
+      whereConditions.estado = estado;
+    }
+
+    // Calcular offset para paginación
+    const offset = (page - 1) * limit;
+
+    // Obtener aplicaciones con paginación
+    const { count, rows: aplicaciones } = await AplicacionesEstudiantes.findAndCountAll({
+      where: whereConditions,
+      include: [
+        {
+          model: Usuarios,
+          as: 'estudiante',
+          attributes: ['id', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email'],
+          include: [
+            {
+              model: PerfilUsuario,
+              attributes: ['id']
+            }
+          ]
+        }
+      ],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['created_at', 'DESC']],
+      distinct: true
+    });
+
+    // Mapear solo la información de estudiantes
+    const estudiantes = aplicaciones.map(app => ({
+      id: app.estudiante.id,
+      primer_nombre: app.estudiante.primer_nombre,
+      segundo_nombre: app.estudiante.segundo_nombre,
+      primer_apellido: app.estudiante.primer_apellido,
+      segundo_apellido: app.estudiante.segundo_apellido,
+      email: app.estudiante.email,
+      perfil_id: app.estudiante.PerfilUsuario?.id ?? null,
+      aplicacion_id: app.id,
+      estado: app.estado,
+      fecha_aplicacion: app.created_at
+    }));
+
+    // Calcular información de paginación
+    const totalPages = Math.ceil(count / limit);
+
+    const response = {
+      estudiantes,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages
+      }
+    };
+
+    reply.send(response);
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al obtener los estudiantes aplicados al proyecto',
+      'GET_ESTUDIANTES_APLICADOS_ERROR',
       error
     ));
   }

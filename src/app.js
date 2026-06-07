@@ -30,6 +30,8 @@ import registroHorasRoutes from './routes/registroHorasRoutes.js';
 import documentosHorasRoutes from './routes/documentosHorasRoutes.js';
 import gruposRoutes from './routes/gruposRoutes.js';
 import grupoEstudiantesRoutes from './routes/grupoEstudiantesRoutes.js';
+import notificacionesRoutes from './routes/notificacionesRoutes.js';
+import emailTestRoutes from './routes/emailTestRoutes.js';
 
 import { preloadRoles } from './services/roleService.js';
 import GrupoCarrera from './models/GrupoCarrera.js';
@@ -183,6 +185,7 @@ fastify.addSchema({
     segundo_apellido: { type: 'string', maxLength: 100, example: 'Santos' },
     email: { type: 'string', maxLength: 150, format: 'email', example: 'juan.perez@example.com' },
     rol_id: { type: 'integer', example: 2 },
+    rol: { $ref: 'Roles' },
     status: { type: 'integer', enum: [0, 1], example: 1, description: '0 = Inactivo, 1 = Activo' },
     created_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' },
     updated_at: { type: 'string', format: 'date-time', example: '2024-01-01T12:00:00Z' }
@@ -270,6 +273,7 @@ fastify.addSchema({
           {
             type: 'object',
             properties: {
+              perfil_id: { type: ['integer', 'null'], example: 5 },
               aplicacion_id: { type: 'integer', example: 1 },
               estado: {
                 type: 'string',
@@ -377,7 +381,19 @@ fastify.addSchema({
     },
     carnet: { type: 'string', example: '1234567', maxLength: 7 },
     carrera: { $ref: 'Carreras' },
-    usuario: { $ref: 'Usuarios' },
+    usuario: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 101 },
+        primer_nombre: { type: 'string', maxLength: 100, example: 'Juan' },
+        segundo_nombre: { type: 'string', maxLength: 100, nullable: true, example: 'Jose' },
+        primer_apellido: { type: 'string', maxLength: 100, example: 'Pérez' },
+        segundo_apellido: { type: 'string', maxLength: 100, nullable: true, example: 'Santos' },
+        email: { type: 'string', format: 'email', maxLength: 150, example: 'juan.perez@example.com' },
+        rol_id: { type: 'integer', example: 2 },
+        rol: { $ref: 'Roles' }
+      }
+    },
     created_at: {
       type: 'string',
       format: 'date-time',
@@ -389,6 +405,45 @@ fastify.addSchema({
       example: '2023-01-01T00:00:00Z'
     },
     //usuario: { $ref: 'Estudiantes' } // Referencia al esquema Usuario
+  }
+});
+
+fastify.addSchema({
+  $id: 'PerfilUsuarioResumenAcademico',
+  type: 'object',
+  properties: {
+    carrera: {
+      type: 'object',
+      nullable: true,
+      properties: {
+        id: { type: 'integer', example: 3 },
+        nombre: { type: 'string', example: 'Ingeniería en Sistemas' },
+        escuela: {
+          type: 'object',
+          nullable: true,
+          properties: {
+            id: { type: 'integer', example: 2 },
+            nombre: { type: 'string', example: 'Escuela de Ingeniería' }
+          }
+        }
+      }
+    },
+    institucion: {
+      type: 'object',
+      nullable: true,
+      properties: {
+        id: { type: 'integer', example: 30 },
+        nombre: { type: 'string', example: 'Asociacion para personas ciegas' }
+      }
+    },
+    rol: {
+      type: 'object',
+      nullable: true,
+      properties: {
+        id: { type: 'integer', example: 1 },
+        nombre: { type: 'string', example: 'Estudiante' }
+      }
+    }
   }
 });
 
@@ -757,7 +812,8 @@ fastify.addSchema({
     foto_perfil: { type: 'string', nullable: true },
     carnet: { type: 'string', maxLength: 7, nullable: true },
     anio_academico: { type: 'string', nullable: true },
-    id_carrera: { type: 'integer', nullable: true }
+    id_carrera: { type: 'integer', nullable: true },
+    id_institucion: { type: 'integer', nullable: true }
   },
   required: ['usuario_id']
 });
@@ -1068,15 +1124,49 @@ fastify.addSchema({
 });
 
 fastify.addSchema({
+  $id: 'AssignEncargadoValidation',
+  type: 'object',
+  description: 'Payload para cambiar el encargado de una institución a partir de un usuario existente',
+  properties: {
+    usuario_id: { type: 'integer', description: 'ID del usuario en la tabla Usuarios' }
+  },
+  required: ['usuario_id']
+});
+
+fastify.addSchema({
   $id: 'InstitucionesCompletaValidation',
   type: 'object',
-  description: 'Payload para crear institución, encargado y usuario de acceso en un solo request',
+  description: 'Payload para crear o asignar encargado a una institución',
+
   properties: {
     institucion: { $ref: 'InstitucionInput#' },
-    encargado:   { $ref: 'EncargadoInput#' },
-    usuario:     { $ref: 'UsuarioSecuridadInput#' }
+
+    id_encargado: {
+      type: 'integer',
+      minimum: 0
+    },
+
+    encargado: {
+      anyOf: [
+        { $ref: 'EncargadoInput#' },
+        { type: 'null' }
+      ]
+    },
+
+    id_usuario: {
+      type: 'integer',
+      minimum: 0
+    },
+
+    usuario: {
+      anyOf: [
+        { $ref: 'UsuarioSecuridadInput#' },
+        { type: 'null' }
+      ]
+    }
   },
-  required: ['institucion', 'encargado', 'usuario']
+
+  required: ['institucion']
 });
 
 fastify.addSchema({
@@ -1202,6 +1292,8 @@ fastify.register(registroHorasRoutes, { prefix: '/api' });
 fastify.register(documentosHorasRoutes, { prefix: '/api' });
 fastify.register(gruposRoutes, { prefix: '/api' });
 fastify.register(grupoEstudiantesRoutes, { prefix: '/api' });
+fastify.register(notificacionesRoutes, { prefix: '/api/notificaciones' });
+fastify.register(emailTestRoutes, { prefix: '/api/email/test' });
 
 /**
  * Registra la landing page de la API
