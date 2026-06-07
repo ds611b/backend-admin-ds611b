@@ -93,6 +93,7 @@ export async function createInstitucion(request, reply) {
 
       usuarioId = usuarioCreado.id;
 
+
     } else {
 
       const usuarioExistente = await Usuarios.findByPk(usuarioId);
@@ -158,6 +159,15 @@ export async function createInstitucion(request, reply) {
       estado: institucion.estado ?? 'Pendiente',
       id_encargado: encargadoId
     });
+
+    // Crear perfil de usuario para el coordinador
+    await PerfilUsuario.create({
+      usuario_id: usuarioId,
+      telefono,
+      id_institucion: nuevaInstitucion.id,
+      carnet: ""
+    }, { transaction });
+
 
     const institucionCompleta = await Instituciones.findByPk(
       nuevaInstitucion.id,
@@ -413,7 +423,7 @@ export async function assignEncargadoToInstitucion(request, reply) {
 
 export async function getProyectosByInstitucionId(request, reply) {
   const { id } = request.params;
-  
+
   try {
     // Verificar que la institución existe
     const institucion = await Instituciones.findByPk(id);
