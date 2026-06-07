@@ -1161,6 +1161,11 @@ fastify.addSchema({
         { $ref: 'UsuarioSecuridadInput#' },
         { type: 'null' }
       ]
+    },
+    estado: {
+      type: 'string',
+      enum: ['Pendiente', 'Aprobado', 'Rechazado'],
+      description: 'Estado de la institución en el proceso de aprobación'
     }
   },
 
