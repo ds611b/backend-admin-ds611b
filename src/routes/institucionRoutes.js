@@ -8,6 +8,7 @@ import {
   deleteInstitucion,
   getProyectosByInstitucionId,
   assignEncargadoToInstitucion,
+  aprobarInstitucion
 } from '../controllers/institucionController.js';
 
 /**
@@ -236,6 +237,52 @@ async function institucionRoutes(fastify, options) {
       }
     }
   }, getProyectosByInstitucionId);
+
+fastify.put('/instituciones/:id/aprobar', {
+  schema: {
+    description: 'Aprueba o rechaza una institución',
+    tags: ['Instituciones'],
+
+    params: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'number',
+          description: 'ID de la institución'
+        }
+      },
+      required: ['id']
+    },
+
+    body: {
+      type: 'object',
+      properties: {
+        estado: {
+          type: 'string',
+          enum: ['Aprobado', 'Rechazado']
+        }
+      },
+      required: ['estado']
+    },
+
+    response: {
+      200: {
+        description: 'Institución actualizada exitosamente',
+        $ref: 'Instituciones'
+      },
+      404: {
+        description: 'Institución no encontrada',
+        $ref: 'ErrorResponse'
+      },
+      500: {
+        description: 'Error al actualizar la institución',
+        $ref: 'ErrorResponse'
+      }
+    }
+  }
+}, aprobarInstitucion);
+
+
 }
 
 export default institucionRoutes;

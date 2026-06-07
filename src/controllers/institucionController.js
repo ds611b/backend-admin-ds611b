@@ -460,3 +460,69 @@ export async function getProyectosByInstitucionId(request, reply) {
     ));
   }
 }
+
+
+// Función para activar el usuario de la institución al ser aprobada la instución
+export async function aprobarInstitucion(request, reply) {
+  const { id } = request.params;
+  const { estado } = request.body;
+
+  try {
+    const institucion = await Instituciones.findByPk(id, {
+      include: [{
+        model: EncargadoInstitucion,
+        as: 'encargado'
+      }]
+    });
+    if (!institucion) {
+      return reply.status(404).send(
+        createErrorResponse(
+          'Institución no encontrada',
+          'INSTITUCION_NOT_FOUND'
+        )
+      );
+    }
+    
+    const encargado = institucion.encargado;
+    if (!encargado) {
+      return reply.status(404).send(
+        createErrorResponse(
+          'Encargado de institución no encontrado',
+          'ENCARGADO_NOT_FOUND'
+        )
+      );
+    }
+    const usuario = await Usuarios.findByPk(encargado.usuario_id);
+    if (!usuario) {
+      return reply.status(404).send(
+        createErrorResponse(
+          'Usuario del encargado no encontrado',
+          'USUARIO_NOT_FOUND'
+        )
+      );
+    }
+
+    institucion.estado = estado;
+
+    await institucion.save();
+
+    if (estado === 'Aprobado') {
+      usuario.status = 1;
+
+      await usuario.save();
+    }
+
+    return reply.send(institucion);
+
+  } catch (error) {
+    request.log.error(error);
+
+    return reply.status(500).send(
+      createErrorResponse(
+        'Error al actualizar la institución',
+        'UPDATE_INSTITUCION_ERROR',
+        error
+      )
+    );
+  }
+}
