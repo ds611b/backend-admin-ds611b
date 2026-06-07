@@ -65,7 +65,6 @@ fastify.get('/encargados-institucion/correo/:correo', {
       properties: {
         correo: {
           type: 'string',
-          format: 'email',
           description: 'Correo electrónico del encargado'
         }
       },
@@ -73,11 +72,14 @@ fastify.get('/encargados-institucion/correo/:correo', {
     },
     response: {
       200: {
-        description: 'Encargado obtenido exitosamente',
-        $ref: 'EncargadoInstitucion'
+        description: 'Encargados obtenidos exitosamente',
+        type: 'array',          // <-- array porque retorna varios
+        items: {
+          $ref: 'EncargadoInstitucion'  // cada item sigue usando el mismo ref
+        }
       },
       404: {
-        description: 'Encargado no encontrado',
+        description: 'Encargados no encontrados',
         $ref: 'ErrorResponse'
       },
       500: {
