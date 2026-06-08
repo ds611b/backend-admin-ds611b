@@ -157,6 +157,7 @@ fastify.get('/aplicaciones-estudiantes/proyecto/:proyectoId', {
                   primer_apellido: { type: 'string' },
                   segundo_apellido: { type: ['string', 'null'] },
                   email: { type: 'string' },
+                  perfil_id: { type: ['number', 'null'] },
                   aplicacion_id: { type: 'number' },
                   estado: { type: 'string' },
                   fecha_aplicacion: { type: 'string' }

@@ -7,9 +7,30 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  * @param {import('fastify').FastifyReply} reply
  */
 export async function getHabilidades(request, reply) {
+  const { page = 1, limit = 10 } = request.query;
+
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const offset = (pageNum - 1) * limitNum;
+
   try {
-    const habilidades = await Habilidades.findAll();
-    reply.send(habilidades);
+    const { count, rows: habilidades } = await Habilidades.findAndCountAll({
+      limit: limitNum,
+      offset,
+      order: [['descripcion', 'ASC']]
+    });
+
+    const totalPages = Math.ceil(count / limitNum);
+
+    reply.send({
+      data: habilidades,
+      pagination: {
+        totalItems: count,
+        totalPages,
+        currentPage: pageNum,
+        itemsPerPage: limitNum
+      }
+    });
   } catch (error) {
     request.log.error(error);
     reply.status(500).send(createErrorResponse(
