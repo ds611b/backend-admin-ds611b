@@ -1,5 +1,6 @@
 import { EncargadoInstitucion } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
+import { Op } from 'sequelize';
 
 /**
  * Obtiene todos los encargados de institución
@@ -153,18 +154,30 @@ export async function getEncargadoInstitucionByCorreo(request, reply) {
   const { correo } = request.params;
 
   try {
-    const encargado = await EncargadoInstitucion.findOne({
-      where: { correo }
+    const encargados = await EncargadoInstitucion.findAll({
+      where: {
+        correo: { [Op.like]: `${correo}%` }
+      }
     });
 
-    if (!encargado) {
+    if (!encargados.length) {
       return reply.status(404).send(createErrorResponse(
-        'Encargado de institución no encontrado',
+        'No se encontraron encargados con ese correo',
         'ENCARGADO_NOT_FOUND'
       ));
     }
 
-    return reply.send(encargado);
+    // datos retornados
+
+    const encargadosData = encargados.map(encargado => ({
+      id: encargado.id,
+      nombres: encargado.nombres,
+      apellidos: encargado.apellidos,
+      correo: encargado.correo,
+      usuario_id: encargado.usuario_id
+    }));
+
+    return reply.send(encargadosData);
 
   } catch (error) {
     request.log.error(error);
@@ -182,5 +195,6 @@ export default {
   getEncargadoInstitucionById,
   createEncargadoInstitucion,
   updateEncargadoInstitucion,
-  deleteEncargadoInstitucion
+  deleteEncargadoInstitucion,
+  getEncargadoInstitucionByCorreo
 };
