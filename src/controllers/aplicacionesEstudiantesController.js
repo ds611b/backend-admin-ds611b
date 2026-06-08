@@ -227,6 +227,23 @@ export async function createAplicacionEstudiante(request, reply) {
 
     const { estudiante_id, proyecto_id } = request.body;
 
+    // Verificar si el estudiante ya tiene una aplicación activa (Pendiente o Aprobado) en cualquier proyecto
+    const aplicacionActiva = await AplicacionesEstudiantes.findOne({
+      where: {
+        estudiante_id,
+        estado: ['Pendiente', 'Aprobado']
+      }
+    });
+
+    if (aplicacionActiva) {
+      return reply.status(409).send(
+        createErrorResponse(
+          `El estudiante ya tiene una aplicación en estado "${aplicacionActiva.estado}" para otro proyecto`,
+          'ESTUDIANTE_TIENE_APLICACION_ACTIVA'
+        )
+      );
+    }
+
     const aplicacionExistente = await AplicacionesEstudiantes.findOne({
       where: {
         estudiante_id,
