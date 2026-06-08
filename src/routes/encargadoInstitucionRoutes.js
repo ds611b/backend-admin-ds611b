@@ -4,6 +4,7 @@ import {
   createEncargadoInstitucion,
   updateEncargadoInstitucion,
   deleteEncargadoInstitucion,
+  getEncargadoInstitucionByCorreo
 } from '../controllers/encargadoInstitucionController.js';
 
 async function encargadoInstitucionRoutes(fastify) {
@@ -54,6 +55,39 @@ async function encargadoInstitucionRoutes(fastify) {
       }
     }
   }, getEncargadoInstitucionById);
+  // GET: Obtener un encargado por correo
+fastify.get('/encargados-institucion/correo/:correo', {
+  schema: {
+    description: 'Obtiene un encargado de institución por correo electrónico',
+    tags: ['Encargados Institución'],
+    params: {
+      type: 'object',
+      properties: {
+        correo: {
+          type: 'string',
+          format: 'email',
+          description: 'Correo electrónico del encargado'
+        }
+      },
+      required: ['correo']
+    },
+    response: {
+      200: {
+        description: 'Encargado obtenido exitosamente',
+        $ref: 'EncargadoInstitucion'
+      },
+      404: {
+        description: 'Encargado no encontrado',
+        $ref: 'ErrorResponse'
+      },
+      500: {
+        description: 'Error al obtener el encargado',
+        $ref: 'ErrorResponse'
+      }
+    }
+  }
+}, getEncargadoInstitucionByCorreo);
+
 
   // POST: Crear un nuevo encargado
   fastify.post('/encargados-institucion', {

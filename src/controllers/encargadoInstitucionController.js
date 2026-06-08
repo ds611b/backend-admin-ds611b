@@ -146,6 +146,36 @@ export async function deleteEncargadoInstitucion(request, reply) {
     ));
   }
 }
+/**
+ * Obtiene un encargado por correo electrónico
+ */
+export async function getEncargadoInstitucionByCorreo(request, reply) {
+  const { correo } = request.params;
+
+  try {
+    const encargado = await EncargadoInstitucion.findOne({
+      where: { correo }
+    });
+
+    if (!encargado) {
+      return reply.status(404).send(createErrorResponse(
+        'Encargado de institución no encontrado',
+        'ENCARGADO_NOT_FOUND'
+      ));
+    }
+
+    return reply.send(encargado);
+
+  } catch (error) {
+    request.log.error(error);
+
+    return reply.status(500).send(createErrorResponse(
+      'Error al buscar el encargado de institución',
+      'GET_ENCARGADO_BY_EMAIL_ERROR',
+      error
+    ));
+  }
+}
 
 export default {
   getEncargadosInstitucion,
