@@ -385,7 +385,7 @@ async function registroHorasRoutes(fastify) {
             required: ['estudiante_id', 'estado'],
             properties: {
               estudiante_id: { type: 'integer' },
-              estado: { type: 'string', enum: ['Aprobado', 'Pendiente', 'Rechazado'] }
+              estado: { type: 'string', enum: ['Aprobado', 'Pendiente', 'Rechazado','Finalizada'] }
             }
           },
           'registro-horas': {
