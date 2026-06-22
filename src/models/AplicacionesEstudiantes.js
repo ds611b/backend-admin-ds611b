@@ -16,7 +16,7 @@ const AplicacionesEstudiantes = sequelize.define('AplicacionesEstudiantes', {
     allowNull: false,
   },
   estado: {
-    type: DataTypes.ENUM('Pendiente', 'Aprobado', 'Rechazado', 'Cancelado'),
+    type: DataTypes.ENUM('Pendiente', 'Aprobado', 'Rechazado', 'Cancelado','Finalizada'),
     defaultValue: 'Pendiente',
     allowNull: false,
   },
