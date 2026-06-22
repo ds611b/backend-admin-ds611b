@@ -10,13 +10,34 @@ async function habilidadesRoutes(fastify) {
   // GET: Obtener todas las habilidades
   fastify.get('/habilidades', {
     schema: {
-      description: 'Obtiene todas las habilidades',
+      description: 'Obtiene todas las habilidades con paginación',
       tags: ['Habilidades'],
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Número de página', default: 1, minimum: 1 },
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
+        }
+      },
       response: {
         200: {
           description: 'Lista de habilidades obtenida exitosamente',
-          type: 'array',
-          items: { $ref: 'Habilidades' }
+          type: 'object',
+          properties: {
+            data: {
+              type: 'array',
+              items: { $ref: 'Habilidades' }
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                totalItems: { type: 'number' },
+                totalPages: { type: 'number' },
+                currentPage: { type: 'number' },
+                itemsPerPage: { type: 'number' }
+              }
+            }
+          }
         },
         500: {
           description: 'Error al obtener las habilidades',

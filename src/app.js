@@ -31,6 +31,7 @@ import documentosHorasRoutes from './routes/documentosHorasRoutes.js';
 import gruposRoutes from './routes/gruposRoutes.js';
 import grupoEstudiantesRoutes from './routes/grupoEstudiantesRoutes.js';
 import notificacionesRoutes from './routes/notificacionesRoutes.js';
+import emailTestRoutes from './routes/emailTestRoutes.js';
 
 import { preloadRoles } from './services/roleService.js';
 import GrupoCarrera from './models/GrupoCarrera.js';
@@ -272,6 +273,7 @@ fastify.addSchema({
           {
             type: 'object',
             properties: {
+              perfil_id: { type: ['integer', 'null'], example: 5 },
               aplicacion_id: { type: 'integer', example: 1 },
               estado: {
                 type: 'string',
@@ -1296,6 +1298,7 @@ fastify.register(documentosHorasRoutes, { prefix: '/api' });
 fastify.register(gruposRoutes, { prefix: '/api' });
 fastify.register(grupoEstudiantesRoutes, { prefix: '/api' });
 fastify.register(notificacionesRoutes, { prefix: '/api/notificaciones' });
+fastify.register(emailTestRoutes, { prefix: '/api/email/test' });
 
 /**
  * Registra la landing page de la API
