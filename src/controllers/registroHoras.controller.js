@@ -329,6 +329,8 @@ async function _consultarHorasEstudiante(id_perfil_usuario, id_proyecto, tipo_ho
 
   const requisitosHoras = await HorasRequisito.findAll({ where: whereRequisito });
 
+  console.log('json de horas requisito:', JSON.stringify(requisitosHoras, null, 2));
+
   const estudianteInfo = {
     id: perfilUsuario.id,
     nombre_completo: `${perfilUsuario.usuario.primer_nombre} ${perfilUsuario.usuario.segundo_nombre || ''} ${perfilUsuario.usuario.primer_apellido} ${perfilUsuario.usuario.segundo_apellido || ''}`.trim(),
