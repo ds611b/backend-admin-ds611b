@@ -7,7 +7,8 @@ import {
   getHorasPorEstudiante,
   getHorasPorEstudianteEnProyecto,
   getResumenProyecto,
-  validarRegistroHoras   
+  validarRegistroHoras,
+  ingresoHorasEquivalentes
 } from '../controllers/registroHoras.controller.js';
 
 async function registroHorasRoutes(fastify) {
@@ -294,9 +295,9 @@ async function registroHorasRoutes(fastify) {
         type: 'object',
         required: ['ids', 'accion', 'validado_por'],
         properties: {
-          ids:                      { type: 'array', items: { type: 'integer' }, minItems: 1 },
-          accion:                   { type: 'string', enum: ['Aprobado', 'Rechazado', 'Pendiente'] },
-          validado_por:             { type: 'integer' },
+          ids: { type: 'array', items: { type: 'integer' }, minItems: 1 },
+          accion: { type: 'string', enum: ['Aprobado', 'Rechazado', 'Pendiente'] },
+          validado_por: { type: 'integer' },
           observaciones_validacion: { type: 'string' }
         }
       },
@@ -304,17 +305,17 @@ async function registroHorasRoutes(fastify) {
         200: {
           type: 'object',
           properties: {
-            mensaje:      { type: 'string' },
-            accion:       { type: 'string' },
+            mensaje: { type: 'string' },
+            accion: { type: 'string' },
             validado_por: { type: 'integer' },
             exitosos: {
               type: 'array',
               items: {
                 type: 'object',
                 properties: {
-                  id:              { type: 'integer' },
+                  id: { type: 'integer' },
                   estado_anterior: { type: 'string' },
-                  estado_nuevo:    { type: 'string' }
+                  estado_nuevo: { type: 'string' }
                 }
               }
             },
@@ -323,7 +324,7 @@ async function registroHorasRoutes(fastify) {
               items: {
                 type: 'object',
                 properties: {
-                  id:    { type: 'integer' },
+                  id: { type: 'integer' },
                   error: { type: 'string' }
                 }
               }
@@ -335,8 +336,112 @@ async function registroHorasRoutes(fastify) {
         500: { $ref: 'ErrorResponse' }
       }
     }
+
   }, validarRegistroHoras);
-  
+  // ✅ NUEVA — ingreso rápido de horas equivalentes por coordinador
+  fastify.post('/registro-horas/ingreso-equivalente', {
+    schema: {
+      description: 'Crea institución (o reutiliza), proyecto, aplicación del estudiante y registro de horas en una sola operación. Usado por coordinadores para ingresar horas equivalentes.',
+      tags: ['Registro de horas'],
+      body: {
+        type: 'object',
+        required: ['institucion', 'proyecto', 'estudiante', 'registro-horas'],
+        properties: {
+          institucion: {
+            type: 'object',
+            required: ['nombre', 'estado'],
+            properties: {
+              nombre: { type: 'string' },
+              direccion: { type: 'string' },
+              telefono: { type: 'string' },
+              email: { type: 'string', format: 'email' },
+              nit: { type: 'string' },
+              fecha_fundacion: { type: 'string', format: 'date' },
+              estado: { type: 'string', enum: ['Aprobado', 'Pendiente', 'Rechazado'] }
+            }
+          },
+          proyecto: {
+            type: 'object',
+            required: ['nombre'],
+            properties: {
+              nombre: { type: 'string' },
+              descripcion: { type: 'string' },
+              sitio_web: { type: 'string' },
+              fecha_inicio: { type: 'string', format: 'date' },
+              fecha_fin: { type: 'string', format: 'date' },
+              modalidad: { type: 'string', enum: ['Presencial', 'Virtual', 'Híbrido'] },
+              direccion: { type: 'string' },
+              actividad_principal: { type: 'string' },
+              horario_requerido: { type: 'string' },
+              disponibilidad: { type: 'boolean' },
+              horas_requeridas: { type: 'number' },
+              personas_requeridas: { type: 'integer' },
+              tipo_proyecto: { type: 'string', enum: ['A', 'S'] },
+              estado: { type: 'string', enum: ['Aprobado', 'Pendiente', 'Rechazado'] }
+            }
+          },
+          estudiante: {
+            type: 'object',
+            required: ['estudiante_id', 'estado'],
+            properties: {
+              estudiante_id: { type: 'integer' },
+              estado: { type: 'string', enum: ['Aprobado', 'Pendiente', 'Rechazado'] }
+            }
+          },
+          'registro-horas': {
+            type: 'object',
+            required: ['id_perfil_usuario', 'fecha', 'horas_realizadas', 'descripcion_actividad', 'estado', 'validado_por'],
+            properties: {
+              id_perfil_usuario: { type: 'integer' },
+              id_proyecto: { type: 'integer' },
+              fecha: { type: 'string', format: 'date' },
+              horas_realizadas: { type: 'number' },
+              descripcion_actividad: { type: 'string' },
+              estado: { type: 'string', enum: ['Aprobado', 'Pendiente', 'Rechazado'] },
+              validado_por: { type: 'integer' },
+              observaciones_validacion: { type: 'string' }
+            }
+          }
+        }
+      },
+      response: {
+        201: {
+          type: 'object',
+          properties: {
+            mensaje: { type: 'string' },
+            institucion: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer' },
+                nombre: { type: 'string' },
+                creada: { type: 'boolean' }
+              }
+            },
+            proyecto: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer' },
+                nombre: { type: 'string' }
+              }
+            },
+            aplicacion: {
+              type: 'object',
+              properties: {
+                estudiante_id: { type: 'integer' },
+                proyecto_id: { type: 'integer' },
+                estado: { type: 'string' }
+              }
+            },
+            registro_horas: { type: 'object', additionalProperties: true }
+          }
+        },
+        404: { $ref: 'ErrorResponse' },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, ingresoHorasEquivalentes);
+
+
 }
 
 
