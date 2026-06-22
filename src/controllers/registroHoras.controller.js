@@ -801,7 +801,7 @@ export async function validarRegistroHoras(request, reply) {
             const nuevasHoras = Math.max(
               0,
               parseFloat(requisito.horas_completadas || 0) -
-                parseFloat(registro.horas_realizadas || 0)
+              parseFloat(registro.horas_realizadas || 0)
             );
 
             await requisito.update(
@@ -935,7 +935,7 @@ export async function validarRegistroHoras(request, reply) {
         attributes: ['usuario_id']
       });
 
-      console.log(`✅ estudiante ${JSON.stringify(registros[0])} Proyecto ${registros[0].id_proyecto} ha alcanzado las horas requeridas: ${totalHorasAprobadas}/${horasRequeridas}. Marcando como Finalizado.`); 
+      console.log(`✅ estudiante ${JSON.stringify(registros[0])} Proyecto ${registros[0].id_proyecto} ha alcanzado las horas requeridas: ${totalHorasAprobadas}/${horasRequeridas}. Marcando como Finalizado.`);
 
       await AplicacionesEstudiantes.update(
         {
@@ -978,7 +978,7 @@ export async function validarRegistroHoras(request, reply) {
 
 
 export async function ingresoHorasEquivalentes(request, reply) {
-const transaction = await RegistroHoras.sequelize.transaction();
+  const transaction = await RegistroHoras.sequelize.transaction();
 
   try {
     const {
@@ -996,33 +996,33 @@ const transaction = await RegistroHoras.sequelize.transaction();
 
     if (!institucion) {
       institucion = await Instituciones.create({
-        nombre:           bodyInstitucion.nombre,
-        direccion:        bodyInstitucion.direccion        ?? null,
-        telefono:         bodyInstitucion.telefono         ?? null,
-        email:            bodyInstitucion.email            ?? null,
-        nit:              bodyInstitucion.nit              ?? null,
-        fecha_fundacion:  bodyInstitucion.fecha_fundacion  ?? null,
-        estado:           bodyInstitucion.estado           ?? 'Aprobado'
+        nombre: bodyInstitucion.nombre,
+        direccion: bodyInstitucion.direccion ?? null,
+        telefono: bodyInstitucion.telefono ?? null,
+        email: bodyInstitucion.email ?? null,
+        nit: bodyInstitucion.nit ?? null,
+        fecha_fundacion: bodyInstitucion.fecha_fundacion ?? null,
+        estado: bodyInstitucion.estado ?? 'Aprobado'
       }, { transaction });
     }
 
     // ── 2. PROYECTO: siempre nuevo, ligado a la institución ────────────────
     const proyecto = await ProyectosInstitucion.create({
-      institucion_id:      institucion.id,
-      nombre:              bodyProyecto.nombre,
-      descripcion:         bodyProyecto.descripcion         ?? null,
-      sitio_web:           bodyProyecto.sitio_web           ?? null,
-      fecha_inicio:        bodyProyecto.fecha_inicio        ?? null,
-      fecha_fin:           bodyProyecto.fecha_fin           ?? null,
-      modalidad:           bodyProyecto.modalidad           ?? 'Presencial',
-      direccion:           bodyProyecto.direccion           ?? null,
+      institucion_id: institucion.id,
+      nombre: bodyProyecto.nombre,
+      descripcion: bodyProyecto.descripcion ?? null,
+      sitio_web: bodyProyecto.sitio_web ?? null,
+      fecha_inicio: bodyProyecto.fecha_inicio ?? null,
+      fecha_fin: bodyProyecto.fecha_fin ?? null,
+      modalidad: bodyProyecto.modalidad ?? 'Presencial',
+      direccion: bodyProyecto.direccion ?? null,
       actividad_principal: bodyProyecto.actividad_principal ?? null,
-      horario_requerido:   bodyProyecto.horario_requerido   ?? null,
-      disponibilidad:      bodyProyecto.disponibilidad      ?? false,
-      horas_requeridas:    bodyProyecto.horas_requeridas    ?? 0,
+      horario_requerido: bodyProyecto.horario_requerido ?? null,
+      disponibilidad: bodyProyecto.disponibilidad ?? false,
+      horas_requeridas: bodyProyecto.horas_requeridas ?? 0,
       personas_requeridas: bodyProyecto.personas_requeridas ?? 0,
-      tipo_proyecto:       bodyProyecto.tipo_proyecto       ?? null,
-      estado:              bodyProyecto.estado              ?? 'Aprobado'
+      tipo_proyecto: bodyProyecto.tipo_proyecto ?? null,
+      estado: bodyProyecto.estado ?? 'Aprobado'
     }, { transaction });
 
     // ── 3. APLICACIÓN DEL ESTUDIANTE ───────────────────────────────────────
@@ -1042,9 +1042,10 @@ const transaction = await RegistroHoras.sequelize.transaction();
 
     await AplicacionesEstudiantes.create({
       estudiante_id: perfilEstudiante.usuario_id,
-      proyecto_id:   proyecto.id,
-      estado:        bodyEstudiante.estado ?? 'Aprobado'
+      proyecto_id: proyecto.id,
+      estado: bodyEstudiante.estado ?? 'Aprobado'
     }, { transaction });
+
 
     // ── 4. GRUPO_ESTUDIANTE: obtener el vínculo para el registro de horas ──
     const grupoEstudiante = await GrupoEstudiantes.findOne({
@@ -1053,6 +1054,15 @@ const transaction = await RegistroHoras.sequelize.transaction();
       transaction
     });
 
+    await HorasRequisito.create({
+      id_grupo_estudiante: grupoEstudiante.id,
+      id_estudiante: bodyEstudiante.estudiante_id,
+      horas_completadas: bodyRegistro.horas_realizadas,
+      fecha_inicio: new Date(),
+      tipo_horas: proyecto.tipo_proyecto,
+      estado: 'Finalizada'
+    }, { transaction });
+
     const id_grupo_estudiante = grupoEstudiante?.id ?? null;
 
     // ── 5. REGISTRO DE HORAS ───────────────────────────────────────────────
@@ -1060,53 +1070,53 @@ const transaction = await RegistroHoras.sequelize.transaction();
     const tipo_horas = proyecto.tipo_proyecto ?? null;
 
     // ── Resolver nombre y cargo del coordinador que valida ─────────────────
-const perfilValidador = await PerfilUsuario.findOne({
-  where: { id: bodyRegistro.validado_por },
-  attributes: ['id', 'usuario_id'],
-  transaction
-});
+    const perfilValidador = await PerfilUsuario.findOne({
+      where: { id: bodyRegistro.validado_por },
+      attributes: ['id', 'usuario_id'],
+      transaction
+    });
 
-const usuarioValidador = await Usuarios.findOne({
-  where: { id: perfilValidador?.usuario_id },
-  attributes: [
-    'id',
-    'primer_nombre',
-    'segundo_nombre',
-    'primer_apellido',
-    'segundo_apellido',
-    'rol_id'
-  ],
-  transaction
-});
+    const usuarioValidador = await Usuarios.findOne({
+      where: { id: perfilValidador?.usuario_id },
+      attributes: [
+        'id',
+        'primer_nombre',
+        'segundo_nombre',
+        'primer_apellido',
+        'segundo_apellido',
+        'rol_id'
+      ],
+      transaction
+    });
 
-const cargoValidador = await Roles.findOne({
-  where: { id: usuarioValidador?.rol_id },
-  attributes: ['nombre'],
-  transaction
-});
+    const cargoValidador = await Roles.findOne({
+      where: { id: usuarioValidador?.rol_id },
+      attributes: ['nombre'],
+      transaction
+    });
 
-const supervisorNombre = usuarioValidador
-  ? `${usuarioValidador.primer_nombre} ${usuarioValidador.primer_apellido}`
-  : (bodyRegistro.supervisor_nombre ?? null);
+    const supervisorNombre = usuarioValidador
+      ? `${usuarioValidador.primer_nombre} ${usuarioValidador.primer_apellido}`
+      : (bodyRegistro.supervisor_nombre ?? null);
 
-const supervisorCargo = cargoValidador?.nombre
-  ?? (bodyRegistro.supervisor_cargo ?? null);
+    const supervisorCargo = cargoValidador?.nombre
+      ?? (bodyRegistro.supervisor_cargo ?? null);
 
-// ── Crear el registro de horas ─────────────────────────────────────────
-const nuevoRegistro = await RegistroHoras.create({
-  id_grupo_estudiante,
-  id_proyecto:             proyecto.id,
-  fecha:                   bodyRegistro.fecha,
-  tipo_horas,
-  horas_realizadas:        bodyRegistro.horas_realizadas,
-  descripcion_actividad:   bodyRegistro.descripcion_actividad,
-  supervisor_nombre:       supervisorNombre,
-  supervisor_cargo:        supervisorCargo,
-  estado_validacion:       bodyRegistro.estado                   ?? 'Aprobado',
-  validado_por:            bodyRegistro.validado_por             ?? null,
-  fecha_validacion:        bodyRegistro.estado !== 'Aprobado'   ? new Date() : null,
-  observaciones_validacion: bodyRegistro.observaciones_validacion ?? null
-}, { transaction });
+    // ── Crear el registro de horas ─────────────────────────────────────────
+    const nuevoRegistro = await RegistroHoras.create({
+      id_grupo_estudiante,
+      id_proyecto: proyecto.id,
+      fecha: bodyRegistro.fecha,
+      tipo_horas,
+      horas_realizadas: bodyRegistro.horas_realizadas,
+      descripcion_actividad: bodyRegistro.descripcion_actividad,
+      supervisor_nombre: supervisorNombre,
+      supervisor_cargo: supervisorCargo,
+      estado_validacion: bodyRegistro.estado ?? 'Aprobado',
+      validado_por: bodyRegistro.validado_por ?? null,
+      fecha_validacion: bodyRegistro.estado !== 'Aprobado' ? new Date() : null,
+      observaciones_validacion: bodyRegistro.observaciones_validacion ?? null
+    }, { transaction });
 
     await transaction.commit();
 
@@ -1129,18 +1139,18 @@ const nuevoRegistro = await RegistroHoras.create({
     return reply.status(201).send({
       mensaje: 'Ingreso rápido completado correctamente',
       institucion: {
-        id:     institucion.id,
+        id: institucion.id,
         nombre: institucion.nombre,
         creada: !bodyInstitucion._existente  // referencial, ver nota abajo
       },
       proyecto: {
-        id:     proyecto.id,
+        id: proyecto.id,
         nombre: proyecto.nombre
       },
       aplicacion: {
         estudiante_id: perfilEstudiante.id,
-        proyecto_id:   proyecto.id,
-        estado:        bodyEstudiante.estado ?? 'Aprobado'
+        proyecto_id: proyecto.id,
+        estado: bodyEstudiante.estado ?? 'Aprobado'
       },
       registro_horas: registroCompleto
     });
