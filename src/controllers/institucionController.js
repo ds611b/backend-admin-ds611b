@@ -1,4 +1,4 @@
-import { Instituciones, EncargadoInstitucion, ProyectosInstitucion, Usuarios } from '../models/index.js';
+import { Instituciones, EncargadoInstitucion, ProyectosInstitucion, Usuarios, PerfilUsuario } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 import {
   createInstitucionCompleta as createInstitucionCompletaService,
@@ -160,13 +160,13 @@ export async function createInstitucion(request, reply) {
       id_encargado: encargadoId
     });
 
-    // Crear perfil de usuario para el coordinador
+    // Crear perfil de usuario para el encargado de la institución
     await PerfilUsuario.create({
       usuario_id: usuarioId,
-      telefono,
+      telefono: encargado?.telefono ?? null,
       id_institucion: nuevaInstitucion.id,
       carnet: ""
-    }, { transaction });
+    });
 
 
     const institucionCompleta = await Instituciones.findByPk(
