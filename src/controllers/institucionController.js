@@ -185,6 +185,20 @@ export async function createInstitucion(request, reply) {
 
     request.log.error(error);
 
+    // Reportar con claridad qué campo único está duplicado (en vez de un
+    // "Validation error" opaco). Útil porque el flujo no es transaccional y
+    // un intento fallido puede dejar institución/encargado/usuario huérfanos.
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const campos = (error.errors ?? []).map(e => e.path).join(', ');
+      return reply.status(409).send(
+        createErrorResponse(
+          `Ya existe un registro con el mismo valor en: ${campos || 'un campo único'}`,
+          'INSTITUCION_DUPLICADA',
+          error.errors?.map(e => ({ campo: e.path, valor: e.value }))
+        )
+      );
+    }
+
     return reply.status(500).send(
       createErrorResponse(
         'Error al crear la institución',
