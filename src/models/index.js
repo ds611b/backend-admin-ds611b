@@ -26,6 +26,7 @@ import Grupos from './Grupos.js';
 import GrupoCarrera from './GrupoCarrera.js';
 import GrupoEstudiantes from './GrupoEstudiantes.js';
 import Notificaciones from './Notificaciones.js';
+import ConfiguracionIA from './ConfiguracionIA.js';
 
 
 
@@ -193,5 +194,6 @@ export {
   DocumentosHoras,
   Grupos,
   GrupoEstudiantes,
-  GrupoCarrera
+  GrupoCarrera,
+  ConfiguracionIA
 };
