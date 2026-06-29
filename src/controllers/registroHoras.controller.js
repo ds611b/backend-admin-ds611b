@@ -1060,7 +1060,7 @@ export async function ingresoHorasEquivalentes(request, reply) {
       horas_completadas: bodyRegistro.horas_realizadas,
       fecha_inicio: new Date(),
       tipo_horas: proyecto.tipo_proyecto,
-      estado: 'Finalizada'
+      estado: 'Completado'
     }, { transaction });
 
     const id_grupo_estudiante = grupoEstudiante?.id ?? null;
