@@ -8,14 +8,19 @@
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ConfiguracionIA (
-  id                     INT AUTO_INCREMENT PRIMARY KEY,
-  chatbot_activo         BOOLEAN  NOT NULL DEFAULT TRUE,
-  recomendaciones_activo BOOLEAN  NOT NULL DEFAULT TRUE,
-  actualizado_por        INT      NULL,
-  updated_at             DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  id                            INT AUTO_INCREMENT PRIMARY KEY,
+  chatbot_activo                BOOLEAN  NOT NULL DEFAULT TRUE,
+  recomendaciones_activo        BOOLEAN  NOT NULL DEFAULT TRUE,
+  extraccion_habilidades_activo BOOLEAN  NOT NULL DEFAULT TRUE,
+  actualizado_por               INT      NULL,
+  updated_at                    DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Fila única inicial (ambas funciones activas por defecto).
+-- Fila única inicial (todas las funciones activas por defecto).
 -- IGNORE evita error si ya existe la fila id = 1.
-INSERT IGNORE INTO ConfiguracionIA (id, chatbot_activo, recomendaciones_activo)
-VALUES (1, TRUE, TRUE);
+INSERT IGNORE INTO ConfiguracionIA (id, chatbot_activo, recomendaciones_activo, extraccion_habilidades_activo)
+VALUES (1, TRUE, TRUE, TRUE);
+
+-- Para instalaciones que ya tenían la tabla sin la columna nueva, ejecutar:
+-- ALTER TABLE ConfiguracionIA
+--   ADD COLUMN extraccion_habilidades_activo BOOLEAN NOT NULL DEFAULT TRUE AFTER recomendaciones_activo;

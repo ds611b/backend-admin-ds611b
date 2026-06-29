@@ -6,6 +6,7 @@ const configuracionIAObject = {
     id: { type: 'integer' },
     chatbot_activo: { type: 'boolean' },
     recomendaciones_activo: { type: 'boolean' },
+    extraccion_habilidades_activo: { type: 'boolean' },
     actualizado_por: { type: ['integer', 'null'] },
     updated_at: { type: ['string', 'null'], format: 'date-time' }
   }
@@ -38,6 +39,7 @@ async function configuracionIARoutes(fastify) {
         properties: {
           chatbot_activo: { type: 'boolean' },
           recomendaciones_activo: { type: 'boolean' },
+          extraccion_habilidades_activo: { type: 'boolean' },
           actualizado_por: { type: 'integer' }
         }
       },

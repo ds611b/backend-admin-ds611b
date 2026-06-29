@@ -22,6 +22,12 @@ const ConfiguracionIA = sequelize.define('ConfiguracionIA', {
     allowNull: false,
     defaultValue: true
   },
+  // Controla la función "Agregar habilidades con IA" (extracción desde texto).
+  extraccion_habilidades_activo: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true
+  },
   // Usuario (id) que hizo el último cambio. Opcional, solo para trazabilidad.
   actualizado_por: {
     type: DataTypes.INTEGER,

@@ -14,7 +14,8 @@ async function obtenerOcrearConfig() {
     defaults: {
       id: CONFIG_ID,
       chatbot_activo: true,
-      recomendaciones_activo: true
+      recomendaciones_activo: true,
+      extraccion_habilidades_activo: true
     }
   });
   return config;
@@ -45,7 +46,7 @@ export async function getConfiguracionIA(request, reply) {
  * campos enviados (ambos son opcionales). Pensado para el Coordinador General.
  */
 export async function updateConfiguracionIA(request, reply) {
-  const { chatbot_activo, recomendaciones_activo, actualizado_por } = request.body;
+  const { chatbot_activo, recomendaciones_activo, extraccion_habilidades_activo, actualizado_por } = request.body;
 
   try {
     const config = await obtenerOcrearConfig();
@@ -53,10 +54,11 @@ export async function updateConfiguracionIA(request, reply) {
     const cambios = {};
     if (typeof chatbot_activo === 'boolean') cambios.chatbot_activo = chatbot_activo;
     if (typeof recomendaciones_activo === 'boolean') cambios.recomendaciones_activo = recomendaciones_activo;
+    if (typeof extraccion_habilidades_activo === 'boolean') cambios.extraccion_habilidades_activo = extraccion_habilidades_activo;
 
     if (Object.keys(cambios).length === 0) {
       return reply.status(400).send(createErrorResponse(
-        'Debe enviar al menos un campo booleano: chatbot_activo o recomendaciones_activo',
+        'Debe enviar al menos un campo booleano: chatbot_activo, recomendaciones_activo o extraccion_habilidades_activo',
         'VALIDATION_ERROR'
       ));
     }
