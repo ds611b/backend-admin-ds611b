@@ -1,4 +1,4 @@
-import { Instituciones, EncargadoInstitucion, ProyectosInstitucion, Usuarios } from '../models/index.js';
+import { Instituciones, EncargadoInstitucion, ProyectosInstitucion, Usuarios, PerfilUsuario } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 import {
   createInstitucionCompleta as createInstitucionCompletaService,
@@ -160,13 +160,13 @@ export async function createInstitucion(request, reply) {
       id_encargado: encargadoId
     });
 
-    // Crear perfil de usuario para el coordinador
+    // Crear perfil de usuario para el encargado de la institución
     await PerfilUsuario.create({
       usuario_id: usuarioId,
-      telefono,
+      telefono: encargado?.telefono ?? null,
       id_institucion: nuevaInstitucion.id,
       carnet: ""
-    }, { transaction });
+    });
 
 
     const institucionCompleta = await Instituciones.findByPk(
@@ -184,6 +184,20 @@ export async function createInstitucion(request, reply) {
   } catch (error) {
 
     request.log.error(error);
+
+    // Reportar con claridad qué campo único está duplicado (en vez de un
+    // "Validation error" opaco). Útil porque el flujo no es transaccional y
+    // un intento fallido puede dejar institución/encargado/usuario huérfanos.
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const campos = (error.errors ?? []).map(e => e.path).join(', ');
+      return reply.status(409).send(
+        createErrorResponse(
+          `Ya existe un registro con el mismo valor en: ${campos || 'un campo único'}`,
+          'INSTITUCION_DUPLICADA',
+          error.errors?.map(e => ({ campo: e.path, valor: e.value }))
+        )
+      );
+    }
 
     return reply.status(500).send(
       createErrorResponse(

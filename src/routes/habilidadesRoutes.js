@@ -16,7 +16,8 @@ async function habilidadesRoutes(fastify) {
         type: 'object',
         properties: {
           page: { type: 'number', description: 'Número de página', default: 1, minimum: 1 },
-          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 }
+          limit: { type: 'number', description: 'Elementos por página', default: 10, minimum: 1, maximum: 100 },
+          search: { type: 'string', description: 'Filtra habilidades por coincidencia en la descripción' }
         }
       },
       response: {
