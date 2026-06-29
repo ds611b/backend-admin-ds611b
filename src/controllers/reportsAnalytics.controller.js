@@ -12,6 +12,46 @@ import {
     Grupos, // ← IMPORTANTE: Agregar Grupos
 } from '../models/index.js';
 import puppeteer from 'puppeteer';
+import fs from 'fs';
+import path from 'path';
+
+function findChromeExecutable() {
+  const candidates = [
+    process.env.CHROME_PATH,
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/usr/bin/headless-chromium',
+    '/snap/bin/chromium',
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+  ].filter(Boolean);
+
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) return p;
+    } catch (e) {
+      // ignore
+    }
+  }
+  return null;
+}
+
+async function launchPuppeteer(options = {}) {
+  try {
+    return await puppeteer.launch(options);
+  } catch (err) {
+    // If Chromium binary not found, try common locations or CHROME_PATH
+    if (err && (err.code === 'ENOENT' || /spawn .* ENOENT/.test(String(err.message)))) {
+      const exe = process.env.CHROME_PATH || findChromeExecutable();
+      if (exe) {
+        return await puppeteer.launch({ ...options, executablePath: exe });
+      }
+    }
+    throw err;
+  }
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -1094,7 +1134,7 @@ export async function exportCareerPDF(request, reply) {
             <div class="footer"><span>© ${new Date().getFullYear()} · ITCA-FEPADE</span><strong>Sistema de Horas Sociales y Ambientales</strong><span class="page-num">Pág. 1 / 1</span></div>
         </body></html>`;
 
-        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: 'new' });
+        const browser = await launchPuppeteer({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: 'new' });
         const page = await browser.newPage();
         await page.setViewport({ width: 794, height: 1123 });
         await page.setContent(html, { waitUntil: 'networkidle0' });
@@ -1686,7 +1726,7 @@ export async function exportDashboardPDF(request, reply) {
     </div>
     </body></html>`;
 
-        const browser = await puppeteer.launch({
+        const browser = await launchPuppeteer({
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
             headless: 'new'
         });
@@ -1906,7 +1946,7 @@ export async function exportStudentPDF(request, reply) {
     </div>
     </body></html>`;
 
-        const browser = await puppeteer.launch({
+        const browser = await launchPuppeteer({
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
             headless: 'new'
         });
@@ -2809,7 +2849,7 @@ export async function exportGroupPDF(request, reply) {
 
     </body></html>`;
 
-    const browser = await puppeteer.launch({ 
+    const browser = await launchPuppeteer({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: 'new'
     });
@@ -3681,7 +3721,7 @@ export async function exportGeneralReportPDF(request, reply) {
 
     </body></html>`;
 
-    const browser = await puppeteer.launch({
+    const browser = await launchPuppeteer({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: 'new'
     });
@@ -3894,7 +3934,7 @@ export async function exportAdvancedStatsPDF(request, reply) {
 
     </body></html>`;
 
-    const browser = await puppeteer.launch({
+    const browser = await launchPuppeteer({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: 'new'
     });
@@ -4117,7 +4157,7 @@ export async function exportIndividualReportPDF(request, reply) {
 
     </body></html>`;
 
-    const browser = await puppeteer.launch({
+    const browser = await launchPuppeteer({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: 'new'
     });
