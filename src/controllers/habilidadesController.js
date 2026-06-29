@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { Habilidades } from '../models/index.js'
 import { createErrorResponse } from '../utils/errorResponse.js';
 
@@ -7,14 +8,21 @@ import { createErrorResponse } from '../utils/errorResponse.js';
  * @param {import('fastify').FastifyReply} reply
  */
 export async function getHabilidades(request, reply) {
-  const { page = 1, limit = 10 } = request.query;
+  const { page = 1, limit = 10, search } = request.query;
 
   const pageNum = parseInt(page, 10);
   const limitNum = parseInt(limit, 10);
   const offset = (pageNum - 1) * limitNum;
 
+  // Filtro opcional por texto: busca la coincidencia en la descripción.
+  const termino = typeof search === 'string' ? search.trim() : '';
+  const where = termino
+    ? { descripcion: { [Op.like]: `%${termino}%` } }
+    : undefined;
+
   try {
     const { count, rows: habilidades } = await Habilidades.findAndCountAll({
+      where,
       limit: limitNum,
       offset,
       order: [['descripcion', 'ASC']]

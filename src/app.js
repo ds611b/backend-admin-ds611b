@@ -34,6 +34,7 @@ import notificacionesRoutes from './routes/notificacionesRoutes.js';
 import emailTestRoutes from './routes/emailTestRoutes.js';
 import reportsRoutes from './routes/reportsRoutes.js';
 import reportsAnalyticsRoutes from './routes/reportsAnalyticsRoutes.js';
+import configuracionIARoutes from './routes/configuracionIARoutes.js';
 
 import { preloadRoles } from './services/roleService.js';
 import GrupoCarrera from './models/GrupoCarrera.js';
@@ -1303,6 +1304,7 @@ fastify.register(reportsRoutes, { prefix: '/api' });
 fastify.register(reportsAnalyticsRoutes, { prefix: '/api' });
 fastify.register(notificacionesRoutes, { prefix: '/api/notificaciones' });
 fastify.register(emailTestRoutes, { prefix: '/api/email/test' });
+fastify.register(configuracionIARoutes, { prefix: '/api' });
 
 /**
  * Registra la landing page de la API
