@@ -32,6 +32,8 @@ import gruposRoutes from './routes/gruposRoutes.js';
 import grupoEstudiantesRoutes from './routes/grupoEstudiantesRoutes.js';
 import notificacionesRoutes from './routes/notificacionesRoutes.js';
 import emailTestRoutes from './routes/emailTestRoutes.js';
+import reportsRoutes from './routes/reportsRoutes.js';
+import reportsAnalyticsRoutes from './routes/reportsAnalyticsRoutes.js';
 
 import { preloadRoles } from './services/roleService.js';
 import GrupoCarrera from './models/GrupoCarrera.js';
@@ -1297,6 +1299,8 @@ fastify.register(registroHorasRoutes, { prefix: '/api' });
 fastify.register(documentosHorasRoutes, { prefix: '/api' });
 fastify.register(gruposRoutes, { prefix: '/api' });
 fastify.register(grupoEstudiantesRoutes, { prefix: '/api' });
+fastify.register(reportsRoutes, { prefix: '/api' });
+fastify.register(reportsAnalyticsRoutes, { prefix: '/api' });
 fastify.register(notificacionesRoutes, { prefix: '/api/notificaciones' });
 fastify.register(emailTestRoutes, { prefix: '/api/email/test' });
 

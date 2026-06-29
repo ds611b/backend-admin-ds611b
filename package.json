@@ -24,7 +24,9 @@
     "mysql2": "3.13.0",
     "nodemailer": "^8.0.10",
     "prompts": "2.4.2",
-    "sequelize": "6.37.6"
+    "sequelize": "6.37.6",
+    "exceljs": "4.3.0",
+    "puppeteer": "^23.0.0"
   },
   "devDependencies": {
     "nodemon": "3.1.9",
