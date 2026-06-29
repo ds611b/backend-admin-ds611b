@@ -1,5 +1,42 @@
 import { Op, fn, col, literal } from 'sequelize';
 import { RegistroHoras, ProyectosInstitucion, GrupoEstudiantes, PerfilUsuario, Usuarios, Carreras, Instituciones, CoordinadoresCarrera, Grupos, EncargadoInstitucion } from '../models/index.js';
+import fs from 'fs';
+import path from 'path';
+
+function findChromeExecutable() {
+  const candidates = [
+    process.env.CHROME_PATH,
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/usr/bin/headless-chromium',
+    '/snap/bin/chromium',
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+  ].filter(Boolean);
+
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) return p;
+    } catch (e) {
+      // ignore
+    }
+  }
+  return null;
+}
+
+async function launchPuppeteerWithModule(puppeteerModule, options = {}) {
+  try {
+    return await puppeteerModule.launch(options);
+  } catch (err) {
+    if (err && (err.code === 'ENOENT' || /spawn .* ENOENT/.test(String(err.message)))) {
+      const exe = process.env.CHROME_PATH || findChromeExecutable();
+      if (exe) return await puppeteerModule.launch({ ...options, executablePath: exe });
+    }
+    throw err;
+  }
+}
 
 function buildDateFilter(from, to) {
   if (!from && !to) return null;
@@ -739,7 +776,8 @@ function buildPDFHtml(reportData) {
 }
 
 async function generatePDF(html) {
-  const browser = await import('puppeteer').then(module => module.default.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] }));
+  const puppeteerModule = await import('puppeteer');
+  const browser = await launchPuppeteerWithModule(puppeteerModule.default, { args: ['--no-sandbox', '--disable-setuid-sandbox'] });
   try {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
