@@ -6,6 +6,19 @@ LABEL authors="c4rberus"
 # Establece el directorio de trabajo dentro del contenedor
 WORKDIR /usr/src/app
 
+# Instalar Chromium y sus dependencias
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Indicar a Puppeteer dónde está Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+
 # Copia los archivos de configuración de npm
 COPY package*.json ./
 
