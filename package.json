@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "create-project": "node scripts/create-project.js"
+    "create-project": "node scripts/create-project.js",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "keywords": [],
   "author": "ds611b",
