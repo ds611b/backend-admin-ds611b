@@ -76,6 +76,80 @@ export async function getHabilidadById(request, reply) {
   }
 }
 
+/** Normaliza para comparar: minúsculas, sin acentos, espacios colapsados. */
+function normalizarHabilidad(texto) {
+  return String(texto ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Resuelve una lista de nombres de habilidades a sus IDs, creando las que no
+ * existan (find-or-create, sin duplicar, case/acento-insensitive). Pensado para
+ * confirmar al guardar las habilidades nuevas recomendadas por la IA.
+ *
+ * Body: { nombres: string[] }
+ * Respuesta: { habilidades: [{ id, descripcion }] }
+ */
+export async function resolverHabilidades(request, reply) {
+  const { nombres } = request.body;
+
+  if (!Array.isArray(nombres) || nombres.length === 0) {
+    return reply.status(400).send(createErrorResponse(
+      'Debe enviar un arreglo "nombres" no vacío',
+      'VALIDATION_ERROR'
+    ));
+  }
+
+  try {
+    // Catálogo actual indexado por nombre normalizado.
+    const catalogo = await Habilidades.findAll({ attributes: ['id', 'descripcion'] });
+    const mapa = new Map(catalogo.map(h => [normalizarHabilidad(h.descripcion), h]));
+
+    const resultado = [];
+    const vistos = new Set();
+
+    for (const raw of nombres) {
+      const nombre = String(raw ?? '').replace(/\s+/g, ' ').trim().slice(0, 50);
+      if (!nombre) continue;
+      const clave = normalizarHabilidad(nombre);
+      if (!clave || vistos.has(clave)) continue;
+      vistos.add(clave);
+
+      const existente = mapa.get(clave);
+      if (existente) {
+        resultado.push({ id: existente.id, descripcion: existente.descripcion });
+        continue;
+      }
+
+      try {
+        const creada = await Habilidades.create({ descripcion: nombre });
+        mapa.set(clave, creada);
+        resultado.push({ id: creada.id, descripcion: creada.descripcion });
+      } catch (err) {
+        if (err.name === 'SequelizeUniqueConstraintError') {
+          const recuperada = await Habilidades.findOne({ where: { descripcion: nombre } });
+          if (recuperada) resultado.push({ id: recuperada.id, descripcion: recuperada.descripcion });
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    reply.send({ habilidades: resultado });
+  } catch (error) {
+    request.log.error(error);
+    reply.status(500).send(createErrorResponse(
+      'Error al resolver las habilidades',
+      'RESOLVER_HABILIDADES_ERROR',
+      error
+    ));
+  }
+}
+
 /**
  * Crea una habilidad.
  * @param {import('fastify').FastifyRequest} request
