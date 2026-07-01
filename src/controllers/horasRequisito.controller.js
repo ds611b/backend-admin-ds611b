@@ -69,11 +69,16 @@ export async function getHorasByUsuario(request, reply) {
       });
     }
 
-    const grupoId = requisito.id_grupo_estudiante;
-    
+    // La meta se toma del grupo ACTIVO (el de la carrera actual).
     const grupoEstudiante = await GrupoEstudiantes.findOne({
       where: { id_estudiante: requisito.id_estudiante, estado: 'Activo' }
     });
+
+    if (!grupoEstudiante) {
+      return reply.status(404).send({
+        message: 'El estudiante no tiene un grupo activo'
+      });
+    }
 
     const grupo = await Grupos.findOne({
      where : { id: grupoEstudiante.id_grupo },
@@ -93,10 +98,19 @@ export async function getHorasByUsuario(request, reply) {
       requeridas = grupo.horas_sociales;
     }
 
+    // Las horas completadas/pendientes se suman sobre TODAS las asignaciones del
+    // estudiante (grupos viejos + el activo). Así, al cambiar de carrera, las
+    // horas ya hechas en el grupo anterior cuentan hacia la meta del grupo nuevo
+    // (ej.: 200 hechas en técnico + meta 300 en ingeniería => faltan 100).
+    const asignaciones = await GrupoEstudiantes.findAll({
+      where: { id_estudiante: requisito.id_estudiante },
+      attributes: ['id']
+    });
+    const idsAsignaciones = asignaciones.map(a => a.id);
 
     const horasPendientes = await RegistroHoras.sum('horas_realizadas', {
       where: {
-        id_grupo_estudiante: grupoId,
+        id_grupo_estudiante: idsAsignaciones,
         estado_validacion: 'Pendiente',
         tipo_horas
       }
@@ -104,7 +118,7 @@ export async function getHorasByUsuario(request, reply) {
 
     const horasCompletadas = await RegistroHoras.sum('horas_realizadas', {
       where: {
-        id_grupo_estudiante: grupoId,
+        id_grupo_estudiante: idsAsignaciones,
         estado_validacion: 'Aprobado',
         tipo_horas
       }

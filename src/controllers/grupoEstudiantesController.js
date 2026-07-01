@@ -1,4 +1,4 @@
-import { GrupoEstudiantes, Grupos, PerfilUsuario, Carreras, GrupoCarrera } from '../models/index.js';
+import { GrupoEstudiantes, Grupos, PerfilUsuario, Carreras, GrupoCarrera, HorasRequisito } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 export async function getGrupoEstudiantes(request, reply) {
@@ -248,6 +248,34 @@ export async function cambiarCarreraEstudiante(request, reply) {
         },
         { transaction }
       );
+    }
+
+    // Asegurar que exista un HorasRequisito por cada tipo que exige el grupo
+    // nuevo (S si horas_sociales>0, A si horas_ambientales>0), apuntando a la
+    // asignación activa. NO se copian horas: el avance previo se conserva en los
+    // RegistroHoras del grupo viejo (historial) y el resumen los suma aparte.
+    const grupoNuevo = grupoCarrera.grupo;
+    const tiposRequeridos = [];
+    if (Number(grupoNuevo.horas_sociales) > 0) tiposRequeridos.push('S');
+    if (Number(grupoNuevo.horas_ambientales) > 0) tiposRequeridos.push('A');
+
+    for (const tipo of tiposRequeridos) {
+      await HorasRequisito.findOrCreate({
+        where: {
+          id_grupo_estudiante: nuevoRegistro.id,
+          id_estudiante: id,
+          tipo_horas: tipo
+        },
+        defaults: {
+          id_grupo_estudiante: nuevoRegistro.id,
+          id_estudiante: id,
+          tipo_horas: tipo,
+          horas_completadas: 0,
+          fecha_inicio: new Date(),
+          estado: 'Pendiente'
+        },
+        transaction
+      });
     }
 
     await transaction.commit();
