@@ -72,7 +72,7 @@ export async function getHorasByUsuario(request, reply) {
     const grupoId = requisito.id_grupo_estudiante;
     
     const grupoEstudiante = await GrupoEstudiantes.findOne({
-      where: { id_estudiante: requisito.id_estudiante}
+      where: { id_estudiante: requisito.id_estudiante, estado: 'Activo' }
     });
 
     const grupo = await Grupos.findOne({
