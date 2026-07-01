@@ -26,11 +26,6 @@ const HorasRequisito = sequelize.define('HorasRequisito', {
       key: 'id',
     },
   },
-  horas_requeridas: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    defaultValue: 0,
-  },
   horas_completadas: {
     type: DataTypes.INTEGER,
     defaultValue: 0,

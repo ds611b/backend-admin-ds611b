@@ -3,10 +3,45 @@ import {
   getHabilidadById,
   createHabilidad,
   updateHabilidad,
-  deleteHabilidad
+  deleteHabilidad,
+  resolverHabilidades
 } from '../controllers/habilidadesController.js';
 
 async function habilidadesRoutes(fastify) {
+  // POST: Resolver nombres -> ids (find-or-create) para confirmar al guardar
+  fastify.post('/habilidades/resolver', {
+    schema: {
+      description: 'Resuelve nombres de habilidades a sus IDs, creando las que no existan (sin duplicar).',
+      tags: ['Habilidades'],
+      body: {
+        type: 'object',
+        required: ['nombres'],
+        properties: {
+          nombres: { type: 'array', items: { type: 'string' } }
+        }
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            habilidades: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'integer' },
+                  descripcion: { type: 'string' }
+                }
+              }
+            }
+          }
+        },
+        400: { $ref: 'ErrorResponse' },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, resolverHabilidades);
+
   // GET: Obtener todas las habilidades
   fastify.get('/habilidades', {
     schema: {
