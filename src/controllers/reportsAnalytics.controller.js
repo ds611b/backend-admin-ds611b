@@ -396,7 +396,7 @@ async function computeCareerReportData(id_carrera) {
             'id_grupo',
             [sequelize().fn('COUNT', sequelize().col('id_estudiante')), 'total_estudiantes'],
         ],
-        where: { id_grupo: groupIds },
+        where: { id_grupo: groupIds, estado: 'Activo' },
         group: ['id_grupo'],
         raw: true,
     });
@@ -408,7 +408,7 @@ async function computeCareerReportData(id_carrera) {
             [sequelize().fn('SUM', sequelize().col('horas_realizadas')), 'approved_hours'],
         ],
         where: { estado_validacion: 'Aprobado' },
-        include: [{ model: GrupoEstudiantes, as: 'grupo_estudiante', attributes: [], where: { id_grupo: groupIds } }],
+        include: [{ model: GrupoEstudiantes, as: 'grupo_estudiante', attributes: [], where: { id_grupo: groupIds, estado: 'Activo' } }],
         group: ['grupo_estudiante.id_grupo'],
         raw: true,
     });
@@ -421,7 +421,7 @@ async function computeCareerReportData(id_carrera) {
             [sequelize().fn('SUM', sequelize().col('horas_realizadas')), 'total_horas'],
         ],
         where: { estado_validacion: 'Aprobado' },
-        include: [{ model: GrupoEstudiantes, as: 'grupo_estudiante', attributes: ['id_estudiante', 'id_grupo'], where: { id_grupo: groupIds } }],
+        include: [{ model: GrupoEstudiantes, as: 'grupo_estudiante', attributes: ['id_estudiante', 'id_grupo'], where: { id_grupo: groupIds, estado: 'Activo' } }],
         group: ['grupo_estudiante.id_estudiante', 'grupo_estudiante.id_grupo'],
         raw: true,
     });
@@ -496,7 +496,8 @@ async function getStudentGoals(id_estudiante) {
 
         const grupoEstudiante = await GrupoEstudiantes.findOne({
             where: {
-                id_estudiante
+                id_estudiante,
+                estado: 'Activo'
             },
             include: [
                 {
@@ -536,7 +537,8 @@ async function getStudentGoals(id_estudiante) {
 
         const grupoCarrera = await GrupoCarrera.findOne({
             where: {
-                id_grupo: grupo.id
+                id_grupo: grupo.id,
+                activo: true
             },
             include: [
                 {
@@ -842,6 +844,7 @@ async function computeCompletionRate() {
     try {
         const estudiantesGrupos = await GrupoEstudiantes.findAll({
             attributes: ['id_estudiante'],
+            where: { estado: 'Activo' },
             include: [{
                 model: Grupos,
                 as: 'Grupo',
@@ -877,7 +880,7 @@ async function computeCompletionRate() {
                 include: [{
                     model: GrupoEstudiantes,
                     as: 'grupo_estudiante',
-                    where: { id_estudiante: Number(id) },
+                    where: { id_estudiante: Number(id), estado: 'Activo' },
                     attributes: ['id_estudiante'],
                 }],
                 raw: true,
@@ -2016,7 +2019,7 @@ async function computeGroupSummary() {
 
       // 2. Obtener estudiantes del grupo
       const estudiantes = await GrupoEstudiantes.findAll({
-        where: { id_grupo: grupoId },
+        where: { id_grupo: grupoId, estado: 'Activo' },
         attributes: ['id_estudiante'],
         raw: true
       });

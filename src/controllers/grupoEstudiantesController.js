@@ -1,4 +1,4 @@
-import { GrupoEstudiantes, Grupos, PerfilUsuario } from '../models/index.js';
+import { GrupoEstudiantes, Grupos, PerfilUsuario, Carreras, GrupoCarrera } from '../models/index.js';
 import { createErrorResponse } from '../utils/errorResponse.js';
 
 export async function getGrupoEstudiantes(request, reply) {
@@ -132,5 +132,158 @@ export async function deleteGrupoEstudiante(request, reply) {
       'DELETE_GRUPO_ESTUDIANTE_ERROR',
       error
     ));
+  }
+}
+
+export async function cambiarCarreraEstudiante(request, reply) {
+  const { id } = request.params;
+  const { id_carrera } = request.body;
+
+  const transaction = await PerfilUsuario.sequelize.transaction();
+
+  try {
+    // Buscar estudiante
+    const estudiante = await PerfilUsuario.findByPk(id, { transaction });
+
+    if (!estudiante) {
+      await transaction.rollback();
+      return reply.status(404).send(
+        createErrorResponse(
+          'Estudiante no encontrado',
+          'ESTUDIANTE_NOT_FOUND'
+        )
+      );
+    }
+
+    // Validar carrera
+    const carrera = await Carreras.findByPk(id_carrera, { transaction });
+
+    if (!carrera) {
+      await transaction.rollback();
+      return reply.status(404).send(
+        createErrorResponse(
+          'Carrera no encontrada',
+          'CARRERA_NOT_FOUND'
+        )
+      );
+    }
+
+    // Buscar el grupo asociado a la carrera
+    const grupoCarrera = await GrupoCarrera.findOne({
+      where: {
+        id_carrera,
+        activo: true
+      },
+      include: [
+        {
+          model: Grupos,
+          as: 'grupo'
+        }
+      ],
+      transaction
+    });
+
+    if (!grupoCarrera || !grupoCarrera.grupo) {
+      await transaction.rollback();
+      return reply.status(404).send(
+        createErrorResponse(
+          'No existe un grupo asociado a esta carrera',
+          'GRUPO_CARRERA_NOT_FOUND'
+        )
+      );
+    }
+
+    // Actualizar carrera del estudiante
+    await estudiante.update(
+      {
+        id_carrera
+      },
+      { transaction }
+    );
+
+    // Buscar grupos activos del estudiante
+    const gruposActivos = await GrupoEstudiantes.findAll({
+      where: {
+        id_estudiante: id,
+        estado: 'Activo'
+      },
+      order: [['fecha_asignacion', 'DESC']],
+      transaction
+    });
+
+    // Verificar si ya pertenece al grupo correcto
+    const grupoActual = gruposActivos.find(
+      ge => ge.id_grupo === grupoCarrera.id_grupo
+    );
+
+    let nuevoRegistro;
+
+    if (grupoActual) {
+      // Ya pertenece al grupo correcto
+      nuevoRegistro = grupoActual;
+    } else {
+      // Inactivar grupos activos anteriores
+      if (gruposActivos.length > 0) {
+        await GrupoEstudiantes.update(
+          {
+            estado: 'Inactivo'
+          },
+          {
+            where: {
+              id_estudiante: id,
+              estado: 'Activo'
+            },
+            transaction
+          }
+        );
+      }
+
+      // Crear nueva asignación
+      nuevoRegistro = await GrupoEstudiantes.create(
+        {
+          id_grupo: grupoCarrera.id_grupo,
+          id_estudiante: id,
+          fecha_asignacion: new Date(),
+          estado: 'Activo'
+        },
+        { transaction }
+      );
+    }
+
+    await transaction.commit();
+
+    // Obtener registro completo
+    const resultado = await GrupoEstudiantes.findByPk(nuevoRegistro.id, {
+      include: [
+        {
+          model: Grupos
+        },
+        {
+          model: PerfilUsuario,
+          as: 'perfil_estudiante'
+        }
+      ]
+    });
+
+    return reply.send({
+      success: true,
+      message: grupoActual
+        ? 'La carrera fue actualizada. El estudiante ya pertenecía al grupo correspondiente.'
+        : 'Carrera y grupo actualizados correctamente.',
+      data: resultado
+    });
+
+  } catch (error) {
+    await transaction.rollback();
+
+    request.log.error(error);
+
+    return reply.status(500).send(
+      createErrorResponse(
+        'Error al cambiar carrera del estudiante',
+        'CHANGE_STUDENT_CAREER_ERROR',
+        error
+      )
+    );
   }
 }
