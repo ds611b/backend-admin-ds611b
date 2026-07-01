@@ -96,7 +96,7 @@ async function computeDashboardData(from, to) {
       [fn('SUM', col('horas_realizadas')), 'horasTotal'],
       [fn('COUNT', fn('DISTINCT', col('grupo_estudiante.id_estudiante'))), 'estudiantesActivos']
     ],
-    include: [{ model: GrupoEstudiantes, as: 'grupo_estudiante', attributes: [] }],
+    include: [{ model: GrupoEstudiantes, as: 'grupo_estudiante', attributes: [], where: { estado: 'Activo' } }],
     where,
     raw: true
   });
@@ -262,6 +262,7 @@ async function computeStudentsRanking(from, to, limit = 20) {
         model: GrupoEstudiantes,
         as: 'grupo_estudiante',
         attributes: ['id_grupo'],
+        where: { estado: 'Activo' },
         include: [
           {
             model: PerfilUsuario,
@@ -324,6 +325,7 @@ async function computeStudentsRanking(from, to, limit = 20) {
 async function computeRiskStudents(from, to, threshold = 100) {
   const studentGroups = await GrupoEstudiantes.findAll({
     attributes: ['id_estudiante', 'id_grupo'],
+    where: { estado: 'Activo' },
     include: [
       {
         model: PerfilUsuario,
@@ -346,7 +348,7 @@ async function computeRiskStudents(from, to, threshold = 100) {
       [col('grupo_estudiante.id_estudiante'), 'id_estudiante'],
       [fn('SUM', literal(`CASE WHEN estado_validacion = 'Aprobado' THEN horas_realizadas ELSE 0 END`)), 'horasAprobadas']
     ],
-    include: [{ model: GrupoEstudiantes, as: 'grupo_estudiante', attributes: [] }],
+    include: [{ model: GrupoEstudiantes, as: 'grupo_estudiante', attributes: [], where: { estado: 'Activo' } }],
     where,
     group: ['grupo_estudiante.id_estudiante'],
     raw: true

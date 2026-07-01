@@ -294,3 +294,4 @@ export async function deleteGrupo(request, reply) {
     ));
   }
 }
+
