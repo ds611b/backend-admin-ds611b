@@ -160,7 +160,7 @@ export async function createCoordinador(request, reply) {
       email:         correo_institucional,
       password_hash,
       rol_id,
-      status: 1
+      status: 0
     }, { transaction });
     
     // Crear perfil de usuario para el coordinador
