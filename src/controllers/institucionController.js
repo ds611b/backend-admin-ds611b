@@ -540,3 +540,128 @@ export async function aprobarInstitucion(request, reply) {
     );
   }
 }
+
+/**
+ * Crea una PROPUESTA de institución (solo datos de la institución, estado
+ * Pendiente, sin encargado ni usuario). Pensado para el estudiante desde el
+ * formulario de servicio social: NO crea cuentas. El encargado lo crea luego el
+ * coordinador al aprobar (registrarEncargadoParaInstitucion).
+ */
+export async function crearPropuestaInstitucion(request, reply) {
+  const { institucion } = request.body;
+
+  if (!institucion?.nombre) {
+    return reply.status(400).send(createErrorResponse(
+      'Debe enviar los datos de la institución (al menos el nombre)',
+      'VALIDATION_ERROR'
+    ));
+  }
+
+  try {
+    const nueva = await Instituciones.create({
+      nombre: institucion.nombre,
+      direccion: institucion.direccion ?? null,
+      telefono: institucion.telefono ?? null,
+      email: institucion.email ?? null,
+      nit: institucion.nit ?? null,
+      fecha_fundacion: institucion.fecha_fundacion ? new Date(institucion.fecha_fundacion) : null,
+      estado: 'Pendiente',
+      id_encargado: null,
+    });
+
+    return reply.status(201).send(nueva);
+  } catch (error) {
+    request.log.error(error);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const campos = (error.errors ?? []).map(e => e.path).join(', ');
+      return reply.status(409).send(createErrorResponse(
+        `Ya existe una institución con el mismo valor en: ${campos || 'un campo único'}`,
+        'INSTITUCION_DUPLICADA',
+        error.errors?.map(e => ({ campo: e.path, valor: e.value }))
+      ));
+    }
+    return reply.status(500).send(createErrorResponse(
+      'Error al crear la propuesta de institución',
+      'CREATE_PROPUESTA_INSTITUCION_ERROR',
+      error
+    ));
+  }
+}
+
+/**
+ * Crea el encargado (con su usuario en el servicio de seguridad) para una
+ * institución YA existente y lo enlaza. Acción del coordinador al aprobar una
+ * propuesta. Falla si la institución ya tiene encargado.
+ */
+export async function registrarEncargadoParaInstitucion(request, reply) {
+  const { id } = request.params;
+  const { encargado, usuario } = request.body;
+
+  if (!encargado || !usuario) {
+    return reply.status(400).send(createErrorResponse(
+      'Debe enviar los objetos "encargado" y "usuario"',
+      'VALIDATION_ERROR'
+    ));
+  }
+
+  try {
+    const institucion = await Instituciones.findByPk(id);
+    if (!institucion) {
+      return reply.status(404).send(createErrorResponse(
+        'Institución no encontrada',
+        'INSTITUCION_NOT_FOUND'
+      ));
+    }
+    if (institucion.id_encargado) {
+      return reply.status(409).send(createErrorResponse(
+        'La institución ya tiene un encargado asignado',
+        'ENCARGADO_YA_ASIGNADO'
+      ));
+    }
+
+    // 1) Usuario en el servicio de seguridad (rol Institución)
+    const usuarioCreado = await registrarUsuarioSeguridad(usuario);
+    const usuarioId = usuarioCreado.id;
+
+    // 2) Encargado
+    const nuevoEncargado = await EncargadoInstitucion.create({
+      nombres: encargado.nombres,
+      apellidos: encargado.apellidos,
+      correo: encargado.correo,
+      telefono: encargado.telefono,
+      usuario_id: usuarioId,
+    });
+
+    // 3) Perfil del encargado
+    await PerfilUsuario.create({
+      usuario_id: usuarioId,
+      telefono: encargado?.telefono ?? null,
+      id_institucion: institucion.id,
+      carnet: '',
+    });
+
+    // 4) Enlazar encargado a la institución
+    await institucion.update({ id_encargado: nuevoEncargado.id });
+
+    const completa = await Instituciones.findByPk(institucion.id, {
+      include: [{ model: EncargadoInstitucion, as: 'encargado' }],
+    });
+    return reply.status(201).send(completa);
+  } catch (error) {
+    request.log.error(error);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const campos = (error.errors ?? []).map(e => e.path).join(', ');
+      return reply.status(409).send(createErrorResponse(
+        `Ya existe un registro con el mismo valor en: ${campos || 'un campo único'}`,
+        'ENCARGADO_DUPLICADO',
+        error.errors?.map(e => ({ campo: e.path, valor: e.value }))
+      ));
+    }
+    const statusCode = error.statusCode || 500;
+    return reply.status(statusCode).send(createErrorResponse(
+      error.message || 'Error al registrar el encargado de la institución',
+      'REGISTRAR_ENCARGADO_ERROR',
+      error
+    ));
+  }
+}

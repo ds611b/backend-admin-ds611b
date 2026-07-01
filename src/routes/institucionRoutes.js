@@ -8,7 +8,9 @@ import {
   deleteInstitucion,
   getProyectosByInstitucionId,
   assignEncargadoToInstitucion,
-  aprobarInstitucion
+  aprobarInstitucion,
+  crearPropuestaInstitucion,
+  registrarEncargadoParaInstitucion
 } from '../controllers/institucionController.js';
 
 /**
@@ -112,6 +114,86 @@ async function institucionRoutes(fastify, options) {
       }
     }
   }, createInstitucion);
+
+  // POST /instituciones/propuesta — el estudiante propone una institución (sin encargado/usuario)
+  fastify.post('/instituciones/propuesta', {
+    schema: {
+      description: 'Crea una propuesta de institución (estado Pendiente, sin encargado ni usuario). No crea cuentas.',
+      tags: ['Instituciones'],
+      body: {
+        type: 'object',
+        required: ['institucion'],
+        properties: {
+          institucion: {
+            type: 'object',
+            required: ['nombre'],
+            properties: {
+              nombre: { type: 'string' },
+              direccion: { type: 'string' },
+              telefono: { type: 'string' },
+              email: { type: 'string' },
+              nit: { type: 'string' },
+              fecha_fundacion: { type: 'string' }
+            }
+          }
+        }
+      },
+      response: {
+        201: { $ref: 'Instituciones' },
+        400: { $ref: 'ErrorResponse' },
+        409: { $ref: 'ErrorResponse' },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, crearPropuestaInstitucion);
+
+  // POST /instituciones/:id/encargado — el coordinador crea el encargado (+usuario) para una propuesta
+  fastify.post('/instituciones/:id/encargado', {
+    schema: {
+      description: 'Crea el encargado (con su usuario de seguridad) para una institución existente y lo enlaza. Acción del coordinador al aprobar una propuesta.',
+      tags: ['Instituciones'],
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: { id: { type: 'integer' } }
+      },
+      body: {
+        type: 'object',
+        required: ['encargado', 'usuario'],
+        properties: {
+          encargado: {
+            type: 'object',
+            required: ['nombres', 'apellidos', 'correo'],
+            properties: {
+              nombres: { type: 'string' },
+              apellidos: { type: 'string' },
+              correo: { type: 'string' },
+              telefono: { type: 'string' }
+            }
+          },
+          usuario: {
+            type: 'object',
+            required: ['primer_nombre', 'primer_apellido', 'email', 'password'],
+            properties: {
+              primer_nombre: { type: 'string' },
+              segundo_nombre: { type: 'string' },
+              primer_apellido: { type: 'string' },
+              segundo_apellido: { type: 'string' },
+              email: { type: 'string' },
+              password: { type: 'string' }
+            }
+          }
+        }
+      },
+      response: {
+        201: { $ref: 'Instituciones' },
+        400: { $ref: 'ErrorResponse' },
+        404: { $ref: 'ErrorResponse' },
+        409: { $ref: 'ErrorResponse' },
+        500: { $ref: 'ErrorResponse' }
+      }
+    }
+  }, registrarEncargadoParaInstitucion);
 
   // PUT /instituciones/:id
   fastify.put('/instituciones/:id', {
