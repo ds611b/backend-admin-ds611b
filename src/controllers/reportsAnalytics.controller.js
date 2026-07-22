@@ -487,6 +487,26 @@ async function computeCareerReportData(id_carrera) {
 
 // ─── Nuevo helper para obtener meta del estudiante ──────────────────────────
 
+/**
+ * Resuelve el PerfilUsuario de un estudiante aceptando TANTO el id de perfil
+ * como el id de usuario. Así los reportes funcionan sin importar cuál id manden.
+ * Devuelve el perfil (raw, con usuario incluido) o null.
+ */
+async function resolvePerfilEstudiante(id) {
+    const includeUsuario = [{
+        model: Usuarios,
+        as: 'usuario',
+        attributes: ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
+    }];
+    // Primero por id de perfil...
+    let perfil = await PerfilUsuario.findOne({ where: { id }, include: includeUsuario, raw: true });
+    // ...si no existe, por id de usuario.
+    if (!perfil) {
+        perfil = await PerfilUsuario.findOne({ where: { usuario_id: id }, include: includeUsuario, raw: true });
+    }
+    return perfil;
+}
+
 async function getStudentGoals(id_estudiante) {
 
     const DEFAULT_AMBIENTALES = 200;
@@ -494,9 +514,13 @@ async function getStudentGoals(id_estudiante) {
 
     try {
 
+        // Acepta id de perfil o de usuario.
+        const perfil = await resolvePerfilEstudiante(id_estudiante);
+        const perfilId = perfil?.id ?? id_estudiante;
+
         const grupoEstudiante = await GrupoEstudiantes.findOne({
             where: {
-                id_estudiante,
+                id_estudiante: perfilId,
                 estado: 'Activo'
             },
             include: [
@@ -590,26 +614,18 @@ async function getStudentGoals(id_estudiante) {
 }
 
 async function computeStudentDetail(id_estudiante) {
-    const goals = await getStudentGoals(id_estudiante);
+    // Acepta id de perfil o de usuario; a partir de aquí se usa el id de perfil.
+    const perfil = await resolvePerfilEstudiante(id_estudiante);
+    const perfilId = perfil?.id ?? id_estudiante;
 
-    const perfil = await PerfilUsuario.findOne({
-        where: { id: id_estudiante },
-        include: [{
-            model: Usuarios,
-            as: 'usuario',
-            attributes: ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'email']
-        }],
-        raw: true,
-    });
-
-    console.log('Perfil del estudiante:', JSON.stringify(perfil, null, 2));
+    const goals = await getStudentGoals(perfilId);
 
     const registros = await RegistroHoras.findAll({
         where: { estado_validacion: ['Aprobado', 'Pendiente', 'Rechazado'] },
         include: [{
             model: GrupoEstudiantes,
             as: 'grupo_estudiante',
-            where: { id_estudiante },
+            where: { id_estudiante: perfilId },
             attributes: ['id_estudiante'],
         }, {
             model: ProyectosInstitucion,
@@ -671,7 +687,7 @@ async function computeStudentDetail(id_estudiante) {
 
     return {
         estudiante: {
-            id: id_estudiante,
+            id: perfilId,
             nombre: perfil ? buildFullName(perfil, 'usuario') : 'Sin nombre',
             carnet: perfil?.carnet || '—',
             email: perfil?.['usuario.email'] || '—',
@@ -1396,6 +1412,8 @@ const CSS_DASHBOARD = `
 
 const CSS_STUDENT = `
   @page { size: A4; margin: 0; }
+  /* Contenedor de 1 página exacta: evita que el contenido se derrame a una hoja en blanco. */
+  .page { width: 210mm; height: 297mm; overflow: hidden; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
@@ -1727,6 +1745,7 @@ export async function exportDashboardPDF(request, reply) {
       <strong>Sistema de Horas Sociales y Ambientales</strong>
       <span class="page-num">Pág. 1 / 1</span>
     </div>
+    </div><!-- /.page -->
     </body></html>`;
 
         const browser = await launchPuppeteer({
@@ -1815,6 +1834,7 @@ export async function exportStudentPDF(request, reply) {
     <title>Reporte Estudiante — ${estudiante.nombre}</title>
     <style>${CSS_STUDENT}</style>
     </head><body>
+    <div class="page">
     <div class="header">
       <div class="header-left">
         <div class="logo-box">IT</div>
@@ -1947,6 +1967,7 @@ export async function exportStudentPDF(request, reply) {
       <strong>Sistema de Horas Sociales y Ambientales</strong>
       <span class="page-num">Pág. 1 / 1</span>
     </div>
+    </div><!-- /.page -->
     </body></html>`;
 
         const browser = await launchPuppeteer({
@@ -3145,6 +3166,8 @@ const CSS_GENERAL_REPORT = `
 const CSS_INDIVIDUAL_REPORT = `
   @page { size: A4; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Contenedor de 1 página exacta: evita que el contenido se derrame a una hoja en blanco. */
+  .page { width: 210mm; height: 297mm; overflow: hidden; }
   body {
     font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
     background: #F5F5F5;
@@ -4040,6 +4063,7 @@ export async function exportIndividualReportPDF(request, reply) {
     <title>Reporte Individual de Desempeño — ${estudiante.nombre}</title>
     <style>${CSS_INDIVIDUAL_REPORT}</style>
     </head><body>
+    <div class="page">
 
     <div class="header">
       <div class="header-left">
