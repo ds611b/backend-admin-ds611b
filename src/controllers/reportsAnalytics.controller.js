@@ -2949,7 +2949,12 @@ const CSS_GENERAL_REPORT = `
   }
   .gold-band span:last-child { color: #8B0000; font-weight: 800; }
   .body { padding: 10px 18px 8px; }
-  
+
+  /* Cada página de diseño fijo va en un contenedor de alto exacto A4 con
+     overflow:hidden para que NO se derrame y genere una hoja en blanco.
+     La página 2 (tablas) fluye libre y arranca en hoja nueva con break-before. */
+  .page { width: 210mm; height: 297mm; overflow: hidden; }
+  .page2 { page-break-before: always; }
   .page-break { page-break-after: always; }
   
   .section-title {
@@ -3535,6 +3540,7 @@ export async function exportGeneralReportPDF(request, reply) {
     <title>Reporte General de Gestión — ITCA-FEPADE</title>
     <style>${CSS_GENERAL_REPORT}</style>
     </head><body>
+    <div class="page">
 
     <!-- PÁGINA 1 -->
     <div class="header">
@@ -3633,9 +3639,10 @@ export async function exportGeneralReportPDF(request, reply) {
       <strong>Reporte General de Gestión</strong>
       <span class="page-num">Pág. 1 / 2</span>
     </div>
+    </div><!-- /.page (pág. 1) -->
 
     <!-- PÁGINA 2 - TABLAS DETALLADAS -->
-    <div class="page-break"></div>
+    <div class="page2">
 
     <div class="header">
       <div class="header-left">
@@ -3721,6 +3728,7 @@ export async function exportGeneralReportPDF(request, reply) {
       <strong>Reporte General de Gestión</strong>
       <span class="page-num">Pág. 2 / 2</span>
     </div>
+    </div><!-- /.page2 (pág. 2) -->
 
     </body></html>`;
 
